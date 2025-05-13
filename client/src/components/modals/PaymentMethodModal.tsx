@@ -53,7 +53,13 @@ export default function PaymentMethodModal({
         <DialogHeader>
           <DialogTitle className="text-xl font-display font-bold text-white">Select Payment Method</DialogTitle>
           <DialogDescription className="text-gray-400">
-            Congratulations! You won the auction for {auction.nft.name}. Please select your preferred payment method.
+            Congratulations! You won the auction for {auction.nft.name}. 
+            <div className="mt-2 font-semibold text-white">
+              Total Amount: {auction.currentBid || "0"} {auction.nft.currency}
+            </div>
+            <div className="mt-1">
+              Please select your preferred cryptocurrency payment method:
+            </div>
           </DialogDescription>
         </DialogHeader>
         
@@ -66,7 +72,21 @@ export default function PaymentMethodModal({
                   <RadioGroupItem value={method.id} id={method.id} className="border-gray-500" />
                   <Label htmlFor={method.id} className="flex items-center flex-1 cursor-pointer">
                     <Icon className={`mr-2 h-5 w-5 ${method.color}`} />
-                    <span>{method.name}</span>
+                    <div className="flex flex-col">
+                      <span>{method.name}</span>
+                      {auction.currentBid && (
+                        <span className="text-xs text-gray-400 mt-1">
+                          ≈ {method.id === "ethereum" 
+                              ? parseFloat(auction.currentBid).toFixed(4) 
+                              : method.id === "solana" 
+                                ? (parseFloat(auction.currentBid) * 15).toFixed(2)
+                                : method.id === "bitcoin"
+                                  ? (parseFloat(auction.currentBid) * 0.021).toFixed(6)
+                                  : (parseFloat(auction.currentBid) * 1580).toFixed(2)
+                            } {method.id === "stablecoin" ? "USDC" : method.id.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
                   </Label>
                 </div>
               );

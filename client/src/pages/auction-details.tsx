@@ -68,12 +68,26 @@ export default function AuctionDetailsPage() {
   };
   
   const handleSelectPaymentMethod = (method: string) => {
-    console.log(`Selected payment method: ${method}`);
-    // Here you would typically initiate a payment transaction using the selected method
+    console.log(`Selected payment method: ${method} for auction ${auction?.id}`);
+    setShowPaymentModal(false);
+    
+    // Get the total amount to pay based on current bid
+    const paymentAmount = auction?.currentBid || "0";
+    const nftName = auction?.nft.name || "NFT";
+    
     toast({
-      title: "Payment Initiated",
-      description: `Your payment for ${auction?.nft.name} is being processed using your selected method.`,
+      title: "Payment Method Selected",
+      description: `You've chosen to pay with ${method}. An invoice for ${paymentAmount} ${method} will be sent to your connected wallet.`,
     });
+    
+    // In a real implementation, this would initiate a crypto payment transaction
+    setTimeout(() => {
+      toast({
+        title: "Payment Instructions Sent",
+        description: `Check your email for instructions on how to complete your payment for ${nftName}.`,
+        variant: "default",
+      });
+    }, 2000);
   };
   
   const handleCloseBidModal = () => {
