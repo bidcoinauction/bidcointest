@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
-import { formatCurrency, formatAddress } from "@/lib/utils";
+import { formatCurrency, formatAddress, formatPriceUSD } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -74,7 +74,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const tokenDisplay = auction.nft.tokenId ? `#${auction.nft.tokenId}` : `#${Math.floor(Math.random() * 100000)}`;
   
   // Format bid value display
-  const bidValueDisplay = "+$0.01 per bid";
+  const bidValueDisplay = "+$0.03 per bid";
   
   // Format time left for timestamp display (HH:MM:SS format)
   const formatTimeLeft = () => {
@@ -127,6 +127,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           <div>
             <div className="text-xs text-gray-400">Price</div>
             <div className="text-sm text-white font-medium">
+              {formatPriceUSD(localCurrentBid || 0)}
+            </div>
+            <div className="text-xs text-gray-400">
               {formatCurrency(localCurrentBid || 0, currency)}
             </div>
           </div>
@@ -142,7 +145,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           <div>
             <div className="text-xs text-gray-400">Bid Value</div>
             <div className="text-xs text-green-500">
-              +$0.01 per bid
+              {bidValueDisplay}
             </div>
           </div>
         </div>
@@ -180,10 +183,10 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
       {/* Starting price and increment info */}
       <div className="border-t border-gray-800 px-3 py-2 flex justify-between items-center text-xs">
         <div className="text-gray-400">
-          Starting: {formatCurrency(startingPrice, currency)}
+          Starting: $0.00
         </div>
         <div className="text-gray-400">
-          +$0.03
+          Bid Cost: $0.24 • Each bid adds: +$0.03
         </div>
       </div>
 

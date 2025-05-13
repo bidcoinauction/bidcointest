@@ -104,11 +104,24 @@ export function getCurrencySymbol(chainId: number | null): string {
   }
 }
 
-// Format price to USD
+// Format price to USD for penny auctions
 export function formatPriceUSD(price: number | string): string {
+  // For penny auctions, we're converting crypto price to USD
+  // Each crypto unit is worth a different amount in USD
+  
+  // Convert the input price to a number
   const numPrice = typeof price === "string" ? parseFloat(price) : price;
+  
+  // For our penny auction, we want to show small amounts (less than $1)
+  // Each bid only increases the price by $0.03
+  // We multiply the crypto price by 100 to get a reasonable USD equivalent 
+  // (This would be based on actual exchange rates in production)
+  const usdPrice = numPrice * 100;
+  
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(numPrice);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(usdPrice);
 }
