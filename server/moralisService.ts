@@ -38,7 +38,7 @@ export class MoralisService {
         limit: 10, // Adjusted for reasonable response size
       });
 
-      return response.toJSON().result || [];
+      return response?.toJSON().result || [];
     } catch (error) {
       console.error(`Failed to get NFTs for wallet ${walletAddress}:`, error);
       return [];
@@ -57,7 +57,7 @@ export class MoralisService {
         limit: 10, // Adjusted for reasonable response size
       });
 
-      return response.toJSON().result || [];
+      return response?.toJSON().result || [];
     } catch (error) {
       console.error(`Failed to get NFTs for collection ${collectionAddress}:`, error);
       return [];
@@ -76,7 +76,7 @@ export class MoralisService {
         chain,
       });
 
-      return response.toJSON() || null;
+      return response?.toJSON() || null;
     } catch (error) {
       console.error(`Failed to get metadata for NFT ${tokenAddress}:${tokenId}:`, error);
       return null;
@@ -86,40 +86,63 @@ export class MoralisService {
   // Convert Moralis NFT data to our application's NFT schema
   mapToAppNFT(moralisNFT: any, creatorId: number): Omit<InsertNFT, "id"> {
     // Handle missing metadata by providing default values
-    const metadata = moralisNFT.metadata ? 
-      (typeof moralisNFT.metadata === 'string' ? 
-        JSON.parse(moralisNFT.metadata) : 
-        moralisNFT.metadata) 
-      : {};
+    let metadata = {};
     
-    const name = metadata.name || moralisNFT.name || `${moralisNFT.symbol} #${moralisNFT.token_id}`;
+    try {
+      if (moralisNFT.metadata) {
+        metadata = typeof moralisNFT.metadata === 'string' 
+          ? JSON.parse(moralisNFT.metadata) 
+          : moralisNFT.metadata;
+      }
+    } catch (e) {
+      console.error("Failed to parse NFT metadata:", e);
+    }
+    
+    const name = metadata.name || moralisNFT.name || `NFT #${moralisNFT.token_id}`;
     const description = metadata.description || 'No description available';
-    const imageUrl = metadata.image || 
-                     metadata.image_url || 
-                     `/assets/nft_images/default_nft.png`;
+    let imageUrl = '/assets/nft_images/default_nft.png';
+    
+    if (metadata.image) {
+      imageUrl = metadata.image;
+    } else if (metadata.image_url) {
+      imageUrl = metadata.image_url;
+    } else if (moralisNFT.token_uri) {
+      // Some NFTs might have image URL in token_uri
+      imageUrl = moralisNFT.token_uri;
+    }
                      
     // Clean up image URL (remove ipfs:// prefix, etc.)
     const cleanImageUrl = this.cleanImageUrl(imageUrl);
     
     // Extract attributes if available
     const attributes = metadata.attributes || [];
+    
+    // Process attributes to ensure they match our expected format
+    const processedAttributes = attributes.map((attr: any) => {
+      return {
+        trait_type: attr.trait_type || attr.key || "Property",
+        value: attr.value || attr.trait_value || "",
+        rarity: attr.rarity || "common"
+      };
+    });
 
+    // Return NFT data that matches InsertNFT type from our schema
     return {
       name,
       description,
-      tokenId: moralisNFT.token_id,
-      contractAddress: moralisNFT.token_address,
+      tokenId: moralisNFT.token_id || "",
+      contractAddress: moralisNFT.token_address || "",
       tokenStandard: moralisNFT.contract_type || 'ERC721',
       blockchain: 'ethereum', // Default to ethereum for now
       royalty: '0', // Default royalty
-      collection: moralisNFT.name,
-      supply: '1', // Default to 1 for NFTs
-      creatorId,
+      collection: moralisNFT.name || "Unknown Collection",
+      floorPrice: null, // Default floor price
+      currency: 'ETH', // Default currency
+      items: null, // Default items count
+      category: 'art', // Default category
+      creatorId, // User who imported the NFT
       imageUrl: cleanImageUrl,
-      attributes: attributes,
-      rarity: 'common', // Default rarity
-      createdAt: new Date(),
-      currency: 'ETH' // Default currency
+      attributes: processedAttributes
     };
   }
 

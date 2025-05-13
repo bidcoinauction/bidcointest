@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import AuctionsPage from "@/pages/auctions";
 import AuctionDetailsPage from "@/pages/auction-details";
 import NFTCollectionsPage from "@/pages/nft-collections";
+import NFTExplorerPage from "@/pages/nft-explorer";
 import OrdinalsPage from "@/pages/ordinals";
 import BidPacksPage from "@/pages/bid-packs";
 import ActivityPage from "@/pages/activity";
@@ -50,6 +51,7 @@ function App() {
           <Route path="/auctions" component={AuctionsPage}/>
           <Route path="/auctions/:id" component={AuctionDetailsPage}/>
           <Route path="/nft-collections" component={NFTCollectionsPage}/>
+          <Route path="/nft-explorer" component={NFTExplorerPage}/>
           <Route path="/ordinals" component={OrdinalsPage}/>
           <Route path="/bid-packs" component={BidPacksPage}/>
           <Route path="/activity" component={ActivityPage}/>

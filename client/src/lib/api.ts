@@ -157,3 +157,76 @@ export async function purchaseBidPack(packId: number, walletAddress: string) {
     throw error;
   }
 }
+
+// Moralis API Integration
+
+// Get NFTs from a wallet using Moralis
+export async function getWalletNFTs(walletAddress: string, chain = 'ethereum') {
+  try {
+    const response = await axios.get(`${API_URL}/moralis/wallet/${walletAddress}/nfts`, {
+      params: { chain }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching NFTs from wallet ${walletAddress}:`, error);
+    throw error;
+  }
+}
+
+// Get NFTs from a collection using Moralis
+export async function getNFTsByCollection(collectionAddress: string, chain = 'ethereum') {
+  try {
+    const response = await axios.get(`${API_URL}/moralis/collection/${collectionAddress}/nfts`, {
+      params: { chain }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching NFTs from collection ${collectionAddress}:`, error);
+    throw error;
+  }
+}
+
+// Get NFT metadata using Moralis
+export async function getNFTMetadata(tokenAddress: string, tokenId: string, chain = 'ethereum') {
+  try {
+    const response = await axios.get(`${API_URL}/moralis/nft/${tokenAddress}/${tokenId}`, {
+      params: { chain }
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching NFT metadata for ${tokenAddress}/${tokenId}:`, error);
+    throw error;
+  }
+}
+
+// Import an NFT from Moralis
+export async function importNFTFromMoralis(tokenAddress: string, tokenId: string, creatorId = 1, chain = 'ethereum') {
+  try {
+    const response = await axios.post(`${API_URL}/moralis/import`, {
+      tokenAddress,
+      tokenId,
+      creatorId,
+      chain
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error importing NFT ${tokenAddress}/${tokenId}:`, error);
+    throw error;
+  }
+}
+
+// Import multiple NFTs from a wallet
+export async function importWalletNFTs(walletAddress: string, limit = 5, creatorId = 1, chain = 'ethereum') {
+  try {
+    const response = await axios.post(`${API_URL}/moralis/import-wallet`, {
+      walletAddress,
+      limit,
+      creatorId,
+      chain
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error importing NFTs from wallet ${walletAddress}:`, error);
+    throw error;
+  }
+}
