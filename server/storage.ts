@@ -11,6 +11,8 @@ import {
   marketStats, type MarketStat,
   type BlockchainStats
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, isNull } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
@@ -30,7 +32,7 @@ export interface IStorage {
   getAuctions(): Promise<Auction[]>;
   getFeaturedAuctions(): Promise<Auction[]>;
   createAuction(auction: InsertAuction): Promise<Auction>;
-  updateAuctionBid(id: number, currentBid: string, bidCount: number): Promise<Auction>;
+  updateAuctionBid(id: number, currentBid: string, bidCount: number, newEndTime?: Date): Promise<Auction>;
   
   // Bid operations
   getBidsByAuction(auctionId: number): Promise<Bid[]>;
@@ -808,13 +810,18 @@ export class MemStorage implements IStorage {
     return { ...auction, nft: nft!, creator: creator!, bids: [], history: [] };
   }
 
-  async updateAuctionBid(id: number, currentBid: string, bidCount: number): Promise<Auction> {
+  async updateAuctionBid(id: number, currentBid: string, bidCount: number, newEndTime?: Date): Promise<Auction> {
     const auction = this.auctions.get(id);
     if (!auction) {
       throw new Error(`Auction with ID ${id} not found`);
     }
 
-    const updatedAuction = { ...auction, currentBid, bidCount };
+    const updatedAuction = { 
+      ...auction, 
+      currentBid, 
+      bidCount,
+      endTime: newEndTime || auction.endTime 
+    };
     this.auctions.set(id, updatedAuction);
 
     return this.getAuction(id) as Promise<Auction>;
@@ -975,4 +982,282 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// Database storage implementation using Drizzle ORM
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByWalletAddress(walletAddress: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.walletAddress, walletAddress));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getNFT(id: number): Promise<NFT | undefined> {
+    const [nft] = await db.select().from(nfts).where(eq(nfts.id, id));
+    if (!nft) return undefined;
+    
+    // Get creator
+    const creator = await this.getUser(nft.creatorId || 1);
+    
+    return { ...nft, creator: creator!, attributes: nft.attributes || [] };
+  }
+
+  async getNFTs(): Promise<NFT[]> {
+    const allNfts = await db.select().from(nfts);
+    
+    // Get all creators
+    const creatorIds = [...new Set(allNfts.map(nft => nft.creatorId).filter(Boolean))];
+    const creators = await Promise.all(creatorIds.map(id => this.getUser(id || 1)));
+    const creatorsMap = new Map(creators.map(creator => [creator!.id, creator]));
+    
+    return allNfts.map(nft => ({
+      ...nft,
+      creator: creatorsMap.get(nft.creatorId || 1)!,
+      attributes: nft.attributes || []
+    }));
+  }
+
+  async createNFT(insertNft: InsertNFT): Promise<NFT> {
+    const [nft] = await db
+      .insert(nfts)
+      .values(insertNft)
+      .returning();
+    
+    const creator = await this.getUser(nft.creatorId || 1);
+    
+    return { ...nft, creator: creator!, attributes: nft.attributes || [] };
+  }
+
+  async getAuction(id: number): Promise<Auction | undefined> {
+    const [auction] = await db.select().from(auctions).where(eq(auctions.id, id));
+    if (!auction) return undefined;
+    
+    // Get NFT
+    const nft = await this.getNFT(auction.nftId);
+    
+    // Get creator
+    const creator = await this.getUser(auction.creatorId || 1);
+    
+    // Get bids
+    const auctionBids = await this.getBidsByAuction(id);
+    
+    // Get history
+    const history = await this.getAuctionHistory(id);
+    
+    return { ...auction, nft: nft!, creator: creator!, bids: auctionBids, history };
+  }
+
+  async getAuctions(): Promise<Auction[]> {
+    const allAuctions = await db.select().from(auctions);
+    return Promise.all(allAuctions.map(auction => this.getAuction(auction.id)));
+  }
+
+  async getFeaturedAuctions(): Promise<Auction[]> {
+    const featuredAuctions = await db
+      .select()
+      .from(auctions)
+      .where(eq(auctions.featured, true));
+    
+    return Promise.all(featuredAuctions.map(auction => this.getAuction(auction.id)));
+  }
+
+  async createAuction(insertAuction: InsertAuction): Promise<Auction> {
+    const [auction] = await db
+      .insert(auctions)
+      .values(insertAuction)
+      .returning();
+    
+    return this.getAuction(auction.id) as Promise<Auction>;
+  }
+
+  async updateAuctionBid(id: number, currentBid: string, bidCount: number, newEndTime?: Date): Promise<Auction> {
+    const [updatedAuction] = await db
+      .update(auctions)
+      .set({ 
+        currentBid, 
+        bidCount,
+        ...(newEndTime && { endTime: newEndTime })
+      })
+      .where(eq(auctions.id, id))
+      .returning();
+    
+    return this.getAuction(id) as Promise<Auction>;
+  }
+
+  async getBidsByAuction(auctionId: number): Promise<Bid[]> {
+    const auctionBids = await db
+      .select()
+      .from(bids)
+      .where(eq(bids.auctionId, auctionId))
+      .orderBy(desc(bids.timestamp));
+    
+    // Get all bidders
+    const bidderIds = [...new Set(auctionBids.map(bid => bid.bidderId))];
+    const bidders = await Promise.all(bidderIds.map(id => this.getUser(id)));
+    const biddersMap = new Map(bidders.map(bidder => [bidder!.id, bidder]));
+    
+    return auctionBids.map(bid => ({
+      ...bid,
+      bidder: biddersMap.get(bid.bidderId)!
+    }));
+  }
+
+  async createBid(insertBid: InsertBid): Promise<Bid> {
+    const now = new Date();
+    const bidWithTimestamp = { ...insertBid, timestamp: now };
+    
+    const [bid] = await db
+      .insert(bids)
+      .values(bidWithTimestamp)
+      .returning();
+    
+    const bidder = await this.getUser(bid.bidderId);
+    
+    return { ...bid, bidder: bidder! };
+  }
+
+  async getBidPack(id: number): Promise<BidPack | undefined> {
+    const [bidPack] = await db.select().from(bidPacks).where(eq(bidPacks.id, id));
+    return bidPack || undefined;
+  }
+
+  async getBidPacks(): Promise<BidPack[]> {
+    return db.select().from(bidPacks);
+  }
+
+  async createBidPack(insertBidPack: InsertBidPack): Promise<BidPack> {
+    const [bidPack] = await db
+      .insert(bidPacks)
+      .values(insertBidPack)
+      .returning();
+    
+    return bidPack;
+  }
+
+  async getUserBidPacks(userId: number): Promise<UserBidPack[]> {
+    const userPacks = await db
+      .select()
+      .from(userBidPacks)
+      .where(eq(userBidPacks.userId, userId));
+    
+    // Get user
+    const user = await this.getUser(userId);
+    
+    // Get all bid packs
+    const packIds = [...new Set(userPacks.map(pack => pack.bidPackId))];
+    const packs = await Promise.all(packIds.map(id => this.getBidPack(id)));
+    const packsMap = new Map(packs.map(pack => [pack!.id, pack]));
+    
+    return userPacks.map(userPack => ({
+      ...userPack,
+      user: user!,
+      bidPack: packsMap.get(userPack.bidPackId)!
+    }));
+  }
+
+  async createUserBidPack(insertUserBidPack: InsertUserBidPack): Promise<UserBidPack> {
+    const [userBidPack] = await db
+      .insert(userBidPacks)
+      .values(insertUserBidPack)
+      .returning();
+    
+    const user = await this.getUser(userBidPack.userId);
+    const bidPack = await this.getBidPack(userBidPack.bidPackId);
+    
+    return { ...userBidPack, user: user!, bidPack: bidPack! };
+  }
+
+  async updateUserBidPackCount(id: number, bidsRemaining: number): Promise<UserBidPack> {
+    const [updatedUserBidPack] = await db
+      .update(userBidPacks)
+      .set({ bidsRemaining })
+      .where(eq(userBidPacks.id, id))
+      .returning();
+    
+    const user = await this.getUser(updatedUserBidPack.userId);
+    const bidPack = await this.getBidPack(updatedUserBidPack.bidPackId);
+    
+    return { ...updatedUserBidPack, user: user!, bidPack: bidPack! };
+  }
+
+  async getActivities(): Promise<Activity[]> {
+    const allActivities = await db
+      .select()
+      .from(activities)
+      .orderBy(desc(activities.timestamp));
+    
+    // Get all NFTs
+    const nftIds = [...new Set(allActivities.map(activity => activity.nftId))];
+    const allNfts = await Promise.all(nftIds.map(id => this.getNFT(id)));
+    const nftsMap = new Map(allNfts.map(nft => [nft!.id, nft]));
+    
+    return allActivities.map(activity => ({
+      ...activity,
+      nft: nftsMap.get(activity.nftId)!
+    }));
+  }
+
+  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+    const now = new Date();
+    const activityWithTimestamp = { ...insertActivity, timestamp: now };
+    
+    const [activity] = await db
+      .insert(activities)
+      .values(activityWithTimestamp)
+      .returning();
+    
+    const nft = await this.getNFT(activity.nftId);
+    
+    return { ...activity, nft: nft! };
+  }
+
+  async getAuctionHistory(auctionId: number): Promise<AuctionHistory[]> {
+    return db
+      .select()
+      .from(auctionHistories)
+      .where(eq(auctionHistories.auctionId, auctionId))
+      .orderBy(desc(auctionHistories.timestamp));
+  }
+
+  async createAuctionHistory(insertHistory: InsertAuctionHistory): Promise<AuctionHistory> {
+    const now = new Date();
+    const historyWithTimestamp = { ...insertHistory, timestamp: now };
+    
+    const [history] = await db
+      .insert(auctionHistories)
+      .values(historyWithTimestamp)
+      .returning();
+    
+    return history;
+  }
+
+  async getBlockchainStats(): Promise<BlockchainStats> {
+    const networks = await db.select().from(blockchainNetworks);
+    const stats = await db.select().from(marketStats);
+    
+    return {
+      networks,
+      marketStats: stats
+    };
+  }
+}
+
+// Use MemStorage for development, DatabaseStorage for production when database is connected
+export const storage = process.env.NODE_ENV === 'production' 
+  ? new DatabaseStorage() 
+  : new MemStorage();

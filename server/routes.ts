@@ -221,28 +221,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Auction has ended' });
       }
       
-      // Check if bid amount is higher than current bid
-      if (Number(bidData.amount) <= Number(auction.currentBid)) {
-        return res.status(400).json({ message: 'Bid amount must be higher than current bid' });
-      }
-      
       // Get user by wallet address
       const bidder = await storage.getUserByWalletAddress(bidData.walletAddress);
       if (!bidder) {
         return res.status(404).json({ message: 'User not found for wallet address' });
       }
       
-      // Create bid
+      // Penny auction logic:
+      // 1. Each bid costs $0.24 (or equivalent in crypto)
+      // 2. Each bid only increases price by $0.03 (3 pennies)
+      // 3. Each bid extends auction time
+      
+      // Calculate the new bid amount (current bid + $0.03)
+      const currentBid = Number(auction.currentBid || auction.startingBid);
+      const bidIncrement = 0.03; // $0.03 increment per bid
+      const newBidAmount = (currentBid + bidIncrement).toFixed(4); // Format to 4 decimal places
+      
+      // Extend auction time (add 10-15 seconds per bid)
+      let newEndTime = new Date(auction.endTime);
+      const extensionSeconds = Math.floor(Math.random() * 6) + 10; // 10-15 seconds
+      newEndTime.setSeconds(newEndTime.getSeconds() + extensionSeconds);
+      
+      // Update auction with new bid amount, end time, and increment bid count
+      const updatedBidCount = (auction.bidCount || 0) + 1;
+      await storage.updateAuctionBid(auction.id, newBidAmount, updatedBidCount, newEndTime);
+      
+      // Create bid record
       const newBid = await storage.createBid({
         auctionId: bidData.auctionId,
         bidderId: bidder.id,
-        amount: String(bidData.amount || 0), // Convert to string for decimal field
+        amount: newBidAmount,
       });
       
       // Create auction history entry
       await storage.createAuctionHistory({
         auctionId: bidData.auctionId,
-        description: `Bid placed for ${bidData.amount} ${auction.currency} by ${bidder.username}`,
+        description: `Bid placed for ${newBidAmount} ${auction.currency} by ${bidder.username}`,
         icon: "fa-gavel",
       });
       
@@ -252,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nftId: auction.nftId,
         from: bidData.walletAddress.substring(0, 6) + '...' + bidData.walletAddress.substring(bidData.walletAddress.length - 4),
         to: `@${auction.creator.username}`,
-        price: String(bidData.amount || 0),
+        price: newBidAmount,
         currency: auction.currency || "ETH",
       });
       
