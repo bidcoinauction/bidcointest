@@ -166,45 +166,48 @@ export class MemStorage implements IStorage {
 
     // Create NFTs
     const nft1 = await this.createNFT({
-      name: "Crypto Genesis #358",
-      description: "Limited edition blockchain art from renowned digital artist CryptoMaestro. This Genesis series NFT represents the birth of decentralized finance.",
-      imageUrl: "https://images.unsplash.com/photo-1639762681057-408e52192e55?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600&q=80",
-      tokenId: "7834",
-      contractAddress: "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
-      blockchain: "BTC Ordinal",
-      tokenStandard: "BRC-20",
-      royalty: 2.5,
-      collection: "Genesis",
-      floorPrice: 0.85,
+      name: "Degen Toonz #4269",
+      description: "Degen Toonz Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeicqwwfjxsm64dgzst5xjymoqq3jpgbwudgqw2irswxtqozvddwmfy.ipfs.dweb.link/9932.png",
+      tokenId: "4269",
+      contractAddress: "0xbba9187d5108e395d0681462523c4404de06a497",
+      blockchain: "ETH",
+      tokenStandard: "ERC-721",
+      royalty: "7.5",
+      collection: "Degen Toonz",
+      floorPrice: "0.225",
       currency: "ETH",
-      category: "art",
+      category: "pfp",
+      items: 10000,
       creatorId: user1.id,
       attributes: [
-        { trait_type: "Background", value: "Deep Space", rarity: "12%" },
-        { trait_type: "Style", value: "Cubism", rarity: "8%" },
-        { trait_type: "Color Palette", value: "Cosmic", rarity: "15%" },
-        { trait_type: "Generation", value: "First", rarity: "5%" }
+        { trait_type: "Background", value: "Orange", rarity: "12%" },
+        { trait_type: "Clothes", value: "Orange Hoodie", rarity: "8%" },
+        { trait_type: "Eyes", value: "Laser", rarity: "15%" },
+        { trait_type: "Mouth", value: "Bored", rarity: "5%" }
       ]
     });
 
     const nft2 = await this.createNFT({
-      name: "Abstract Geometry",
-      description: "Exploring the intersection of mathematics and art through abstract geometric forms.",
-      imageUrl: "https://images.unsplash.com/photo-1634986666676-ec8fd927c23d?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-      tokenId: "24601",
-      contractAddress: "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
+      name: "Milady #7218",
+      description: "Milady Maker is a collection of 10,000 randomly generated Milady NFTs on the Ethereum blockchain.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://i.seadn.io/gcs/files/84673e9ffd81b367c3c64bfeb3bfbcc9.png?w=500&auto=format",
+      tokenId: "7218",
+      contractAddress: "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
       blockchain: "ETH",
       tokenStandard: "ERC-721",
-      royalty: 10,
-      collection: "Geometry Masters",
-      floorPrice: 0.34,
+      royalty: "5.0",
+      collection: "Milady Maker",
+      floorPrice: "2.18",
       currency: "ETH",
-      category: "abstract",
+      category: "pfp",
+      items: 10000,
       creatorId: user2.id,
       attributes: [
-        { trait_type: "Shapes", value: "Hexagonal", rarity: "25%" },
-        { trait_type: "Dimension", value: "Multi-layered", rarity: "18%" },
-        { trait_type: "Symmetry", value: "Radial", rarity: "12%" }
+        { trait_type: "Background", value: "Red", rarity: "8%" },
+        { trait_type: "Face", value: "Ecstatic", rarity: "15%" },
+        { trait_type: "Hair", value: "Red Buns", rarity: "4%" },
+        { trait_type: "Outfit", value: "Blue Dress", rarity: "7%" }
       ]
     });
 
