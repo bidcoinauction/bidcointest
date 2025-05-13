@@ -1,7 +1,7 @@
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
 export default function Navigation() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   // Check if a path is active, including parent paths
   const isActive = (path: string): boolean => {
@@ -9,40 +9,57 @@ export default function Navigation() {
     return location.startsWith(path);
   };
 
+  // Navigate to path
+  const navigate = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLocation(path);
+  };
+
   return (
     <nav className="bg-background/50 border-b border-[#374151]">
       <div className="container mx-auto px-4">
         <div className="flex overflow-x-auto py-2 space-x-6 text-sm font-medium">
-          <Link href="/auctions">
-            <a className={`px-1 py-2 whitespace-nowrap ${isActive("/auctions") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}>
-              Auctions
-            </a>
-          </Link>
-          <Link href="/nft-collections">
-            <a className={`px-1 py-2 whitespace-nowrap ${isActive("/nft-collections") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}>
-              NFT Collections
-            </a>
-          </Link>
-          <Link href="/ordinals">
-            <a className={`px-1 py-2 whitespace-nowrap ${isActive("/ordinals") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}>
-              Ordinals
-            </a>
-          </Link>
-          <Link href="/bid-packs">
-            <a className={`px-1 py-2 whitespace-nowrap ${isActive("/bid-packs") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}>
-              BidPacks
-            </a>
-          </Link>
-          <Link href="/activity">
-            <a className={`px-1 py-2 whitespace-nowrap ${isActive("/activity") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}>
-              Activity
-            </a>
-          </Link>
-          <Link href="/about">
-            <a className={`px-1 py-2 whitespace-nowrap ${isActive("/about") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}>
-              About
-            </a>
-          </Link>
+          <div 
+            onClick={navigate("/auctions")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/auctions") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            Auctions
+          </div>
+          
+          <div 
+            onClick={navigate("/nft-collections")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/nft-collections") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            NFT Collections
+          </div>
+          
+          <div 
+            onClick={navigate("/ordinals")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/ordinals") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            Ordinals
+          </div>
+          
+          <div 
+            onClick={navigate("/bid-packs")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/bid-packs") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            BidPacks
+          </div>
+          
+          <div 
+            onClick={navigate("/activity")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/activity") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            Activity
+          </div>
+          
+          <div 
+            onClick={navigate("/about")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/about") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            About
+          </div>
         </div>
       </div>
     </nav>

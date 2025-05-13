@@ -11,6 +11,7 @@ import NotFound from "@/pages/not-found";
 import useWebSocket from "@/hooks/useWebSocket";
 import { queryClient } from "@/lib/queryClient";
 import Header from "@/components/layout/Header";
+import Navigation from "@/components/layout/Navigation";
 import Footer from "@/components/layout/Footer";
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
+      <Navigation />
       <main className="flex-grow">
         <Switch>
           <Route path="/" component={AuctionsPage}/>

@@ -1,8 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { getAuctions } from "@/lib/api";
-import Header from "@/components/layout/Header";
-import Navigation from "@/components/layout/Navigation";
-import Footer from "@/components/layout/Footer";
 import FeaturedAuction from "@/components/auctions/FeaturedAuction";
 import AuctionFilters, { AuctionFilters as Filters } from "@/components/auctions/AuctionFilters";
 import AuctionCard from "@/components/auctions/AuctionCard";
@@ -51,9 +48,6 @@ export default function AuctionsPage() {
 
   return (
     <>
-      <Header />
-      <Navigation />
-      
       <main className="container mx-auto px-4 py-8">
         <FeaturedAuction />
         <AuctionFilters onFilterChange={handleFilterChange} />
@@ -93,8 +87,6 @@ export default function AuctionsPage() {
         <BitCrunchSection />
         <AuctionHistory />
       </main>
-      
-      <Footer />
     </>
   );
 }
