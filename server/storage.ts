@@ -632,35 +632,35 @@ export class MemStorage implements IStorage {
       nftId: nft3.id,
       from: "0x3aF1...c5D8",
       to: "@pixelqueen",
-      price: 0.027,
+      price: "0.027",
       currency: "BTC",
     });
 
     // Create blockchain networks for BitCrunch API data
     await this.createBlockchainNetwork({
       name: "Bitcoin",
-      price: 43256.78,
+      price: "43256.78",
       change: "+2.34%",
       gradient: "bg-gradient-to-r from-orange-500 to-orange-300",
     });
 
     await this.createBlockchainNetwork({
       name: "Ethereum",
-      price: 3127.45,
+      price: "3127.45",
       change: "-1.87%",
       gradient: "bg-gradient-to-r from-indigo-500 to-purple-500",
     });
 
     await this.createBlockchainNetwork({
       name: "Solana",
-      price: 102.89,
+      price: "102.89",
       change: "+5.67%",
       gradient: "bg-gradient-to-r from-green-500 to-teal-500",
     });
 
     await this.createBlockchainNetwork({
       name: "Polygon",
-      price: 1.15,
+      price: "1.15",
       change: "+3.21%",
       gradient: "bg-gradient-to-r from-pink-500 to-rose-500",
     });
