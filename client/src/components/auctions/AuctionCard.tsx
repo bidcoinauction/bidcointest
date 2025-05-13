@@ -187,15 +187,22 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </div>
       </div>
 
-      <BidModal 
-        open={showBidModal} 
-        onOpenChange={setShowBidModal} 
-        auction={{
-          ...auction,
-          currentBid: localCurrentBid,
-          bidCount: localBidCount
-        }}
-      />
+      {showBidModal && (
+        <BidModal 
+          isOpen={showBidModal}
+          onClose={() => setShowBidModal(false)}
+          auction={{
+            ...auction,
+            currentBid: localCurrentBid,
+            bidCount: localBidCount
+          }}
+          minimumBid={localCurrentBid + 0.01}
+          onPlaceBid={(amount) => {
+            console.log(`Placed bid: ${amount}`);
+            setShowBidModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

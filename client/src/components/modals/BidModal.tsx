@@ -15,20 +15,22 @@ import { Auction } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 
 interface BidModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   auction: Auction;
+  onPlaceBid: (amount: number) => void;
+  minimumBid: number;
 }
 
-export default function BidModal({ open, onOpenChange, auction }: BidModalProps) {
-  const [bidAmount, setBidAmount] = useState<string>((auction.currentBid + 0.01).toFixed(2));
+export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimumBid }: BidModalProps) {
+  const [bidAmount, setBidAmount] = useState<string>(minimumBid.toFixed(2));
   const [isPending, setIsPending] = useState(false);
   
   const { toast } = useToast();
   const { address, provider, balance, isConnected } = useWallet();
   const queryClient = useQueryClient();
   
-  const minBid = auction.currentBid + 0.01;
+  const minBid = minimumBid;
   
   const handleMaxBid = () => {
     if (balance) {
@@ -92,7 +94,8 @@ export default function BidModal({ open, onOpenChange, auction }: BidModalProps)
           description: `Your bid of ${bidAmount} ${auction.currency} has been placed`,
         });
         
-        onOpenChange(false);
+        onPlaceBid(parseFloat(bidAmount));
+        onClose();
       }
     } catch (error) {
       toast({
@@ -106,7 +109,7 @@ export default function BidModal({ open, onOpenChange, auction }: BidModalProps)
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={open => !open && onClose()}>
       <DialogContent className="bg-[#1f2937] border border-[#374151] text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-display font-bold text-white">Place a Bid</DialogTitle>
@@ -114,11 +117,11 @@ export default function BidModal({ open, onOpenChange, auction }: BidModalProps)
         
         <div className="flex items-center space-x-4 mb-6">
           <div className="h-16 w-16 rounded-lg overflow-hidden">
-            <img src={auction.nft.imageUrl} alt={`${auction.nft.name} thumbnail`} className="w-full h-full object-cover" />
+            <img src={auction.nft.imageUrl || '/placeholder-image.jpg'} alt={`${auction.nft.name} thumbnail`} className="w-full h-full object-cover" />
           </div>
           <div>
             <h4 className="text-white font-medium text-lg">{auction.nft.name}</h4>
-            <p className="text-gray-400 text-sm">Current bid: <span className="text-white">{auction.currentBid} {auction.currency}</span></p>
+            <p className="text-gray-400 text-sm">Current bid: <span className="text-white">{auction.currentBid || 0} {auction.currency}</span></p>
           </div>
         </div>
         
@@ -174,7 +177,7 @@ export default function BidModal({ open, onOpenChange, auction }: BidModalProps)
           <Button
             variant="outline"
             className="flex-1 bg-background hover:bg-[#374151] text-white py-3 px-4 rounded-lg transition-colors border border-[#374151]"
-            onClick={() => onOpenChange(false)}
+            onClick={onClose}
             disabled={isPending}
           >
             Cancel

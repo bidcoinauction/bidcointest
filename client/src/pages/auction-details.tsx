@@ -172,7 +172,7 @@ export default function AuctionDetailsPage() {
               <p className="text-gray-400 mb-2">Current Bid</p>
               <div className="flex items-baseline">
                 <span className="text-3xl font-display font-bold text-white mr-2">{auction.currentBid || 0} {auction.currency}</span>
-                <span className="text-gray-400">(~${((auction.currentBid || 0) * 1800).toFixed(2)} USD)</span>
+                <span className="text-gray-400">(~${(Number(auction.currentBid || 0) * 1800).toFixed(2)} USD)</span>
               </div>
             </div>
             
@@ -333,7 +333,7 @@ export default function AuctionDetailsPage() {
       {showBidModal && (
         <BidModal 
           auction={auction}
-          minimumBid={minimumBid}
+          minimumBid={Number(minimumBid)}
           isOpen={showBidModal}
           onClose={handleCloseBidModal}
           onPlaceBid={handlePlaceBid}
