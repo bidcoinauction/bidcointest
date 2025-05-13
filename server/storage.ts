@@ -808,7 +808,7 @@ export class MemStorage implements IStorage {
     return { ...auction, nft: nft!, creator: creator!, bids: [], history: [] };
   }
 
-  async updateAuctionBid(id: number, currentBid: number, bidCount: number): Promise<Auction> {
+  async updateAuctionBid(id: number, currentBid: string, bidCount: number): Promise<Auction> {
     const auction = this.auctions.get(id);
     if (!auction) {
       throw new Error(`Auction with ID ${id} not found`);

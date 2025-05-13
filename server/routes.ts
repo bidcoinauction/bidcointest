@@ -204,7 +204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const bidData = z.object({
         auctionId: z.number(),
-        amount: z.number(),
+        amount: z.string(),
         walletAddress: z.string(),
       }).parse(req.body);
       
