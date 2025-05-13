@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 type MessageHandler = (data: any) => void;
 type MessageHandlers = {
@@ -6,36 +6,58 @@ type MessageHandlers = {
 };
 
 export function useWebSocket() {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const messageHandlers: MessageHandlers = {};
+  const socketRef = useRef<WebSocket | null>(null);
+  const handlersRef = useRef<MessageHandlers>({});
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const MAX_RECONNECT_DELAY = 5000;
+  const RECONNECT_DELAY = 3000;
 
   // Initialize WebSocket connection
   useEffect(() => {
+    let unmounted = false;
+
     const connect = () => {
       try {
+        if (unmounted) return;
+
+        // Clear any existing reconnect timeouts
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+
+        // Close existing socket if it exists
+        if (socketRef.current) {
+          socketRef.current.close();
+        }
+
         // Determine protocol based on current protocol
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         const wsUrl = `${protocol}//${window.location.host}/ws`;
         
         console.log('Connecting to WebSocket at', wsUrl);
         const ws = new WebSocket(wsUrl);
+        socketRef.current = ws;
 
         ws.onopen = () => {
+          if (unmounted) return;
           console.log('WebSocket connection established');
           setIsConnected(true);
           setError(null);
         };
 
         ws.onmessage = (event) => {
+          if (unmounted) return;
           try {
             const message = JSON.parse(event.data);
             console.log('WebSocket message received:', message);
             
             // Handle messages based on their type
-            if (message && message.type && messageHandlers[message.type]) {
-              messageHandlers[message.type].forEach(handler => handler(message.data));
+            if (message && message.type && handlersRef.current[message.type]) {
+              handlersRef.current[message.type].forEach(handler => handler(message.data));
             }
           } catch (err) {
             console.error('Error parsing WebSocket message:', err);
@@ -43,66 +65,122 @@ export function useWebSocket() {
         };
 
         ws.onerror = (event) => {
+          if (unmounted) return;
           console.error('WebSocket error:', event);
           setError('WebSocket connection error');
         };
 
-        ws.onclose = () => {
-          console.log('WebSocket connection closed');
+        ws.onclose = (event) => {
+          if (unmounted) return;
+          console.log('WebSocket connection closed', event.code, event.reason);
           setIsConnected(false);
           
-          // Attempt to reconnect after a delay
-          setTimeout(() => {
-            if (socket?.readyState === WebSocket.CLOSED) {
+          // Attempt to reconnect after a delay, but only if it wasn't an intentional close
+          if (!event.wasClean) {
+            reconnectTimeoutRef.current = setTimeout(() => {
+              console.log('Attempting to reconnect WebSocket...');
               connect();
-            }
-          }, 5000);
-        };
-
-        setSocket(ws);
-
-        // Clean up on unmount
-        return () => {
-          ws.close();
+            }, RECONNECT_DELAY);
+          }
         };
       } catch (err) {
+        if (unmounted) return;
         console.error('Error setting up WebSocket:', err);
         setError('Failed to establish WebSocket connection');
+        
+        // Try to reconnect after a delay
+        reconnectTimeoutRef.current = setTimeout(connect, MAX_RECONNECT_DELAY);
       }
     };
 
     connect();
+
+    // Clean up on unmount
+    return () => {
+      unmounted = true;
+      
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      
+      if (socketRef.current) {
+        // Properly close the WebSocket
+        const socket = socketRef.current;
+        socket.onclose = null; // Remove the event handler to prevent reconnection attempts
+        socket.close();
+        socketRef.current = null;
+      }
+    };
   }, []);
 
   // Function to subscribe to specific message types
   const subscribe = useCallback((type: string, handler: MessageHandler) => {
-    if (!messageHandlers[type]) {
-      messageHandlers[type] = [];
+    if (!handlersRef.current[type]) {
+      handlersRef.current[type] = [];
     }
-    messageHandlers[type].push(handler);
+    handlersRef.current[type].push(handler);
 
     // Return unsubscribe function
     return () => {
-      if (messageHandlers[type]) {
-        messageHandlers[type] = messageHandlers[type].filter(h => h !== handler);
+      if (handlersRef.current[type]) {
+        handlersRef.current[type] = handlersRef.current[type].filter(h => h !== handler);
       }
     };
-  }, [messageHandlers]);
+  }, []);
 
   // Function to send a message through the WebSocket
   const sendMessage = useCallback((type: string, data: any) => {
-    if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type, data }));
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({ type, data }));
       return true;
     }
     return false;
-  }, [socket]);
+  }, []);
+
+  // Function to manually reconnect if needed
+  const reconnect = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+    
+    if (socketRef.current) {
+      socketRef.current.close();
+      socketRef.current = null;
+    }
+    
+    setIsConnected(false);
+    setError(null);
+    
+    // Set a timeout to avoid immediate reconnection attempts
+    reconnectTimeoutRef.current = setTimeout(() => {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      console.log('Manually reconnecting to WebSocket at', wsUrl);
+      const ws = new WebSocket(wsUrl);
+      socketRef.current = ws;
+      
+      // Set up event handlers (simplified for manual reconnect)
+      ws.onopen = () => {
+        console.log('Manual WebSocket reconnection successful');
+        setIsConnected(true);
+        setError(null);
+      };
+      
+      ws.onclose = () => {
+        console.log('Manual WebSocket reconnection failed');
+        setIsConnected(false);
+      };
+    }, 1000);
+  }, []);
 
   return {
     isConnected,
     error,
     subscribe,
-    sendMessage
+    sendMessage,
+    reconnect
   };
 }
 
