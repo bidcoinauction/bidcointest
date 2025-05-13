@@ -2,7 +2,8 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getActivity } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
-import { Activity, ActivityType } from "@shared/schema";
+import { Activity } from "@/lib/api";
+import { ActivityType } from "@shared/schema";
 
 function getActivityBadgeColor(type: ActivityType) {
   switch (type) {
@@ -130,7 +131,7 @@ export default function AuctionHistory() {
                     <div className="text-sm text-gray-300">{activity.to}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
-                    {formatRelativeTime(activity.timestamp)}
+                    {activity.timestamp ? formatRelativeTime(activity.timestamp) : 'N/A'}
                   </td>
                 </tr>
               ))}
