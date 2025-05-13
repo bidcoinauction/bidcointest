@@ -374,31 +374,31 @@ export class MemStorage implements IStorage {
 
     const auction5 = await this.createAuction({
       nftId: nft5.id,
-      startingBid: 0.3,
-      currentBid: 0.53,
-      currency: "ETH",
+      startingBid: "1200.0",
+      currentBid: "1390.0",
+      currency: "SOL",
       endTime: new Date(Date.now() + tenDays),
-      featured: false,
+      featured: true,
       creatorId: user5.id,
     });
 
     const auction6 = await this.createAuction({
       nftId: nft6.id,
-      startingBid: 1.5,
-      currentBid: 3.2,
+      startingBid: "25.0",
+      currentBid: "34.0",
       currency: "SOL",
       endTime: new Date(Date.now() + (oneDay * 2)),
-      featured: false,
+      featured: true,
       creatorId: user6.id,
     });
 
     const auction7 = await this.createAuction({
       nftId: nft7.id,
-      startingBid: 8,
-      currentBid: 12.4,
-      currency: "AVAX",
+      startingBid: "2.0",
+      currentBid: "2.88",
+      currency: "ETH",
       endTime: new Date(Date.now() + (oneDay * 9)),
-      featured: false,
+      featured: true,
       creatorId: user7.id,
     });
 
@@ -406,37 +406,37 @@ export class MemStorage implements IStorage {
     await this.createBid({
       auctionId: auction1.id,
       bidderId: user2.id,
-      amount: 0.6,
+      amount: "0.6",
     });
 
     await this.createBid({
       auctionId: auction1.id,
       bidderId: user3.id,
-      amount: 0.75,
+      amount: "0.75",
     });
 
     await this.createBid({
       auctionId: auction1.id,
       bidderId: user5.id,
-      amount: 0.875,
+      amount: "0.875",
     });
 
     await this.createBid({
       auctionId: auction2.id,
       bidderId: user1.id,
-      amount: 0.22,
+      amount: "0.22",
     });
 
     await this.createBid({
       auctionId: auction2.id,
       bidderId: user4.id,
-      amount: 0.28,
+      amount: "0.28",
     });
 
     await this.createBid({
       auctionId: auction2.id,
       bidderId: user5.id,
-      amount: 0.34,
+      amount: "0.34",
     });
 
     await this.createBid({
