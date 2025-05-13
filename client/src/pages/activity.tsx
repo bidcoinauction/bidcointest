@@ -195,8 +195,8 @@ export default function ActivityPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getActivityBadgeColor(activity.type)}`}>
-                              {getActivityLabel(activity.type)}
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getActivityBadgeColor(activity.type as ActivityType)}`}>
+                              {getActivityLabel(activity.type as ActivityType)}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
