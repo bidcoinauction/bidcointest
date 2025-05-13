@@ -18,7 +18,7 @@ interface BidModalProps {
   isOpen: boolean;
   onClose: () => void;
   auction: Auction;
-  onPlaceBid: (amount: number) => void;
+  onPlaceBid: (amount: string) => void;
   minimumBid: number;
 }
 
@@ -82,7 +82,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
       
       if (success) {
         // Record the bid in our database
-        await apiPlaceBid(auction.id, parseFloat(bidAmount), address);
+        await apiPlaceBid(auction.id, bidAmount, address);
         
         // Invalidate queries to refresh auction data
         queryClient.invalidateQueries({ queryKey: ["/api/auctions"] });
@@ -94,7 +94,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
           description: `Your bid of ${bidAmount} ${auction.currency} has been placed`,
         });
         
-        onPlaceBid(parseFloat(bidAmount));
+        onPlaceBid(bidAmount);
         onClose();
       }
     } catch (error) {

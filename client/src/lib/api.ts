@@ -130,7 +130,7 @@ export async function getActivity() {
 }
 
 // Place a bid on an auction
-export async function placeBid(auctionId: number, amount: number, walletAddress: string) {
+export async function placeBid(auctionId: number, amount: string, walletAddress: string) {
   try {
     const response = await axios.post(`${API_URL}/bids`, {
       auctionId,
