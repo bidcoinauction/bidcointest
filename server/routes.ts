@@ -14,6 +14,8 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { magicEdenService } from "./magicEden";
+import { moralisService } from "./moralisService";
+import { EvmChain } from "@moralisweb3/common-evm-utils";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -397,6 +399,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error importing NFTs:', error);
       return res.status(500).json({ message: 'Failed to import NFTs from Magic Eden' });
+    }
+  });
+
+  // Moralis API integration
+  app.get('/api/moralis/wallet/:address/nfts', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const chainParam = req.query.chain as string;
+      
+      // Default to ETH, but allow other chains
+      let chain = EvmChain.ETHEREUM;
+      if (chainParam === 'polygon') {
+        chain = EvmChain.POLYGON;
+      } else if (chainParam === 'bsc') {
+        chain = EvmChain.BSC;
+      } else if (chainParam === 'avalanche') {
+        chain = EvmChain.AVALANCHE;
+      }
+      
+      const nfts = await moralisService.getWalletNFTs(address, chain);
+      return res.json(nfts);
+    } catch (error) {
+      console.error('Error fetching wallet NFTs:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFTs from wallet' });
+    }
+  });
+
+  app.get('/api/moralis/collection/:address/nfts', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const chainParam = req.query.chain as string;
+      
+      // Default to ETH, but allow other chains
+      let chain = EvmChain.ETHEREUM;
+      if (chainParam === 'polygon') {
+        chain = EvmChain.POLYGON;
+      } else if (chainParam === 'bsc') {
+        chain = EvmChain.BSC;
+      } else if (chainParam === 'avalanche') {
+        chain = EvmChain.AVALANCHE;
+      }
+      
+      const nfts = await moralisService.getNFTsByCollection(address, chain);
+      return res.json(nfts);
+    } catch (error) {
+      console.error('Error fetching collection NFTs:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFTs from collection' });
+    }
+  });
+
+  app.get('/api/moralis/nft/:tokenAddress/:tokenId', async (req, res) => {
+    try {
+      const { tokenAddress, tokenId } = req.params;
+      const chainParam = req.query.chain as string;
+      
+      // Default to ETH, but allow other chains
+      let chain = EvmChain.ETHEREUM;
+      if (chainParam === 'polygon') {
+        chain = EvmChain.POLYGON;
+      } else if (chainParam === 'bsc') {
+        chain = EvmChain.BSC;
+      } else if (chainParam === 'avalanche') {
+        chain = EvmChain.AVALANCHE;
+      }
+      
+      const nftData = await moralisService.getNFTMetadata(tokenAddress, tokenId, chain);
+      
+      if (!nftData) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      return res.json(nftData);
+    } catch (error) {
+      console.error('Error fetching NFT metadata:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFT metadata' });
+    }
+  });
+
+  // Import NFT from Moralis to our system
+  app.post('/api/moralis/import', async (req, res) => {
+    try {
+      const { tokenAddress, tokenId, creatorId = 1, chain = 'ethereum' } = req.body;
+      
+      if (!tokenAddress || !tokenId) {
+        return res.status(400).json({ 
+          message: 'Token address and token ID are required' 
+        });
+      }
+      
+      // Map chain string to Moralis chain
+      let moralisChain = EvmChain.ETHEREUM;
+      if (chain === 'polygon') {
+        moralisChain = EvmChain.POLYGON;
+      } else if (chain === 'bsc') {
+        moralisChain = EvmChain.BSC;
+      } else if (chain === 'avalanche') {
+        moralisChain = EvmChain.AVALANCHE;
+      }
+      
+      // Get NFT metadata from Moralis
+      const nftData = await moralisService.getNFTMetadata(tokenAddress, tokenId, moralisChain);
+      
+      if (!nftData) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      // Map to our app's NFT schema
+      const appNftData = moralisService.mapToAppNFT(nftData, creatorId);
+      
+      // Create NFT in our system
+      const nft = await storage.createNFT(appNftData);
+      
+      // Broadcast update to WebSocket clients
+      broadcastUpdate('nft-imported', { nft });
+      
+      return res.status(201).json(nft);
+    } catch (error) {
+      console.error('Error importing NFT from Moralis:', error);
+      return res.status(500).json({ message: 'Failed to import NFT from Moralis' });
+    }
+  });
+
+  // Import multiple NFTs from a wallet
+  app.post('/api/moralis/import-wallet', async (req, res) => {
+    try {
+      const { walletAddress, limit = 5, creatorId = 1, chain = 'ethereum' } = req.body;
+      
+      if (!walletAddress) {
+        return res.status(400).json({ message: 'Wallet address is required' });
+      }
+      
+      // Map chain string to Moralis chain
+      let moralisChain = EvmChain.ETHEREUM;
+      if (chain === 'polygon') {
+        moralisChain = EvmChain.POLYGON;
+      } else if (chain === 'bsc') {
+        moralisChain = EvmChain.BSC;
+      } else if (chain === 'avalanche') {
+        moralisChain = EvmChain.AVALANCHE;
+      }
+      
+      // Get NFTs from wallet
+      const nfts = await moralisService.getWalletNFTs(walletAddress, moralisChain);
+      
+      if (!nfts || nfts.length === 0) {
+        return res.status(404).json({ message: 'No NFTs found in this wallet' });
+      }
+      
+      // Limit the number of NFTs to import
+      const limitedNfts = nfts.slice(0, limit);
+      
+      const importedNFTs = [];
+      
+      // Import each NFT
+      for (const nft of limitedNfts) {
+        const appNftData = moralisService.mapToAppNFT(nft, creatorId);
+        const createdNft = await storage.createNFT(appNftData);
+        importedNFTs.push(createdNft);
+      }
+      
+      // Broadcast update to WebSocket clients
+      broadcastUpdate('wallet-nfts-imported', { 
+        count: importedNFTs.length, 
+        wallet: walletAddress 
+      });
+      
+      return res.status(201).json(importedNFTs);
+    } catch (error) {
+      console.error('Error importing wallet NFTs:', error);
+      return res.status(500).json({ message: 'Failed to import NFTs from wallet' });
     }
   });
 
