@@ -13,6 +13,7 @@ import {
   insertUserBidPackSchema,
 } from "@shared/schema";
 import { z } from "zod";
+import { magicEdenService } from "./magicEden";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -325,6 +326,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(stats);
     } catch (error) {
       return res.status(500).json({ message: 'Failed to fetch blockchain stats' });
+    }
+  });
+
+  // Magic Eden API integration
+  app.get('/api/magiceden/collections', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const timeRange = req.query.timeRange as string || '1d';
+      const collections = await magicEdenService.getPopularCollections(limit, timeRange);
+      return res.json(collections);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch Magic Eden collections' });
+    }
+  });
+
+  app.get('/api/magiceden/collections/:symbol/nfts', async (req, res) => {
+    try {
+      const { symbol } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const nfts = await magicEdenService.getCollectionNFTs(symbol, limit);
+      return res.json(nfts);
+    } catch (error) {
+      return res.status(500).json({ message: `Failed to fetch NFTs for collection ${req.params.symbol}` });
+    }
+  });
+
+  app.get('/api/magiceden/nfts/:collection/:tokenMint', async (req, res) => {
+    try {
+      const { collection, tokenMint } = req.params;
+      const nft = await magicEdenService.getNFTDetails(collection, tokenMint);
+      
+      if (!nft) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      return res.json(nft);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch NFT details' });
+    }
+  });
+
+  // Import Magic Eden NFTs to our system
+  app.post('/api/magiceden/import', async (req, res) => {
+    try {
+      const { collectionSymbol, limit = 5, creatorId = 1 } = req.body;
+      
+      if (!collectionSymbol) {
+        return res.status(400).json({ message: 'Collection symbol is required' });
+      }
+      
+      const meNFTs = await magicEdenService.getCollectionNFTs(collectionSymbol, limit);
+      
+      if (!meNFTs || meNFTs.length === 0) {
+        return res.status(404).json({ message: 'No NFTs found for this collection' });
+      }
+      
+      const importedNFTs = [];
+      
+      for (const meNFT of meNFTs) {
+        const nftData = magicEdenService.convertToAppNFT(meNFT, creatorId);
+        const nft = await storage.createNFT(nftData);
+        importedNFTs.push(nft);
+      }
+      
+      // Broadcast update to WebSocket clients
+      broadcastUpdate('nfts-imported', { count: importedNFTs.length, collection: collectionSymbol });
+      
+      return res.status(201).json(importedNFTs);
+    } catch (error) {
+      console.error('Error importing NFTs:', error);
+      return res.status(500).json({ message: 'Failed to import NFTs from Magic Eden' });
     }
   });
 
