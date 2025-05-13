@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if bid amount is higher than current bid
-      if (bidData.amount <= Number(auction.currentBid)) {
+      if (Number(bidData.amount) <= Number(auction.currentBid)) {
         return res.status(400).json({ message: 'Bid amount must be higher than current bid' });
       }
       

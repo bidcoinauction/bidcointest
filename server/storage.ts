@@ -30,7 +30,7 @@ export interface IStorage {
   getAuctions(): Promise<Auction[]>;
   getFeaturedAuctions(): Promise<Auction[]>;
   createAuction(auction: InsertAuction): Promise<Auction>;
-  updateAuctionBid(id: number, currentBid: number, bidCount: number): Promise<Auction>;
+  updateAuctionBid(id: number, currentBid: string, bidCount: number): Promise<Auction>;
   
   // Bid operations
   getBidsByAuction(auctionId: number): Promise<Bid[]>;
