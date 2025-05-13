@@ -33,12 +33,21 @@ export default function AuctionsPage() {
         const timeB = b.endTime ? new Date(b.endTime).getTime() : Date.now();
         return timeA - timeB;
       }
-      case "price-low-high":
-        return (a.currentBid || 0) - (b.currentBid || 0);
-      case "price-high-low":
-        return (b.currentBid || 0) - (a.currentBid || 0);
-      case "most-bids":
-        return (b.bidCount || 0) - (a.bidCount || 0);
+      case "price-low-high": {
+        const bidA = a.currentBid ? parseFloat(String(a.currentBid)) : 0;
+        const bidB = b.currentBid ? parseFloat(String(b.currentBid)) : 0;
+        return bidA - bidB;
+      }
+      case "price-high-low": {
+        const bidA = a.currentBid ? parseFloat(String(a.currentBid)) : 0;
+        const bidB = b.currentBid ? parseFloat(String(b.currentBid)) : 0;
+        return bidB - bidA;
+      }
+      case "most-bids": {
+        const bidCountA = a.bidCount !== null && a.bidCount !== undefined ? Number(a.bidCount) : 0;
+        const bidCountB = b.bidCount !== null && b.bidCount !== undefined ? Number(b.bidCount) : 0;
+        return bidCountB - bidCountA;
+      }
       case "recently-added":
       default: {
         const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;

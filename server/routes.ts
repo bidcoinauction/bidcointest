@@ -233,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newBid = await storage.createBid({
         auctionId: bidData.auctionId,
         bidderId: bidder.id,
-        amount: bidData.amount,
+        amount: String(bidData.amount || 0), // Convert to string for decimal field
       });
       
       // Create auction history entry
@@ -249,8 +249,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nftId: auction.nftId,
         from: bidData.walletAddress.substring(0, 6) + '...' + bidData.walletAddress.substring(bidData.walletAddress.length - 4),
         to: `@${auction.creator.username}`,
-        price: bidData.amount,
-        currency: auction.currency,
+        price: String(bidData.amount || 0),
+        currency: auction.currency || "ETH",
       });
       
       // Get updated auction
