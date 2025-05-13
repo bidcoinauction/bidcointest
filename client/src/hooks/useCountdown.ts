@@ -39,11 +39,18 @@ export function useCountdown({ endTime, onComplete }: UseCountdownProps) {
     return Math.max(0, Math.min(100, percentRemaining));
   };
 
+  // Get the seconds part for Bidcoin timer reset mechanism
+  const getSecondsRemaining = (): number => {
+    // Calculate seconds for the Bidcoin timer reset (we need actual seconds, not just formatted time)
+    return Math.floor(timeRemaining % 60);
+  };
+
   return {
     timeRemaining,
     formattedTime,
     isComplete,
-    percentRemaining: calculatePercentRemaining()
+    percentRemaining: calculatePercentRemaining(),
+    secondsRemaining: getSecondsRemaining()
   };
 }
 
