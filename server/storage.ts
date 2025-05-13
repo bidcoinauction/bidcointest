@@ -212,45 +212,48 @@ export class MemStorage implements IStorage {
     });
 
     const nft3 = await this.createNFT({
-      name: "Pixel Punk #42",
-      description: "Part of the iconic Pixel Punks collection, featuring pixelated characters with unique traits.",
-      imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-      tokenId: "8823",
-      contractAddress: "0xed5af388653567af2f388e6224dc7c4b3241c544",
-      blockchain: "BTC",
-      tokenStandard: "Ordinal",
-      royalty: 5,
-      collection: "Pixel Punks",
-      floorPrice: 0.027,
-      currency: "BTC",
-      category: "collectibles",
+      name: "MadLads #8993",
+      description: "Mad Lads is a collection of 10,000 NFTs on the Solana blockchain. Each Mad Lad represents a member of the community of creators, artists, and builders.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeigdkqszzkj5pyle7etrmkj7b6humrlwt4urnrctwy4owqusqt6et4.ipfs.nftstorage.link/",
+      tokenId: "8993",
+      contractAddress: "0xc88bfed94fd57443a012787bd43958fbd8553c69",
+      blockchain: "SOL",
+      tokenStandard: "Metaplex",
+      royalty: "5.0",
+      collection: "Mad Lads",
+      floorPrice: "55.3",
+      currency: "SOL",
+      category: "pfp",
+      items: 10000,
       creatorId: user3.id,
       attributes: [
-        { trait_type: "Hair", value: "Mohawk", rarity: "7%" },
-        { trait_type: "Eyes", value: "Laser", rarity: "3%" },
-        { trait_type: "Background", value: "Cyberpunk City", rarity: "9%" },
-        { trait_type: "Accessories", value: "Gold Chain", rarity: "12%" }
+        { trait_type: "Background", value: "Blue", rarity: "7%" },
+        { trait_type: "Clothing", value: "Black Hoodie", rarity: "3%" },
+        { trait_type: "Expression", value: "Smirk", rarity: "5%" },
+        { trait_type: "Headwear", value: "Crown", rarity: "2%" }
       ]
     });
 
     const nft4 = await this.createNFT({
-      name: "Crypto Dimensions",
-      description: "A 3D exploration of blockchain technology represented through intricate dimensional layers.",
-      imageUrl: "https://images.unsplash.com/photo-1621075160523-b936ad96132a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-      tokenId: "3324",
-      contractAddress: "0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb",
-      blockchain: "MATIC",
+      name: "Azuki #9605",
+      description: "Azuki starts with a collection of 10,000 avatars that give you membership access to The Garden: a corner of the internet where artists, builders, and web3 enthusiasts meet to create a decentralized future.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://i.seadn.io/gae/0YX3_aDQgxkVs4vO4rCwGrXhqjQzvCKdoY1fKni5tJXVB5xR2g5NAhMxNGr_fa3FP-EMG5KCO6fwD15aPZT5j2Sc_rnbR_ciCTol?w=500&auto=format",
+      tokenId: "9605",
+      contractAddress: "0xed5af388653567af2f388e6224dc7c4b3241c544",
+      blockchain: "ETH",
       tokenStandard: "ERC-721",
-      royalty: 7.5,
-      collection: "Crypto Dimensions",
-      floorPrice: 145,
-      currency: "MATIC",
-      category: "3d",
+      royalty: "7.5",
+      collection: "Azuki",
+      floorPrice: "15.5",
+      currency: "ETH",
+      category: "pfp",
+      items: 10000,
       creatorId: user4.id,
       attributes: [
-        { trait_type: "Depth", value: "Infinite", rarity: "5%" },
-        { trait_type: "Render Quality", value: "Ultra HD", rarity: "15%" },
-        { trait_type: "Animation", value: "Subtle Flow", rarity: "20%" }
+        { trait_type: "Hair", value: "Pink Spiky", rarity: "5%" },
+        { trait_type: "Clothing", value: "Kimono", rarity: "15%" },
+        { trait_type: "Eyes", value: "Suspicious", rarity: "10%" },
+        { trait_type: "Background", value: "Off White C", rarity: "20%" }
       ]
     });
 
