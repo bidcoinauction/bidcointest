@@ -62,46 +62,44 @@ export default function AuctionsPage() {
   };
 
   return (
-    <>
-      <main className="container mx-auto px-4 py-8">
-        <FeaturedAuction />
-        <AuctionFilters onFilterChange={handleFilterChange} />
-        
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-          {isLoading ? (
-            // Skeleton loading state
-            Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-[#1f2937] rounded-xl overflow-hidden border border-[#374151] animate-pulse">
-                <div className="h-48 bg-[#374151]"></div>
-                <div className="p-4">
-                  <div className="flex justify-between mb-2">
-                    <div className="h-6 w-32 bg-[#374151] rounded"></div>
-                    <div className="h-4 w-12 bg-[#374151] rounded"></div>
-                  </div>
-                  <div className="flex justify-between mb-4">
-                    <div className="h-8 w-24 bg-[#374151] rounded"></div>
-                    <div className="h-8 w-24 bg-[#374151] rounded"></div>
-                  </div>
-                  <div className="h-10 bg-[#374151] rounded"></div>
+    <div className="container mx-auto px-4 py-8">
+      <FeaturedAuction />
+      <AuctionFilters onFilterChange={handleFilterChange} />
+      
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+        {isLoading ? (
+          // Skeleton loading state
+          Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="bg-[#1f2937] rounded-xl overflow-hidden border border-[#374151] animate-pulse">
+              <div className="h-48 bg-[#374151]"></div>
+              <div className="p-4">
+                <div className="flex justify-between mb-2">
+                  <div className="h-6 w-32 bg-[#374151] rounded"></div>
+                  <div className="h-4 w-12 bg-[#374151] rounded"></div>
                 </div>
+                <div className="flex justify-between mb-4">
+                  <div className="h-8 w-24 bg-[#374151] rounded"></div>
+                  <div className="h-8 w-24 bg-[#374151] rounded"></div>
+                </div>
+                <div className="h-10 bg-[#374151] rounded"></div>
               </div>
-            ))
-          ) : error ? (
-            <div className="col-span-full p-8 text-center">
-              <p className="text-white text-lg mb-2">Failed to load auctions</p>
-              <p className="text-gray-400">Please try again later</p>
             </div>
-          ) : (
-            sortedAuctions.map((auction) => (
-              <AuctionCard key={auction.id} auction={auction} />
-            ))
-          )}
-        </section>
-        
-        <BidPacksSection />
-        <BitCrunchSection />
-        <AuctionHistory />
-      </main>
-    </>
+          ))
+        ) : error ? (
+          <div className="col-span-full p-8 text-center">
+            <p className="text-white text-lg mb-2">Failed to load auctions</p>
+            <p className="text-gray-400">Please try again later</p>
+          </div>
+        ) : (
+          sortedAuctions.map((auction) => (
+            <AuctionCard key={auction.id} auction={auction} />
+          ))
+        )}
+      </section>
+      
+      <BidPacksSection />
+      <BitCrunchSection />
+      <AuctionHistory />
+    </div>
   );
 }

@@ -1,9 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { getAuction } from "@/lib/api";
-import Header from "@/components/layout/Header";
-import Navigation from "@/components/layout/Navigation";
-import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useCountdown from "@/hooks/useCountdown";
@@ -28,70 +25,57 @@ export default function AuctionDetailsPage() {
 
   if (isLoading) {
     return (
-      <>
-        <Header />
-        <Navigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="md:flex gap-8">
-              <div className="md:w-1/2 mb-8 md:mb-0">
-                <div className="h-[500px] bg-[#374151] rounded-xl mb-4"></div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="md:flex gap-8">
+            <div className="md:w-1/2 mb-8 md:mb-0">
+              <div className="h-[500px] bg-[#374151] rounded-xl mb-4"></div>
+            </div>
+            <div className="md:w-1/2">
+              <div className="h-10 w-3/4 bg-[#374151] rounded mb-4"></div>
+              <div className="h-6 w-1/4 bg-[#374151] rounded mb-6"></div>
+              <div className="h-4 w-full bg-[#374151] rounded mb-2"></div>
+              <div className="h-4 w-5/6 bg-[#374151] rounded mb-8"></div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="h-24 bg-[#374151] rounded"></div>
+                <div className="h-24 bg-[#374151] rounded"></div>
               </div>
-              <div className="md:w-1/2">
-                <div className="h-10 w-3/4 bg-[#374151] rounded mb-4"></div>
-                <div className="h-6 w-1/4 bg-[#374151] rounded mb-6"></div>
-                <div className="h-4 w-full bg-[#374151] rounded mb-2"></div>
-                <div className="h-4 w-5/6 bg-[#374151] rounded mb-8"></div>
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="h-24 bg-[#374151] rounded"></div>
-                  <div className="h-24 bg-[#374151] rounded"></div>
+              
+              <div className="flex items-center mb-8">
+                <div className="h-12 w-12 bg-[#374151] rounded-full mr-4"></div>
+                <div>
+                  <div className="h-4 w-24 bg-[#374151] rounded mb-2"></div>
+                  <div className="h-4 w-32 bg-[#374151] rounded"></div>
                 </div>
-                
-                <div className="flex items-center mb-8">
-                  <div className="h-12 w-12 bg-[#374151] rounded-full mr-4"></div>
-                  <div>
-                    <div className="h-4 w-24 bg-[#374151] rounded mb-2"></div>
-                    <div className="h-4 w-32 bg-[#374151] rounded"></div>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="h-12 flex-1 bg-[#374151] rounded"></div>
-                  <div className="h-12 w-12 bg-[#374151] rounded"></div>
-                  <div className="h-12 w-12 bg-[#374151] rounded"></div>
-                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <div className="h-12 flex-1 bg-[#374151] rounded"></div>
+                <div className="h-12 w-12 bg-[#374151] rounded"></div>
+                <div className="h-12 w-12 bg-[#374151] rounded"></div>
               </div>
             </div>
           </div>
-        </main>
-        <Footer />
-      </>
+        </div>
+      </div>
     );
   }
 
   if (error || !auction) {
     return (
-      <>
-        <Header />
-        <Navigation />
-        <main className="container mx-auto px-4 py-8">
-          <div className="bg-[#1f2937] rounded-xl p-8 text-center">
-            <p className="text-white text-lg mb-2">Failed to load auction details</p>
-            <p className="text-gray-400">Please try again later</p>
-          </div>
-        </main>
-        <Footer />
-      </>
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-[#1f2937] rounded-xl p-8 text-center">
+          <p className="text-white text-lg mb-2">Failed to load auction details</p>
+          <p className="text-gray-400">Please try again later</p>
+        </div>
+      </div>
     );
   }
 
   return (
     <>
-      <Header />
-      <Navigation />
-      
-      <main className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="md:flex gap-8">
           <div className="md:w-1/2 mb-8 md:mb-0">
             <div className="bg-[#1f2937] rounded-xl overflow-hidden mb-4">
@@ -262,9 +246,7 @@ export default function AuctionDetailsPage() {
             </Tabs>
           </div>
         </div>
-      </main>
-      
-      <Footer />
+      </div>
       
       {auction && (
         <BidModal 
