@@ -1,6 +1,4 @@
-import Header from "@/components/layout/Header";
-import Navigation from "@/components/layout/Navigation";
-import Footer from "@/components/layout/Footer";
+// Removed header/navigation/footer imports
 import { useQuery } from "@tanstack/react-query";
 import { getActivity } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
