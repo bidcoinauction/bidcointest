@@ -20,10 +20,17 @@ export default function AuctionDetailsPage() {
   });
   
   const timeRemaining = auction?.endTime ? new Date(auction.endTime).getTime() - Date.now() : 0;
-  const { timeLeft, isActive } = useCountdown({ 
+  const { timeRemaining: countdownTime, isComplete } = useCountdown({ 
     endTime: auction?.endTime ? new Date(auction.endTime) : new Date(Date.now() + 3600000),
     onComplete: () => console.log("Auction complete!")
   });
+  
+  // Calculate time units for display
+  const days = Math.floor(countdownTime / 86400);
+  const hours = Math.floor((countdownTime % 86400) / 3600);
+  const minutes = Math.floor((countdownTime % 3600) / 60);
+  const seconds = countdownTime % 60;
+  const isActive = !isComplete;
   
   const bidIncrement = 0.01; // Fixed bid increment of 0.01
   const minimumBid = auction?.currentBid ? auction.currentBid + bidIncrement : auction?.startingBid || 0;
@@ -164,8 +171,8 @@ export default function AuctionDetailsPage() {
             <div className="mb-8">
               <p className="text-gray-400 mb-2">Current Bid</p>
               <div className="flex items-baseline">
-                <span className="text-3xl font-display font-bold text-white mr-2">{auction.currentBid} {auction.currency}</span>
-                <span className="text-gray-400">(~${(auction.currentBid * 1800).toFixed(2)} USD)</span>
+                <span className="text-3xl font-display font-bold text-white mr-2">{auction.currentBid || 0} {auction.currency}</span>
+                <span className="text-gray-400">(~${((auction.currentBid || 0) * 1800).toFixed(2)} USD)</span>
               </div>
             </div>
             
@@ -173,19 +180,19 @@ export default function AuctionDetailsPage() {
               <p className="text-gray-400 mb-2">Auction Ends In</p>
               <div className="grid grid-cols-4 gap-2">
                 <div className="bg-[#111827] p-3 rounded-lg text-center">
-                  <span className="text-2xl font-display font-bold text-white">{timeLeft.days}</span>
+                  <span className="text-2xl font-display font-bold text-white">{days}</span>
                   <p className="text-xs text-gray-400 mt-1">Days</p>
                 </div>
                 <div className="bg-[#111827] p-3 rounded-lg text-center">
-                  <span className="text-2xl font-display font-bold text-white">{timeLeft.hours}</span>
+                  <span className="text-2xl font-display font-bold text-white">{hours}</span>
                   <p className="text-xs text-gray-400 mt-1">Hours</p>
                 </div>
                 <div className="bg-[#111827] p-3 rounded-lg text-center">
-                  <span className="text-2xl font-display font-bold text-white">{timeLeft.minutes}</span>
+                  <span className="text-2xl font-display font-bold text-white">{minutes}</span>
                   <p className="text-xs text-gray-400 mt-1">Minutes</p>
                 </div>
                 <div className="bg-[#111827] p-3 rounded-lg text-center">
-                  <span className="text-2xl font-display font-bold text-white">{timeLeft.seconds}</span>
+                  <span className="text-2xl font-display font-bold text-white">{seconds}</span>
                   <p className="text-xs text-gray-400 mt-1">Seconds</p>
                 </div>
               </div>
@@ -194,10 +201,10 @@ export default function AuctionDetailsPage() {
             <div className="mb-4">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">Total Bids</span>
-                <span className="text-white">{auction.bidCount}</span>
+                <span className="text-white">{auction.bidCount || 0}</span>
               </div>
               <div className="h-2 bg-[#111827] rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, (auction.bidCount / 100) * 100)}%` }}></div>
+                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, ((auction.bidCount || 0) / 100) * 100)}%` }}></div>
               </div>
             </div>
             
