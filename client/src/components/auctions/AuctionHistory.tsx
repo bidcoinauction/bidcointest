@@ -2,10 +2,17 @@ import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { getActivity } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/utils";
-import { Activity } from "@/lib/api";
-import { ActivityType } from "@shared/schema";
+import { Activity, ActivityType } from "@shared/schema";
 
-function getActivityBadgeColor(type: ActivityType) {
+function isValidActivityType(type: string): type is ActivityType {
+  return type === "bid" || type === "purchase" || type === "listing" || type === "bid-increase";
+}
+
+function getActivityBadgeColor(type: string) {
+  // Default to "bid" if invalid type
+  if (!isValidActivityType(type)) {
+    return "bg-primary/20 text-primary";
+  }
   switch (type) {
     case "bid":
       return "bg-primary/20 text-primary";
@@ -20,7 +27,11 @@ function getActivityBadgeColor(type: ActivityType) {
   }
 }
 
-function getActivityLabel(type: ActivityType) {
+function getActivityLabel(type: string) {
+  // Default to "Bid" if invalid type
+  if (!isValidActivityType(type)) {
+    return "Bid";
+  }
   switch (type) {
     case "bid":
       return "Bid Placed";
@@ -81,11 +92,9 @@ export default function AuctionHistory() {
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-display font-bold text-white">Recent Activity</h2>
-        <Link href="/activity">
-          <a className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center">
-            View All 
-            <i className="fa-solid fa-arrow-right ml-2"></i>
-          </a>
+        <Link href="/activity" className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center">
+          View All 
+          <i className="fa-solid fa-arrow-right ml-2"></i>
         </Link>
       </div>
       
