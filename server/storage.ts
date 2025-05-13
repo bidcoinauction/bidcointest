@@ -571,8 +571,8 @@ export class MemStorage implements IStorage {
       type: "pro",
       bidCount: 50,
       bonusBids: 15,
-      price: 0.04,
-      originalPrice: 0.065,
+      price: "0.04",
+      originalPrice: "0.065",
       currency: "BTC",
       available: true,
     });
@@ -582,8 +582,8 @@ export class MemStorage implements IStorage {
       type: "premium",
       bidCount: 125,
       bonusBids: 50,
-      price: 0.09,
-      originalPrice: 0.15,
+      price: "0.09",
+      originalPrice: "0.15",
       currency: "BTC",
       available: true,
     });
@@ -593,8 +593,8 @@ export class MemStorage implements IStorage {
       type: "whale",
       bidCount: 300,
       bonusBids: 150,
-      price: 0.18,
-      originalPrice: 0.30,
+      price: "0.18",
+      originalPrice: "0.30",
       currency: "BTC",
       available: true,
     });
@@ -605,7 +605,7 @@ export class MemStorage implements IStorage {
       nftId: nft6.id,
       from: "0x3aF1...c5D8",
       to: "@digitalsea",
-      price: 3.2,
+      price: "34.0",
       currency: "SOL",
     });
 
@@ -614,7 +614,7 @@ export class MemStorage implements IStorage {
       nftId: nft2.id,
       from: "@geometrymaster",
       to: "0x8cD5...a82B",
-      price: 0.34,
+      price: "0.34",
       currency: "ETH",
     });
 
@@ -623,7 +623,7 @@ export class MemStorage implements IStorage {
       nftId: nft1.id,
       from: "@CryptoMaestro",
       to: "Auction House",
-      price: 0.875,
+      price: "0.875",
       currency: "ETH",
     });
 
