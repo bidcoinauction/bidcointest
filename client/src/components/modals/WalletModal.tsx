@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import useWallet from "@/hooks/useWallet";
 import { WalletType } from "@/lib/web3";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Wallet, Link2, Chrome } from "lucide-react";
 
 interface WalletModalProps {
   open: boolean;
@@ -39,7 +39,7 @@ export default function WalletModal({ open, onOpenChange }: WalletModalProps) {
           >
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center mr-3">
-                <i className="fa-brands fa-firefox text-orange-500 text-xl"></i>
+                <Chrome className="text-orange-500 h-5 w-5" />
               </div>
               <span className="text-white font-medium">MetaMask</span>
             </div>
@@ -54,7 +54,7 @@ export default function WalletModal({ open, onOpenChange }: WalletModalProps) {
           >
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center mr-3">
-                <i className="fa-solid fa-wallet text-blue-500 text-xl"></i>
+                <Wallet className="text-blue-500 h-5 w-5" />
               </div>
               <span className="text-white font-medium">Coinbase Wallet</span>
             </div>
@@ -69,7 +69,7 @@ export default function WalletModal({ open, onOpenChange }: WalletModalProps) {
           >
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center mr-3">
-                <i className="fa-solid fa-link text-purple-500 text-xl"></i>
+                <Link2 className="text-purple-500 h-5 w-5" />
               </div>
               <span className="text-white font-medium">WalletConnect</span>
             </div>
