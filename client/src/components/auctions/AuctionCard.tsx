@@ -17,7 +17,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [showBidModal, setShowBidModal] = useState(false);
   const [isTracked, setIsTracked] = useState(false);
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
-  const [localCurrentBid, setLocalCurrentBid] = useState(auction.currentBid || auction.startingBid);
+  const [localCurrentBid, setLocalCurrentBid] = useState<number>(Number(auction.currentBid || auction.startingBid));
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
   
   // Get real-time auction data via WebSocket
@@ -42,7 +42,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
       if (data.auctionId === auction.id) {
         // Update local state with new bid information
         setLocalBidCount(data.bidCount);
-        setLocalCurrentBid(data.currentBid);
+        setLocalCurrentBid(Number(data.currentBid));
         setLocalLeader(data.bidderAddress);
         
         // Reset timer (Bidcoin reset mechanism)
@@ -193,7 +193,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           onClose={() => setShowBidModal(false)}
           auction={{
             ...auction,
-            currentBid: localCurrentBid,
+            currentBid: localCurrentBid.toString(),
             bidCount: localBidCount
           }}
           minimumBid={localCurrentBid + 0.01}
