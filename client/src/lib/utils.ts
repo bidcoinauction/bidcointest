@@ -13,8 +13,16 @@ export function formatAddress(address: string | null): string {
 }
 
 // Format currency with appropriate ticker symbol
-export function formatCurrency(amount: number | string, currency: string): string {
-  return `${amount} ${currency}`;
+export function formatCurrency(amount: number | string | null, currency: string | null): string {
+  const safeAmount = amount ?? 0;
+  const safeCurrency = currency ?? 'ETH';
+  
+  // Format for crypto
+  if (typeof safeAmount === 'number') {
+    return `${safeAmount.toFixed(4)} ${safeCurrency}`;
+  }
+  
+  return `${safeAmount} ${safeCurrency}`;
 }
 
 // Format date to relative time (e.g., "2 mins ago")

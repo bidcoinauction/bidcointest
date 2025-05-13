@@ -4,6 +4,8 @@ import { useState } from "react";
 import BidModal from "@/components/modals/BidModal";
 import useCountdown from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
+import { formatCurrency } from "@/lib/utils";
+import { Clock, Check } from "lucide-react";
 
 interface AuctionCardProps {
   auction: Auction;
@@ -17,66 +19,69 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   });
 
   return (
-    <div className="bg-[#1f2937] rounded-xl overflow-hidden border border-[#374151] hover:shadow-glow transition-shadow duration-300">
-      <div className="relative">
-        <img 
-          src={auction.nft.imageUrl}
-          alt={auction.nft.name}
-          className="w-full h-48 object-cover"
-        />
-        <div className="absolute top-0 left-0 w-full p-4 flex justify-between">
-          <span className="bg-primary/80 text-white text-xs font-bold px-2 py-1 rounded backdrop-blur-sm">
-            #{auction.nft.tokenId}
-          </span>
-          <span className="bg-black/60 text-white text-xs font-mono px-2 py-1 rounded backdrop-blur-sm">
-            {auction.bidCount} bids
-          </span>
-        </div>
-        <div className="absolute bottom-0 left-0 w-full p-3">
-          {!isComplete ? (
-            <div className="bg-black/70 backdrop-blur-sm text-white text-sm rounded py-1 px-2 font-mono text-center auction-timer">
-              {formattedTime}
-            </div>
-          ) : (
-            <div className="bg-secondary/80 backdrop-blur-sm text-white text-sm rounded py-1 px-2 font-mono text-center">
-              Auction Ended
-            </div>
-          )}
-        </div>
-      </div>
-      <div className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-display font-bold text-white text-lg">{auction.nft.name}</h3>
-          <span className="bg-background px-2 py-0.5 rounded text-xs font-mono text-primary">
-            {auction.currency}
-          </span>
-        </div>
-        
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded-full overflow-hidden border border-primary">
-              <img 
-                src={auction.creator.avatar} 
-                alt={`${auction.creator.username} avatar`} 
-                className="w-full h-full object-cover" 
-              />
-            </div>
-            <p className="text-sm text-gray-400">@{auction.creator.username}</p>
+    <div className="bg-[#111827] rounded-lg overflow-hidden transition-all">
+      <Link href={`/auctions/${auction.id}`}>
+        <a>
+          <div className="relative">
+            <img 
+              src={auction.nft.imageUrl}
+              alt={auction.nft.name}
+              className="w-full h-48 object-cover"
+            />
           </div>
-          <div className="text-right">
-            <p className="text-xs text-gray-400">Current Bid</p>
-            <p className="font-bold text-white">{auction.currentBid} {auction.currency}</p>
+          
+          <div className="p-3">
+            <div className="flex justify-between mb-1">
+              <div className="text-white font-medium">{auction.nft.name}</div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <div className="text-xs text-gray-400">Leader</div>
+                <div className="text-xs text-white truncate">{auction.creator.walletAddress ? auction.creator.walletAddress.substring(0, 8) + '...' : '@' + auction.creator.username}</div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-400">Price</div>
+                <div className="text-white text-sm font-medium flex items-center">
+                  {formatCurrency(auction.currentBid || 0, auction.currency || 'ETH')}
+                  <span className="text-xs ml-1 opacity-70">≈</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <div className="text-xs text-gray-400">Time Left</div>
+                <div className="text-white text-sm font-mono flex items-center">
+                  <Clock className="w-3 h-3 mr-1 text-gray-400" />
+                  {formattedTime}
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2 mt-3">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-1 px-2 rounded-md transition-all text-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  !isComplete && setShowBidModal(true);
+                }}
+                disabled={isComplete}
+              >
+                Bid
+              </Button>
+              
+              <Button 
+                variant="outline"
+                className="border border-blue-600 text-blue-600 hover:bg-blue-600/10 font-medium py-1 px-2 rounded-md transition-all text-sm"
+              >
+                {isComplete ? "Ended" : "Track"}
+              </Button>
+            </div>
           </div>
-        </div>
-        
-        <Button 
-          className={`bid-button w-full bg-primary hover:bg-[#4f46e5] text-white font-medium py-2 rounded-lg transition-all ${isComplete ? 'opacity-50 cursor-not-allowed' : ''}`}
-          onClick={() => !isComplete && setShowBidModal(true)}
-          disabled={isComplete}
-        >
-          {isComplete ? "Auction Ended" : "Place Bid"}
-        </Button>
-      </div>
+        </a>
+      </Link>
 
       <BidModal 
         open={showBidModal} 
