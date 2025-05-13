@@ -166,15 +166,15 @@ export class MemStorage implements IStorage {
 
     // Create NFTs
     const nft1 = await this.createNFT({
-      name: "Degen Toonz #4269",
-      description: "Degen Toonz Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
-      imageUrl: "/assets/nft_images/tpb.jpg",
+      name: "DEGEN TOONZ #4269",
+      description: "DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
+      imageUrl: "/assets/nft_images/300.png",
       tokenId: "4269",
       contractAddress: "0xbba9187d5108e395d0681462523c4404de06a497",
       blockchain: "ETH",
       tokenStandard: "ERC-721",
       royalty: "7.5",
-      collection: "Degen Toonz",
+      collection: "DEGEN TOONZ",
       floorPrice: "0",
       currency: "ETH",
       category: "pfp",
