@@ -23,7 +23,7 @@ interface BidModalProps {
 }
 
 export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimumBid }: BidModalProps) {
-  const [bidAmount, setBidAmount] = useState<string>(minimumBid.toFixed(2));
+  const [bidAmount, setBidAmount] = useState<string>((minimumBid || 0).toFixed(2));
   const [isPending, setIsPending] = useState(false);
   
   const { toast } = useToast();

@@ -45,11 +45,9 @@ export default function AuctionHistory() {
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-display font-bold text-white">Recent Activity</h2>
-          <Link href="/activity">
-            <a className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center">
-              View All 
-              <i className="fa-solid fa-arrow-right ml-2"></i>
-            </a>
+          <Link href="/activity" className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center">
+            View All 
+            <i className="fa-solid fa-arrow-right ml-2"></i>
           </Link>
         </div>
         <div className="bg-[#1f2937] rounded-xl p-4 animate-pulse">
