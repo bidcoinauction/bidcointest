@@ -33,7 +33,7 @@ export default function AuctionDetailsPage() {
   const isActive = !isComplete;
   
   const bidIncrement = 0.01; // Fixed bid increment of 0.01
-  const minimumBid = auction?.currentBid ? auction.currentBid + bidIncrement : auction?.startingBid || 0;
+  const minimumBid = auction?.currentBid ? parseFloat(auction.currentBid) + bidIncrement : parseFloat(auction?.startingBid || "0");
   
   const handleOpenBidModal = () => {
     setShowBidModal(true);
@@ -43,7 +43,7 @@ export default function AuctionDetailsPage() {
     setShowBidModal(false);
   };
   
-  const handlePlaceBid = (amount: number) => {
+  const handlePlaceBid = (amount: string) => {
     console.log("Placing bid:", amount);
     // Implementation to place bid would go here
     setShowBidModal(false);
