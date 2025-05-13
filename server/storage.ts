@@ -258,66 +258,71 @@ export class MemStorage implements IStorage {
     });
 
     const nft5 = await this.createNFT({
-      name: "Blockchain Vision",
-      description: "A visualization of blockchain technology through connected nodes and data flows.",
-      imageUrl: "https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-      tokenId: "9981",
-      contractAddress: "0xe785e82358879f061bc3dcac6f0444462d4b5330",
-      blockchain: "ETH",
-      tokenStandard: "ERC-721",
-      royalty: 3,
-      collection: "Blockchain Visions",
-      floorPrice: 0.53,
-      currency: "ETH",
-      category: "conceptual",
+      name: "DeGods #8748",
+      description: "DeGods is a digital art collection and global community of creators, innovators, and frens. Consider this your digital identity into the DeGods ecosystem.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeicgwsvmzqfm2hcchgbpwj5sxz3kjtdzvmcpbmni4ydtykvp33zcb4.ipfs.nftstorage.link/8748.png",
+      tokenId: "8748",
+      contractAddress: "0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6",
+      blockchain: "SOL",
+      tokenStandard: "Metaplex",
+      royalty: "7.0",
+      collection: "DeGods",
+      floorPrice: "1390.0",
+      currency: "SOL",
+      category: "pfp",
+      items: 10000,
       creatorId: user5.id,
       attributes: [
-        { trait_type: "Node Count", value: "1024", rarity: "8%" },
-        { trait_type: "Connection Type", value: "Multi-directional", rarity: "12%" },
-        { trait_type: "Color Theme", value: "Matrix", rarity: "10%" }
+        { trait_type: "Background", value: "Gray", rarity: "8%" },
+        { trait_type: "Skin", value: "Gold", rarity: "4%" },
+        { trait_type: "Eyes", value: "Sleepy", rarity: "7%" },
+        { trait_type: "Mouth", value: "Neutral", rarity: "15%" }
       ]
     });
 
     const nft6 = await this.createNFT({
-      name: "Crypto Fish",
-      description: "A digital goldfish swimming through the cryptocurrency ocean, representing the fluid nature of digital assets.",
-      imageUrl: "https://images.unsplash.com/photo-1582142306909-195724d33ffc?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-      tokenId: "1272",
-      contractAddress: "0x306b1ea3ecdf94ab739f1910bbda052ed4a9f949",
+      name: "Claynosaurz #7221",
+      description: "Claynosaurz is a collection of 10,000 unique 3D characters, made of clay, living on the Solana blockchain. Claynosaurz is a PFP project that is building a 3D world.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://creator-hub-prod.s3.us-east-2.amazonaws.com/claynosaurz_pfp_1663599533366.png",
+      tokenId: "7221",
+      contractAddress: "0x4aEb52dB83DaA33a31673599E892d9247b0449cA",
       blockchain: "SOL",
-      tokenStandard: "SPL",
-      royalty: 5,
-      collection: "Crypto Aquarium",
-      floorPrice: 3.2,
+      tokenStandard: "Metaplex",
+      royalty: "5.0",
+      collection: "Claynosaurz",
+      floorPrice: "34.0",
       currency: "SOL",
-      category: "animals",
+      category: "pfp",
+      items: 10000,
       creatorId: user6.id,
       attributes: [
-        { trait_type: "Species", value: "Golden Koi", rarity: "7%" },
-        { trait_type: "Water Type", value: "Ethereal", rarity: "15%" },
-        { trait_type: "Animation", value: "Flowing", rarity: "10%" }
+        { trait_type: "Species", value: "Diplodocus", rarity: "7%" },
+        { trait_type: "Skin", value: "Sunset", rarity: "5%" },
+        { trait_type: "Eyes", value: "Friendly", rarity: "15%" },
+        { trait_type: "Background", value: "Violet", rarity: "10%" }
       ]
     });
 
     const nft7 = await this.createNFT({
-      name: "Crypto City",
-      description: "A futuristic blockchain-powered metropolis with vibrant neon lights and decentralized architecture.",
-      imageUrl: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=400&q=80",
-      tokenId: "4452",
-      contractAddress: "0x7d8c139313fbc4d1bae61a1d611f145e0b96a90f",
-      blockchain: "AVAX",
+      name: "Milady #8697",
+      description: "Milady Maker is a collection of 10,000 generative PFPs based on a variation of the y2k Millennial Ms Paint aesthetic.",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://i.seadn.io/gae/dR83qQkJQbWh2qvz7EuIE202LlQM3NqFSR2LVkBxB9BJvmN5K13NcI-ZQYjvpeiSLJzAi2AuP9HHPsLUVhZ1aBBT-_4-vgZ5IAhE?w=500&auto=format",
+      tokenId: "8697",
+      contractAddress: "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
+      blockchain: "ETH",
       tokenStandard: "ERC-721",
-      royalty: 2.5,
-      collection: "Future Cities",
-      floorPrice: 12.4,
-      currency: "AVAX",
-      category: "landscape",
+      royalty: "7.5",
+      collection: "Milady",
+      floorPrice: "2.88",
+      currency: "ETH",
+      category: "pfp",
+      items: 10000,
       creatorId: user7.id,
       attributes: [
-        { trait_type: "Time", value: "Night", rarity: "30%" },
-        { trait_type: "Building Style", value: "Neo-Blockchain", rarity: "5%" },
-        { trait_type: "Traffic", value: "Automated", rarity: "15%" },
-        { trait_type: "Weather", value: "Digital Rain", rarity: "10%" }
+        { trait_type: "Face", value: "Makeup Blue", rarity: "2%" },
+        { trait_type: "Hair", value: "Buns Blonde", rarity: "5%" },
+        { trait_type: "Background", value: "Purple", rarity: "7%" },
+        { trait_type: "Drip", value: "Fuzzy Coat", rarity: "3%" }
       ]
     });
 
