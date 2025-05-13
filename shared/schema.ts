@@ -84,6 +84,7 @@ export const insertAuctionSchema = createInsertSchema(auctions).pick({
   endTime: true,
   featured: true,
   creatorId: true,
+  bidCount: true,
 });
 
 // Bid schema
