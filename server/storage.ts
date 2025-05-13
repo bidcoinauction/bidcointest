@@ -334,8 +334,8 @@ export class MemStorage implements IStorage {
 
     const auction1 = await this.createAuction({
       nftId: nft1.id,
-      startingBid: 0.5,
-      currentBid: 0.875,
+      startingBid: "0.5",
+      currentBid: "0.875",
       currency: "ETH",
       endTime: new Date(Date.now() + oneDay),
       featured: true,
@@ -344,8 +344,8 @@ export class MemStorage implements IStorage {
 
     const auction2 = await this.createAuction({
       nftId: nft2.id,
-      startingBid: 0.2,
-      currentBid: 0.34,
+      startingBid: "0.2",
+      currentBid: "0.34",
       currency: "ETH",
       endTime: new Date(Date.now() + fiveDays),
       featured: false,
@@ -354,9 +354,9 @@ export class MemStorage implements IStorage {
 
     const auction3 = await this.createAuction({
       nftId: nft3.id,
-      startingBid: 0.015,
-      currentBid: 0.027,
-      currency: "BTC",
+      startingBid: "0.015",
+      currentBid: "0.027",
+      currency: "SOL",
       endTime: new Date(Date.now() + threeDays),
       featured: false,
       creatorId: user3.id,
@@ -364,9 +364,9 @@ export class MemStorage implements IStorage {
 
     const auction4 = await this.createAuction({
       nftId: nft4.id,
-      startingBid: 100,
-      currentBid: 145,
-      currency: "MATIC",
+      startingBid: "10.0",
+      currentBid: "15.5",
+      currency: "ETH",
       endTime: new Date(Date.now() - oneDay),
       featured: false,
       creatorId: user4.id,
