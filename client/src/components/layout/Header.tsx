@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Wallet, Bitcoin, LogOut } from "lucide-react";
 import WalletModal from "@/components/modals/WalletModal";
 import useWallet from "@/hooks/useWallet";
 import { formatAddress } from "@/lib/utils";
@@ -25,7 +25,7 @@ export default function Header() {
           <Link href="/">
             <a className="flex items-center space-x-2">
               <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shadow-glow">
-                <i className="fa-solid fa-coin text-white text-xl"></i>
+                <Bitcoin className="text-white h-6 w-6" />
               </div>
               <h1 className="text-2xl font-display font-bold text-white">BidCoin</h1>
             </a>
@@ -64,7 +64,7 @@ export default function Header() {
               className="flex items-center space-x-2 bg-primary hover:bg-[#4f46e5] text-white"
               onClick={() => setShowWalletModal(true)}
             >
-              <i className="fa-solid fa-wallet"></i>
+              <Wallet className="h-4 w-4 mr-1" />
               <span>Connect Wallet</span>
             </Button>
           )}
