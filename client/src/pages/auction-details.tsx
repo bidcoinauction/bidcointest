@@ -376,6 +376,15 @@ export default function AuctionDetailsPage() {
           onPlaceBid={handlePlaceBid}
         />
       )}
+      
+      {showPaymentModal && auction && (
+        <PaymentMethodModal
+          isOpen={showPaymentModal}
+          onClose={handleClosePaymentModal}
+          auction={auction}
+          onSelectPaymentMethod={handleSelectPaymentMethod}
+        />
+      )}
     </div>
   );
 }
