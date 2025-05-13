@@ -111,12 +111,15 @@ export default function BidPacksSection() {
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-display font-bold text-white">BidPacks (Ordinals)</h2>
-          <Link href="/bid-packs">
-            <a className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center">
-              View All 
-              <i className="fa-solid fa-arrow-right ml-2"></i>
-            </a>
-          </Link>
+          <div 
+            className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center cursor-pointer"
+            onClick={() => window.location.href = "/bid-packs"}
+          >
+            View All 
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
@@ -157,12 +160,15 @@ export default function BidPacksSection() {
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-display font-bold text-white">BidPacks (Ordinals)</h2>
-        <Link href="/bid-packs">
-          <a className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center">
-            View All 
-            <i className="fa-solid fa-arrow-right ml-2"></i>
-          </a>
-        </Link>
+        <div 
+          className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center cursor-pointer"
+          onClick={() => window.location.href = "/bid-packs"}
+        >
+          View All 
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
