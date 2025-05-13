@@ -5,14 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useCountdown from "@/hooks/useCountdown";
 import { formatRelativeTime } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BidModal from "@/components/modals/BidModal";
+import PaymentMethodModal from "@/components/modals/PaymentMethodModal";
 import { Heart, Share2, ExternalLink } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import useWallet from "@/hooks/useWallet";
 
 export default function AuctionDetailsPage() {
   const [, params] = useRoute("/auctions/:id");
   const auctionId = params ? parseInt(params.id) : 0;
   const [showBidModal, setShowBidModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const { toast } = useToast();
+  const { address } = useWallet();
   
   const { data: auction, isLoading, error } = useQuery({
     queryKey: [`/api/auctions/${auctionId}`],
@@ -20,9 +26,27 @@ export default function AuctionDetailsPage() {
   });
   
   const timeRemaining = auction?.endTime ? new Date(auction.endTime).getTime() - Date.now() : 0;
+  
+  // Check if the current user is the highest bidder
+  const isHighestBidder = auction?.bids && auction.bids.length > 0 && 
+    auction.bids[0].bidder.walletAddress === address;
+    
+  const handleAuctionComplete = () => {
+    console.log("Auction complete!");
+    
+    // If user is highest bidder, show payment method selection
+    if (isHighestBidder) {
+      setShowPaymentModal(true);
+      toast({
+        title: "Congratulations! 🎉",
+        description: `You've won the auction for ${auction?.nft.name}. Please select your payment method.`,
+      });
+    }
+  };
+  
   const { timeRemaining: countdownTime, isComplete } = useCountdown({ 
     endTime: auction?.endTime ? new Date(auction.endTime) : new Date(Date.now() + 3600000),
-    onComplete: () => console.log("Auction complete!")
+    onComplete: handleAuctionComplete
   });
   
   // Calculate time units for display
@@ -32,11 +56,24 @@ export default function AuctionDetailsPage() {
   const seconds = countdownTime % 60;
   const isActive = !isComplete;
   
-  const bidIncrement = 0.01; // Fixed bid increment of 0.01
+  const bidIncrement = 0.24; // Fixed bid increment of $0.24 (converted to crypto equivalent)
   const minimumBid = auction?.currentBid ? parseFloat(auction.currentBid) + bidIncrement : parseFloat(auction?.startingBid || "0");
   
   const handleOpenBidModal = () => {
     setShowBidModal(true);
+  };
+  
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+  };
+  
+  const handleSelectPaymentMethod = (method: string) => {
+    console.log(`Selected payment method: ${method}`);
+    // Here you would typically initiate a payment transaction using the selected method
+    toast({
+      title: "Payment Initiated",
+      description: `Your payment for ${auction?.nft.name} is being processed using your selected method.`,
+    });
   };
   
   const handleCloseBidModal = () => {
