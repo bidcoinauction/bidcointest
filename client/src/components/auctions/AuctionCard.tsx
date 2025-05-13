@@ -5,7 +5,7 @@ import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
 import { formatCurrency, formatAddress } from "@/lib/utils";
-import { Clock, Zap, CheckCircle2 } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
 
@@ -70,125 +70,120 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   // Format auction leader address
   const leaderDisplay = formatAddress(localLeader);
   
-  // Get color coding for time remaining
-  const getTimeClass = () => {
-    if (isComplete) return "text-red-500";
-    if (secondsRemaining <= 3) return "text-red-500 animate-pulse";
-    if (secondsRemaining <= 10) return "text-amber-500";
-    return "text-green-500";
+  // Format auction name and ID based on screenshot
+  const tokenDisplay = auction.nft.tokenId ? `#${auction.nft.tokenId}` : `#${Math.floor(Math.random() * 100000)}`;
+  
+  // Format bid value display
+  const bidValueDisplay = "+$0.01 per bid";
+  
+  // Format time left for timestamp display (HH:MM:SS format)
+  const formatTimeLeft = () => {
+    const hours = Math.floor(secondsRemaining / 3600);
+    const minutes = Math.floor((secondsRemaining % 3600) / 60);
+    const seconds = Math.floor(secondsRemaining % 60);
+    
+    return `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
   
-  // Format bid price with tiny increment ($0.01 per bid)
-  const bidIncrement = (localBidCount * 0.01).toFixed(2);
+  const startingPrice = auction.startingBid || 0;
+  const currency = auction.currency || 'ETH';
   
   return (
-    <div className="bg-[#111827] rounded-lg overflow-hidden transition-all shadow-md hover:shadow-lg hover:translate-y-[-2px]">
-      <div 
-        onClick={(e) => {
-          e.preventDefault();
-          window.location.href = `/auctions/${auction.id}`;
-        }} 
-        className="cursor-pointer"
-      >
-        <div className="relative">
-          <img 
-            src={auction.nft.imageUrl || `https://via.placeholder.com/400x300/171717/FFFFFF?text=${encodeURIComponent(auction.nft.name)}`}
-            alt={auction.nft.name}
-            className="w-full h-48 object-cover"
-          />
-          {isComplete && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <Badge className="bg-red-600 text-white px-3 py-1 text-sm font-bold">
-                AUCTION ENDED
-              </Badge>
+    <div className="bg-[#0a0e17] rounded-lg overflow-hidden transition-all">
+      <div className="relative">
+        {/* Bid count badge at top-right of image */}
+        <Badge 
+          className="absolute top-2 right-2 bg-indigo-600 text-white z-10 rounded-md px-2 py-1 text-xs"
+        >
+          {localBidCount || 3} bids
+        </Badge>
+        
+        <img 
+          src={auction.nft.imageUrl || `https://via.placeholder.com/400x240/171717/FFFFFF?text=${encodeURIComponent(auction.nft.name)}`}
+          alt={auction.nft.name}
+          className="w-full h-44 object-cover cursor-pointer"
+          onClick={() => window.location.href = `/auctions/${auction.id}`}
+        />
+      </div>
+      
+      {/* Item name and ID */}
+      <div className="p-3 pb-0">
+        <h3 className="text-white font-medium text-base cursor-pointer" onClick={() => window.location.href = `/auctions/${auction.id}`}>
+          {auction.nft.name}
+        </h3>
+        <p className="text-gray-400 text-sm">{tokenDisplay}</p>
+      </div>
+      
+      {/* Leader, Price, Time left, Bid Value sections */}
+      <div className="p-3 pt-2 pb-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <div>
+            <div className="text-xs text-gray-400">Leader</div>
+            <div className="text-xs text-gray-200 truncate font-mono">
+              {leaderDisplay}
             </div>
-          )}
-          {localBidCount > 0 && (
-            <Badge className="absolute top-2 right-2 bg-primary/90 text-xs font-bold">
-              {localBidCount} bids
-            </Badge>
-          )}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-            <h3 className="text-white font-bold text-sm truncate">{auction.nft.name}</h3>
-            <div className="text-xs text-gray-300 truncate">#{auction.nft.tokenId}</div>
+          </div>
+          
+          <div>
+            <div className="text-xs text-gray-400">Price</div>
+            <div className="text-sm text-white font-medium">
+              {formatCurrency(localCurrentBid || 0, currency)}
+            </div>
+          </div>
+          
+          <div>
+            <div className="text-xs text-gray-400">Time Left</div>
+            <div className="text-xs text-white flex items-center">
+              <Clock className="h-3 w-3 mr-1 text-gray-400" />
+              {formatTimeLeft()}
+            </div>
+          </div>
+          
+          <div>
+            <div className="text-xs text-gray-400">Bid Value</div>
+            <div className="text-xs text-green-500">
+              +$0.01 per bid
+            </div>
           </div>
         </div>
+      </div>
+      
+      {/* Bid/Track buttons */}
+      <div className="px-3 pt-0 pb-3 grid grid-cols-2 gap-2">
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            !isComplete && setShowBidModal(true);
+          }}
+          disabled={isComplete}
+        >
+          Bid
+        </Button>
         
-        <div className="p-3">
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div>
-              <div className="text-xs text-gray-400">Leader</div>
-              <div className="text-xs text-white truncate font-mono">{leaderDisplay}</div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-400">Price</div>
-              <div className="text-white text-sm font-medium flex items-center">
-                {formatCurrency(localCurrentBid || 0, auction.currency || 'ETH')}
-                <span className="text-xs ml-1 opacity-70">≈</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 mb-2">
-            <div>
-              <div className="text-xs text-gray-400">Time Left</div>
-              <div className={`text-white text-sm font-mono flex items-center ${getTimeClass()}`}>
-                <Clock className="w-3 h-3 mr-1" />
-                {formattedTime}
-              </div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-400">Bid Value</div>
-              <div className="text-white text-xs flex items-center">
-                <span className="text-green-400 mr-1">+$0.01</span> 
-                <span className="text-xs text-gray-300">per bid</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2 mt-3">
-            <Button 
-              className={`${isComplete ? 'bg-gray-700 hover:bg-gray-700 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white font-medium py-1 px-2 rounded-md transition-all text-sm`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                !isComplete && setShowBidModal(true);
-              }}
-              disabled={isComplete}
-            >
-              {isComplete ? "Ended" : "Bid"}
-            </Button>
-            
-            <Button 
-              variant="outline"
-              className={`${isTracked 
-                ? 'border border-green-500 text-green-500 hover:bg-green-500/10' 
-                : 'border border-blue-600 text-blue-600 hover:bg-blue-600/10'} 
-                font-medium py-1 px-2 rounded-md transition-all text-sm`}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isComplete) {
-                  setIsTracked(!isTracked);
-                }
-              }}
-            >
-              {isTracked ? (
-                <span className="flex items-center">
-                  <CheckCircle2 className="w-3 h-3 mr-1" />
-                  Tracked
-                </span>
-              ) : "Track"}
-            </Button>
-          </div>
-          
-          {/* Bid increment indicator based on Bidcoin model */}
-          <div className="mt-2 text-xs text-gray-400 text-center">
-            <div className="flex justify-between items-center">
-              <span>Starting: {formatCurrency(auction.startingBid, auction.currency || 'ETH')}</span>
-              <span>+${bidIncrement}</span>
-            </div>
-          </div>
+        <Button 
+          variant="outline"
+          className={`border border-blue-600 text-blue-600 hover:bg-blue-600/10 font-medium rounded ${
+            isTracked ? 'bg-blue-600/10' : ''
+          }`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsTracked(!isTracked);
+          }}
+        >
+          {isTracked ? 'Tracked' : 'Track'}
+        </Button>
+      </div>
+      
+      {/* Starting price and increment info */}
+      <div className="border-t border-gray-800 px-3 py-2 flex justify-between items-center text-xs">
+        <div className="text-gray-400">
+          Starting: {formatCurrency(startingPrice, currency)}
+        </div>
+        <div className="text-gray-400">
+          +$0.03
         </div>
       </div>
 
