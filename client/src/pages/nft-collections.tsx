@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getNFTCollections, getSupportedBlockchains } from "@/lib/api";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { 
   Select, 
   SelectContent, 
@@ -45,17 +44,17 @@ interface Collection {
   featured: boolean;
 }
 
-// Mock up collections data (we'll replace with API data)
+// Mock up collections data using local placeholder images
 const mockCollections: Collection[] = [
   {
     id: "1",
     name: "Bored Ape Yacht Club",
     description: "A collection of 10,000 unique Bored Ape NFTs",
-    imageUrl: "https://img.unleashnfts.com/bayc/feature.webp",
-    bannerUrl: "https://img.unleashnfts.com/bayc/banner.webp",
+    imageUrl: "https://via.placeholder.com/500x300/171717/FFFFFF?text=Bored+Ape+Yacht+Club",
+    bannerUrl: "https://via.placeholder.com/1200x300/171717/FFFFFF?text=BAYC+Banner",
     creator: {
       name: "Yuga Labs",
-      avatar: "https://img.unleashnfts.com/bayc/logo.webp",
+      avatar: "https://via.placeholder.com/100/334155/FFFFFF?text=YL",
       verified: true
     },
     blockchain: "ethereum",
@@ -72,11 +71,11 @@ const mockCollections: Collection[] = [
     id: "2",
     name: "Azuki",
     description: "A collection of 10,000 avatars that give you membership access to The Garden",
-    imageUrl: "https://img.unleashnfts.com/azuki/feature.webp",
-    bannerUrl: "https://img.unleashnfts.com/azuki/banner.webp",
+    imageUrl: "https://via.placeholder.com/500x300/171717/FF6B6B?text=Azuki",
+    bannerUrl: "https://via.placeholder.com/1200x300/171717/FF6B6B?text=Azuki+Banner",
     creator: {
       name: "Chiru Labs",
-      avatar: "https://img.unleashnfts.com/azuki/logo.webp",
+      avatar: "https://via.placeholder.com/100/334155/FF6B6B?text=CL",
       verified: true
     },
     blockchain: "ethereum",
@@ -93,11 +92,11 @@ const mockCollections: Collection[] = [
     id: "3",
     name: "Doodles",
     description: "A community-driven collectibles project featuring art by Burnt Toast",
-    imageUrl: "https://img.unleashnfts.com/doodles/feature.webp",
-    bannerUrl: "https://img.unleashnfts.com/doodles/banner.webp",
+    imageUrl: "https://via.placeholder.com/500x300/171717/FFD166?text=Doodles",
+    bannerUrl: "https://via.placeholder.com/1200x300/171717/FFD166?text=Doodles+Banner",
     creator: {
       name: "Doodles",
-      avatar: "https://img.unleashnfts.com/doodles/logo.webp",
+      avatar: "https://via.placeholder.com/100/334155/FFD166?text=D",
       verified: true
     },
     blockchain: "ethereum",
@@ -114,11 +113,11 @@ const mockCollections: Collection[] = [
     id: "4",
     name: "Bitcoin Punks",
     description: "Bitcoin Punks are the first BTC NFT collection on the BTC chain",
-    imageUrl: "https://img.unleashnfts.com/btcpunks/feature.webp",
-    bannerUrl: "https://img.unleashnfts.com/btcpunks/banner.webp",
+    imageUrl: "https://via.placeholder.com/500x300/171717/F7931A?text=Bitcoin+Punks",
+    bannerUrl: "https://via.placeholder.com/1200x300/171717/F7931A?text=BTC+Punks+Banner",
     creator: {
       name: "Bitcoin Punks",
-      avatar: "https://img.unleashnfts.com/btcpunks/logo.webp",
+      avatar: "https://via.placeholder.com/100/334155/F7931A?text=BP",
       verified: true
     },
     blockchain: "bitcoin",
@@ -135,11 +134,11 @@ const mockCollections: Collection[] = [
     id: "5",
     name: "DeGods",
     description: "A deflationary collection of degenerates, punks, and misfits",
-    imageUrl: "https://img.unleashnfts.com/degods/feature.webp",
-    bannerUrl: "https://img.unleashnfts.com/degods/banner.webp",
+    imageUrl: "https://via.placeholder.com/500x300/171717/00FFBD?text=DeGods",
+    bannerUrl: "https://via.placeholder.com/1200x300/171717/00FFBD?text=DeGods+Banner",
     creator: {
       name: "DeGods",
-      avatar: "https://img.unleashnfts.com/degods/logo.webp",
+      avatar: "https://via.placeholder.com/100/334155/00FFBD?text=DG",
       verified: true
     },
     blockchain: "solana",
@@ -156,11 +155,11 @@ const mockCollections: Collection[] = [
     id: "6",
     name: "Moonbirds",
     description: "A collection of 10,000 utility-enabled PFPs that feature a unique and diverse pool of traits",
-    imageUrl: "https://img.unleashnfts.com/moonbirds/feature.webp",
-    bannerUrl: "https://img.unleashnfts.com/moonbirds/banner.webp",
+    imageUrl: "https://via.placeholder.com/500x300/171717/8247E5?text=Moonbirds",
+    bannerUrl: "https://via.placeholder.com/1200x300/171717/8247E5?text=Moonbirds+Banner",
     creator: {
       name: "PROOF",
-      avatar: "https://img.unleashnfts.com/moonbirds/logo.webp",
+      avatar: "https://via.placeholder.com/100/334155/8247E5?text=P",
       verified: true
     },
     blockchain: "ethereum",
@@ -210,6 +209,30 @@ const getCurrencySymbol = (blockchain: string): string => {
 // Collection card component
 const CollectionCard = ({ collection }: { collection: Collection }) => {
   const currencySymbol = getCurrencySymbol(collection.blockchain);
+  const [_, setLocation] = useLocation();
+  
+  // Generate random active auctions count between 3-15
+  const activeAuctions = Math.floor(Math.random() * 12) + 3;
+  
+  // Random time remaining for most auctions (in minutes)
+  const avgTimeRemaining = Math.floor(Math.random() * 480) + 30; // 30 min to 8 hours
+  
+  // Get countdown timer display
+  const formatTime = (minutes: number): string => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+  
+  const handleViewCollection = () => {
+    // Here we would navigate to the collection detail page
+    // For now, we'll simulate going to auctions page as if we're filtering by this collection
+    setLocation(`/auctions?collection=${collection.id}`);
+  };
   
   return (
     <Card className="bg-[#1f2937] border-[#374151] overflow-hidden hover:shadow-glow transition-shadow duration-300">
@@ -270,19 +293,34 @@ const CollectionCard = ({ collection }: { collection: Collection }) => {
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-gray-400 text-xs mb-1">Items</p>
-            <p className="text-white font-bold">{collection.items.toLocaleString()}</p>
+            <p className="text-gray-400 text-xs mb-1">Active Auctions</p>
+            <div className="flex items-center">
+              <p className="text-white font-bold">{activeAuctions}</p>
+              <Badge className="ml-2 bg-primary/20 text-primary text-xs px-2 py-0.5">
+                <Clock className="h-3 w-3 mr-1" />
+                {formatTime(avgTimeRemaining)}
+              </Badge>
+            </div>
           </div>
           <div>
-            <p className="text-gray-400 text-xs mb-1">Owners</p>
-            <p className="text-white font-bold">{collection.owners.toLocaleString()}</p>
+            <p className="text-gray-400 text-xs mb-1">Total Items</p>
+            <p className="text-white font-bold">{collection.items.toLocaleString()}</p>
           </div>
         </div>
       </CardContent>
       
-      <CardFooter className="pt-0 pb-4">
-        <Button className="w-full bg-primary hover:bg-primary/90">
-          View Collection
+      <CardFooter className="pt-0 pb-4 flex gap-2">
+        <Button 
+          className="flex-1 bg-primary hover:bg-primary/90"
+          onClick={handleViewCollection}
+        >
+          View Auctions
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex-1 bg-transparent border-primary text-primary hover:bg-primary/10"
+        >
+          Explore NFTs
         </Button>
       </CardFooter>
     </Card>
@@ -294,36 +332,25 @@ export default function NFTCollectionsPage() {
   const [sortBy, setSortBy] = useState("trending");
   const [activeTab, setActiveTab] = useState("all");
   
-  // Query for blockchains (for filtering)
-  const { 
-    data: blockchains,
-    isLoading: isLoadingBlockchains
-  } = useQuery({
-    queryKey: ["blockchains"],
-    queryFn: getSupportedBlockchains,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-  });
+  // Mock blockchain data for filtering
+  const blockchains = [
+    { id: "ethereum", name: "Ethereum", symbol: "ETH" },
+    { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
+    { id: "solana", name: "Solana", symbol: "SOL" },
+    { id: "polygon", name: "Polygon", symbol: "MATIC" }
+  ];
+  
+  const isLoadingBlockchains = false;
 
-  // Query for NFT collections based on selected blockchain
-  const {
-    data: collections,
-    isLoading: isLoadingCollections,
-    error
-  } = useQuery({
-    queryKey: ["collections", blockchain],
-    queryFn: () => {
-      // When using real API, uncomment this:
-      // return getNFTCollections(blockchain);
-      
-      // For now, filter our mock data by blockchain
-      if (blockchain === "all") {
-        return Promise.resolve(mockCollections);
-      }
-      return Promise.resolve(
-        mockCollections.filter(c => c.blockchain.toLowerCase() === blockchain.toLowerCase())
-      );
-    }
-  });
+  // Filter collections by selected blockchain
+  const filteredByBlockchain = blockchain === "all" 
+    ? mockCollections 
+    : mockCollections.filter(c => c.blockchain.toLowerCase() === blockchain.toLowerCase());
+    
+  // Set up collections with mock data
+  const collections = filteredByBlockchain;
+  const isLoadingCollections = false;
+  const error = null;
 
   // Filter collections based on tab
   const filteredCollections = collections?.filter(collection => {
