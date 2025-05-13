@@ -1,16 +1,10 @@
-import Header from "@/components/layout/Header";
-import Navigation from "@/components/layout/Navigation";
-import Footer from "@/components/layout/Footer";
+// Removed header/footer imports
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
 export default function AboutPage() {
   return (
-    <>
-      <Header />
-      <Navigation />
-      
-      <main className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <section className="mb-12">
           <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">About BidCoin</h1>
           <p className="text-gray-300 max-w-3xl mb-8">
@@ -228,9 +222,6 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
-      </main>
-      
-      <Footer />
-    </>
+    </div>
   );
 }
