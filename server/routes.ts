@@ -104,7 +104,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const nftData = insertNftSchema.parse(req.body);
       
       // Verify that creator exists
-      const creator = await storage.getUser(nftData.creatorId);
+      const creatorId = nftData.creatorId;
+      if (creatorId === null || creatorId === undefined) {
+        return res.status(400).json({ message: 'Creator ID is required' });
+      }
+      
+      const creator = await storage.getUser(creatorId);
       if (!creator) {
         return res.status(400).json({ message: 'Creator not found' });
       }
@@ -152,7 +157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify creator exists
-      const creator = await storage.getUser(auctionData.creatorId);
+      const creatorId = auctionData.creatorId;
+      if (creatorId === null || creatorId === undefined) {
+        return res.status(400).json({ message: 'Creator ID is required' });
+      }
+      
+      const creator = await storage.getUser(creatorId);
       if (!creator) {
         return res.status(400).json({ message: 'Creator not found' });
       }
@@ -172,8 +182,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nftId: auctionData.nftId,
         from: `@${creator.username}`,
         to: "Auction House",
-        price: Number(auctionData.startingBid),
-        currency: auctionData.currency,
+        price: String(auctionData.startingBid || 0),
+        currency: auctionData.currency || "ETH",
       });
       
       // Broadcast update to WebSocket clients

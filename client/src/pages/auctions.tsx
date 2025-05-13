@@ -28,17 +28,23 @@ export default function AuctionsPage() {
   // Apply sorting to filtered auctions
   const sortedAuctions = [...filteredAuctions].sort((a, b) => {
     switch (filters.sortBy) {
-      case "ending-soon":
-        return new Date(a.endTime).getTime() - new Date(b.endTime).getTime();
+      case "ending-soon": {
+        const timeA = a.endTime ? new Date(a.endTime).getTime() : Date.now();
+        const timeB = b.endTime ? new Date(b.endTime).getTime() : Date.now();
+        return timeA - timeB;
+      }
       case "price-low-high":
-        return a.currentBid - b.currentBid;
+        return (a.currentBid || 0) - (b.currentBid || 0);
       case "price-high-low":
-        return b.currentBid - a.currentBid;
+        return (b.currentBid || 0) - (a.currentBid || 0);
       case "most-bids":
-        return b.bidCount - a.bidCount;
+        return (b.bidCount || 0) - (a.bidCount || 0);
       case "recently-added":
-      default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      default: {
+        const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return timeB - timeA;
+      }
     }
   });
 
