@@ -350,7 +350,7 @@ export default function AuctionDetailsPage() {
             <div key={i} className="bg-[#111827] rounded-xl overflow-hidden border border-[#374151] transition-transform hover:scale-105">
               <div className="relative">
                 <img 
-                  src={`https://images.unsplash.com/photo-164297${5610 + i}121-92d49146-2146-401c-8e33-83061731a3e0?auto=format&fit=crop&w=500&h=500&q=80`} 
+                  src={`/assets/nft_images/${i < 3 ? '300' : 'tnb'}.${i < 3 ? 'png' : 'jpg'}`} 
                   alt="Collection item" 
                   className="w-full aspect-square object-cover"
                 />
