@@ -442,91 +442,91 @@ export class MemStorage implements IStorage {
     await this.createBid({
       auctionId: auction3.id,
       bidderId: user2.id,
-      amount: 0.018,
+      amount: "0.018",
     });
 
     await this.createBid({
       auctionId: auction3.id,
       bidderId: user4.id,
-      amount: 0.022,
+      amount: "0.022",
     });
 
     await this.createBid({
       auctionId: auction3.id,
       bidderId: user6.id,
-      amount: 0.027,
+      amount: "0.027",
     });
 
     await this.createBid({
       auctionId: auction4.id,
       bidderId: user1.id,
-      amount: 110,
+      amount: "110.0",
     });
 
     await this.createBid({
       auctionId: auction4.id,
       bidderId: user3.id,
-      amount: 125,
+      amount: "125.0",
     });
 
     await this.createBid({
       auctionId: auction4.id,
       bidderId: user7.id,
-      amount: 145,
+      amount: "145.0",
     });
 
     await this.createBid({
       auctionId: auction5.id,
       bidderId: user1.id,
-      amount: 0.35,
+      amount: "1250.0",
     });
 
     await this.createBid({
       auctionId: auction5.id,
       bidderId: user2.id,
-      amount: 0.42,
+      amount: "1320.0",
     });
 
     await this.createBid({
       auctionId: auction5.id,
       bidderId: user3.id,
-      amount: 0.53,
+      amount: "1390.0",
     });
 
     await this.createBid({
       auctionId: auction6.id,
       bidderId: user4.id,
-      amount: 2.1,
+      amount: "28.0",
     });
 
     await this.createBid({
       auctionId: auction6.id,
       bidderId: user5.id,
-      amount: 2.8,
+      amount: "31.5",
     });
 
     await this.createBid({
       auctionId: auction6.id,
       bidderId: user7.id,
-      amount: 3.2,
+      amount: "34.0",
     });
 
     await this.createBid({
       auctionId: auction7.id,
       bidderId: user1.id,
-      amount: 8.5,
+      amount: "2.2",
     });
 
     await this.createBid({
       auctionId: auction7.id,
       bidderId: user2.id,
-      amount: 10.2,
+      amount: "2.55",
     });
 
     await this.createBid({
       auctionId: auction7.id,
       bidderId: user3.id,
-      amount: 12.4,
+      amount: "2.88",
     });
 
     // Create auction histories
@@ -560,8 +560,8 @@ export class MemStorage implements IStorage {
       type: "starter",
       bidCount: 10,
       bonusBids: 2,
-      price: 0.01,
-      originalPrice: 0.015,
+      price: "0.01",
+      originalPrice: "0.015",
       currency: "BTC",
       available: true,
     });
