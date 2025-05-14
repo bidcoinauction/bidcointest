@@ -3,7 +3,9 @@ import {
   NFTCollection, 
   getCollectionsByChain,
   getCollectionMetrics,
-  getCollectionNFTs
+  getCollectionNFTs,
+  getNFTValuation,
+  getNFTDetailedMetadata
 } from '@/lib/unleashApi';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -12,7 +14,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
   Select, 
@@ -21,7 +23,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { 
   formatPriceUSD, 
   formatNumber, 
@@ -47,6 +48,8 @@ export default function NFTCollectionsPage() {
   const [selectedChain, setSelectedChain] = useState<string>('ethereum');
   const [selectedCollection, setSelectedCollection] = useState<NFTCollection | null>(null);
   const [page, setPage] = useState(1);
+  const [tokenIdInput, setTokenIdInput] = useState<string>('');
+  const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const limit = 8; // Collections per page
   const { toast } = useToast();
 
@@ -80,6 +83,26 @@ export default function NFTCollectionsPage() {
     enabled: !!selectedCollection
   });
 
+  // Fetch NFT valuation if a specific token ID is selected
+  const {
+    data: nftValuation,
+    isLoading: isLoadingValuation
+  } = useQuery({
+    queryKey: ['/unleash/nft/valuation', selectedCollection?.contract_address, selectedTokenId, selectedChain],
+    queryFn: () => getNFTValuation(selectedCollection?.contract_address || '', selectedTokenId || '', selectedChain),
+    enabled: !!selectedCollection && !!selectedTokenId,
+  });
+
+  // Fetch detailed NFT metadata when a token is selected for valuation
+  const {
+    data: nftDetailedMetadata,
+    isLoading: isLoadingNftMetadata
+  } = useQuery({
+    queryKey: ['/unleash/nft/metadata', selectedCollection?.contract_address, selectedTokenId, selectedChain],
+    queryFn: () => getNFTDetailedMetadata(selectedCollection?.contract_address || '', selectedTokenId || '', selectedChain),
+    enabled: !!selectedCollection && !!selectedTokenId,
+  });
+
   // When chain changes, reset page and selected collection
   useEffect(() => {
     setPage(1);
@@ -92,6 +115,19 @@ export default function NFTCollectionsPage() {
 
   const handleChainChange = (value: string) => {
     setSelectedChain(value);
+  };
+  
+  const handleGetValuation = () => {
+    if (!tokenIdInput || !selectedCollection) {
+      toast({
+        title: "Missing information",
+        description: "Please enter a token ID to get valuation",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setSelectedTokenId(tokenIdInput);
   };
 
   // Format metrics data for chart
@@ -345,32 +381,31 @@ export default function NFTCollectionsPage() {
                       </div>
 
                       <div className="mt-8">
-                        <h3 className="text-xl font-bold text-white mb-4">Volume</h3>
-                        <div className="bg-[#111827] p-4 rounded-lg border border-[#374151]">
-                          <ResponsiveContainer width="100%" height={250}>
+                        <h3 className="text-lg font-medium text-white mb-4">Trading Volume</h3>
+                        <div className="bg-[#111827] p-4 rounded-lg h-64">
+                          <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={getChartData()}>
                               <XAxis dataKey="name" stroke="#6b7280" />
                               <YAxis 
                                 stroke="#6b7280"
-                                tickFormatter={(value) => {
-                                  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-                                  if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
-                                  return `$${value}`;
-                                }}
+                                tickFormatter={(value) => `$${value.toLocaleString()}`}
                               />
                               <Tooltip 
-                                formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Volume']}
-                                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
-                                labelStyle={{ color: '#f9fafb' }}
+                                formatter={(value: any) => [`$${value.toLocaleString()}`, 'Volume']}
+                                contentStyle={{ 
+                                  backgroundColor: '#1f2937', 
+                                  borderColor: '#374151',
+                                  color: 'white'
+                                }}
                               />
-                              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                              <Bar dataKey="value" fill="#4f46e5" radius={[4, 4, 0, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
                       </div>
                     </>
                   ) : (
-                    <div className="p-6 text-center text-gray-400">
+                    <div className="text-center py-8 text-gray-400">
                       No metrics available for this collection
                     </div>
                   )}
@@ -378,82 +413,63 @@ export default function NFTCollectionsPage() {
 
                 <TabsContent value="nfts" className="p-6">
                   {isLoadingNFTs ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {[...Array(4)].map((_, i) => (
                         <div key={i} className="bg-[#111827] rounded-lg overflow-hidden">
                           <Skeleton className="h-40 w-full" />
                           <div className="p-3">
-                            <Skeleton className="h-5 w-3/4 mb-2" />
-                            <Skeleton className="h-4 w-1/2" />
+                            <Skeleton className="h-5 w-20 mb-2" />
+                            <Skeleton className="h-4 w-32" />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : collectionNFTs && collectionNFTs.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      {collectionNFTs.map((nft) => (
-                        <div key={nft.token_id} className="bg-[#111827] rounded-lg overflow-hidden border border-[#374151] transition-transform hover:transform hover:scale-[1.02]">
-                          <div className="aspect-square overflow-hidden bg-[#0d1117] relative">
-                            {nft.image_url ? (
-                              <img 
-                                src={nft.image_url} 
-                                alt={nft.name} 
-                                className="w-full h-full object-cover" 
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://placehold.co/400/111827/6b7280?text=NFT';
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-500">No Image</div>
-                            )}
-                            
-                            {/* Rarity badge if we have traits with rarity */}
-                            {nft.traits && nft.traits.some(trait => trait.rarity !== undefined) && (
-                              <div className="absolute top-2 right-2">
-                                <div className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getRarityColor(
-                                  // Average rarity of all traits with rarity value
-                                  nft.traits
-                                    .filter(trait => trait.rarity !== undefined)
-                                    .reduce((sum, trait) => sum + (trait.rarity || 0), 0) / 
-                                  nft.traits.filter(trait => trait.rarity !== undefined).length
-                                )}`}>
-                                  {getRarityLabel(
-                                    nft.traits
-                                      .filter(trait => trait.rarity !== undefined)
-                                      .reduce((sum, trait) => sum + (trait.rarity || 0), 0) / 
-                                    nft.traits.filter(trait => trait.rarity !== undefined).length
-                                  )}
-                                </div>
-                              </div>
-                            )}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {collectionNFTs.map((nft, index) => (
+                        <div key={index} className="bg-[#111827] rounded-lg overflow-hidden border border-[#374151]">
+                          <div className="relative pt-[100%]">
+                            <img 
+                              src={nft.image_url} 
+                              alt={nft.name} 
+                              className="absolute inset-0 w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/400/111827/6b7280?text=NFT';
+                              }}
+                            />
                           </div>
                           <div className="p-3">
-                            <h3 className="font-medium text-white truncate">{nft.name}</h3>
-                            <div className="flex justify-between items-center mt-2">
-                              <div className="text-xs text-gray-400">ID: {nft.token_id}</div>
-                              {nft.estimated_price && (
-                                <div className="text-sm font-medium text-primary">{formatPriceUSD(nft.estimated_price)}</div>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium text-white text-sm truncate">{nft.name}</h3>
+                                <p className="text-gray-400 text-xs mt-1">#{nft.token_id}</p>
+                              </div>
+                              {nft.last_sale_price && (
+                                <div className="text-right">
+                                  <p className="text-xs text-gray-400">Last Sale</p>
+                                  <p className="text-sm font-medium text-white">{formatPriceUSD(nft.last_sale_price)}</p>
+                                </div>
                               )}
                             </div>
                             
-                            {/* Show traits with rarity if available */}
                             {nft.traits && nft.traits.length > 0 && (
-                              <div className="mt-2 pt-2 border-t border-[#374151]">
-                                <div className="text-xs text-gray-400 mb-1">Traits:</div>
+                              <div className="mt-3">
+                                <p className="text-xs text-gray-400 mb-2">Traits</p>
                                 <div className="flex flex-wrap gap-1">
-                                  {nft.traits.slice(0, 3).map((trait, index) => (
+                                  {nft.traits.slice(0, 3).map((trait, i) => (
                                     <div 
-                                      key={index} 
-                                      className={`px-1.5 py-0.5 rounded text-xs ${trait.rarity ? 
-                                        `${getRarityColor(trait.rarity)} text-white` : 
-                                        'bg-[#1f2937] text-gray-300'}`}
-                                      title={trait.rarity ? `Rarity: ${formatRarity(trait.rarity)}` : ''}
+                                      key={i} 
+                                      className="px-2 py-1 rounded-md text-xs"
+                                      style={{ backgroundColor: getRarityColor(trait.rarity || 0) }}
                                     >
-                                      {trait.trait_type}: {trait.value}
+                                      <span className="text-white">{trait.trait_type}: {trait.value}</span>
+                                      {trait.rarity && (
+                                        <span className="ml-1 text-white opacity-80">{formatRarity(trait.rarity)}</span>
+                                      )}
                                     </div>
                                   ))}
                                   {nft.traits.length > 3 && (
-                                    <div className="px-1.5 py-0.5 rounded text-xs bg-[#1f2937] text-gray-300">
+                                    <div className="px-2 py-1 bg-[#1f2937] rounded-md text-xs text-gray-400">
                                       +{nft.traits.length - 3} more
                                     </div>
                                   )}
@@ -465,16 +481,10 @@ export default function NFTCollectionsPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="p-6 text-center text-gray-400">
+                    <div className="text-center py-8 text-gray-400">
                       No NFTs available for this collection
                     </div>
                   )}
-
-                  <div className="mt-4 flex justify-center">
-                    <Button className="bg-primary hover:bg-primary-dark">
-                      Load More
-                    </Button>
-                  </div>
                 </TabsContent>
 
                 <TabsContent value="valuation" className="p-6">
@@ -485,25 +495,137 @@ export default function NFTCollectionsPage() {
                       market trends, and rarity analysis.
                     </p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="font-medium text-white mb-2">Enter Token ID</h4>
-                        <div className="flex space-x-2">
-                          <Input className="bg-[#1f2937] border-[#374151]" placeholder="Token ID" />
-                          <Button>
+                        <div className="flex space-x-2 mb-4">
+                          <Input
+                            type="text"
+                            placeholder="e.g. 1234"
+                            value={tokenIdInput}
+                            onChange={(e) => setTokenIdInput(e.target.value)}
+                            className="bg-[#1f2937] border-[#374151]"
+                          />
+                          <Button 
+                            onClick={handleGetValuation}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                          >
                             Get Valuation
                           </Button>
                         </div>
+                        
+                        {isLoadingValuation || isLoadingNftMetadata ? (
+                          <div className="bg-[#1d2430] p-4 rounded-lg space-y-4">
+                            <Skeleton className="h-4 w-32 mb-2" />
+                            <Skeleton className="h-6 w-40" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        ) : nftValuation ? (
+                          <div className="bg-[#1d2430] p-4 rounded-lg">
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="font-medium text-white">Valuation Result</h4>
+                              <div className="text-xs px-2 py-1 rounded-md bg-indigo-900 text-indigo-100">
+                                Token #{selectedTokenId}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-4">
+                              <div>
+                                <p className="text-gray-400 text-sm">Estimated Value</p>
+                                <p className="text-2xl font-bold text-white">{formatPriceUSD(nftValuation.estimated_value)}</p>
+                              </div>
+                              
+                              <div className="flex space-x-4">
+                                <div>
+                                  <p className="text-gray-400 text-sm">Floor Price</p>
+                                  <p className="text-md font-medium text-white">{formatPriceUSD(nftValuation.floor_price)}</p>
+                                </div>
+                                <div>
+                                  <p className="text-gray-400 text-sm">Premium</p>
+                                  <p className={`text-md font-medium ${nftValuation.premium_percentage > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                    {nftValuation.premium_percentage > 0 ? '+' : ''}{nftValuation.premium_percentage.toFixed(2)}%
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <p className="text-gray-400 text-sm">Confidence Score</p>
+                                <div className="w-full bg-[#111827] rounded-full h-2 mt-2">
+                                  <div 
+                                    className="bg-indigo-600 h-2 rounded-full" 
+                                    style={{ width: `${nftValuation.confidence_score}%` }}
+                                  ></div>
+                                </div>
+                                <p className="text-right text-xs text-gray-400 mt-1">
+                                  {nftValuation.confidence_score}% confidence
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-[#1d2430] p-4 rounded-lg text-center">
+                            <p className="text-white mb-2">No valuation data available for this NFT</p>
+                            <p className="text-gray-400">Try a different token ID or collection</p>
+                          </div>
+                        )}
                       </div>
                       
-                      <div className="bg-[#1d2430] p-4 rounded-lg">
-                        <h4 className="font-medium text-white mb-2">Benefits</h4>
-                        <ul className="text-sm text-gray-400 space-y-2">
-                          <li>• Accurate price estimations based on rarity</li>
-                          <li>• Historical price trends and analysis</li>
-                          <li>• Confidence scores for each valuation</li>
-                          <li>• Market comparison with similar assets</li>
-                        </ul>
+                      <div>
+                        <h4 className="font-medium text-white mb-2">NFT Details</h4>
+                        {isLoadingNftMetadata ? (
+                          <div className="bg-[#1d2430] p-4 rounded-lg">
+                            <Skeleton className="h-40 w-full mb-4" />
+                            <Skeleton className="h-5 w-40 mb-2" />
+                            <Skeleton className="h-4 w-full mb-1" />
+                            <Skeleton className="h-4 w-3/4" />
+                          </div>
+                        ) : nftDetailedMetadata ? (
+                          <div className="bg-[#1d2430] p-4 rounded-lg">
+                            <img 
+                              src={nftDetailedMetadata.image_url} 
+                              alt={nftDetailedMetadata.name}
+                              className="w-full h-40 object-cover rounded-md mb-4" 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/400/111827/6b7280?text=NFT';
+                              }}
+                            />
+                            <h4 className="font-medium text-white">{nftDetailedMetadata.name}</h4>
+                            <p className="text-sm text-gray-400 mt-1 mb-3">{nftDetailedMetadata.description}</p>
+                            
+                            {nftDetailedMetadata.traits && nftDetailedMetadata.traits.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-medium text-white mb-2">Traits</h5>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {nftDetailedMetadata.traits.map((trait, i) => (
+                                    <div key={i} className="bg-[#111827] p-2 rounded-md">
+                                      <p className="text-xs text-gray-400">{trait.trait_type}</p>
+                                      <p className="text-sm text-white">{trait.value}</p>
+                                      {trait.rarity && (
+                                        <div 
+                                          className="mt-1 px-2 py-0.5 rounded text-xs inline-block" 
+                                          style={{ backgroundColor: getRarityColor(trait.rarity) }}
+                                        >
+                                          {getRarityLabel(trait.rarity)} ({formatRarity(trait.rarity)})
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="bg-[#1d2430] p-4 rounded-lg">
+                            <h4 className="font-medium text-white mb-2">Benefits</h4>
+                            <ul className="text-sm text-gray-400 space-y-2">
+                              <li>• Accurate price estimations based on rarity</li>
+                              <li>• Historical price trends and analysis</li>
+                              <li>• Confidence scores for each valuation</li>
+                              <li>• Market comparison with similar assets</li>
+                            </ul>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -517,8 +639,7 @@ export default function NFTCollectionsPage() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Select a Collection</h3>
               <p className="text-gray-400 max-w-md">
-                Choose an NFT collection from the list to view detailed metrics, 
-                NFTs, and valuation data powered by UnleashNFTs.
+                Choose an NFT collection from the list to view detailed metrics, NFTs, and valuations.
               </p>
             </div>
           )}
