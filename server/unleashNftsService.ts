@@ -69,6 +69,25 @@ export class UnleashNftsService {
       log('WARNING: VITE_BITCRUNCH_API_KEY is not set. UnleashNfts API will not work.', 'unleash-nfts');
     } else {
       log('UnleashNfts API key configured successfully', 'unleash-nfts');
+      // Test the connection
+      this.testConnection();
+    }
+  }
+
+  /**
+   * Test the API connection by making a simple request
+   */
+  private async testConnection(): Promise<void> {
+    try {
+      // Try to fetch supported blockchains as a simple API test
+      const blockchains = await this.getSupportedBlockchains(1, 1);
+      if (blockchains && blockchains.length > 0) {
+        log(`UnleashNFTs API connection test successful. Found ${blockchains.length} blockchains.`, 'unleash-nfts');
+      } else {
+        log(`UnleashNFTs API connection test completed, but no blockchains were returned.`, 'unleash-nfts');
+      }
+    } catch (error) {
+      log(`UnleashNFTs API connection test failed: ${error.message}`, 'unleash-nfts');
     }
   }
 
@@ -368,15 +387,30 @@ export class UnleashNftsService {
    */
   async getCollectionsWithValuation(chain: string, page: number = 1, limit: number = 10): Promise<NFTCollection[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/nft/collections/with-valuation`, {
-        headers: this.headers,
-        params: {
-          blockchain: chain,
-          offset: (page - 1) * limit,
-          limit
-        }
-      });
-      return response.data.data || [];
+      // Try v2 endpoint first
+      try {
+        const response = await axios.get(`${BASE_URL_V2}/nft/collections/with-valuation`, {
+          headers: this.headers,
+          params: {
+            blockchain: chain,
+            offset: (page - 1) * limit,
+            limit
+          }
+        });
+        return response.data.data || [];
+      } catch (v2Error) {
+        // If v2 fails, try v1 endpoint
+        log(`V2 collections with valuation endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
+        const response = await axios.get(`${BASE_URL_V1}/nft/collections/with-valuation`, {
+          headers: this.headers,
+          params: {
+            blockchain: chain,
+            offset: (page - 1) * limit,
+            limit
+          }
+        });
+        return response.data.data || [];
+      }
     } catch (error) {
       this.handleError('getCollectionsWithValuation', error);
       return [];
@@ -392,16 +426,32 @@ export class UnleashNftsService {
    */
   async getNFTsWithValuation(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<NFTMetadata[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/nft/tokens`, {
-        headers: this.headers,
-        params: {
-          collection_address: contractAddress,
-          blockchain: chain,
-          offset: (page - 1) * limit,
-          limit
-        }
-      });
-      return response.data.data || [];
+      // Try v2 endpoint first
+      try {
+        const response = await axios.get(`${BASE_URL_V2}/nft/tokens`, {
+          headers: this.headers,
+          params: {
+            collection_address: contractAddress,
+            blockchain: chain,
+            offset: (page - 1) * limit,
+            limit
+          }
+        });
+        return response.data.data || [];
+      } catch (v2Error) {
+        // If v2 fails, try v1 endpoint
+        log(`V2 tokens with valuation endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
+        const response = await axios.get(`${BASE_URL_V1}/nft/tokens`, {
+          headers: this.headers,
+          params: {
+            collection_address: contractAddress,
+            blockchain: chain,
+            offset: (page - 1) * limit,
+            limit
+          }
+        });
+        return response.data.data || [];
+      }
     } catch (error) {
       this.handleError('getNFTsWithValuation', error);
       return [];
@@ -416,15 +466,30 @@ export class UnleashNftsService {
    */
   async getNFTValuation(contractAddress: string, tokenId: string, chain: string): Promise<any> {
     try {
-      const response = await axios.get(`${BASE_URL}/nft/valuation`, {
-        headers: this.headers,
-        params: {
-          collection_address: contractAddress,
-          token_id: tokenId,
-          blockchain: chain
-        }
-      });
-      return response.data.data || null;
+      // Try v2 endpoint first
+      try {
+        const response = await axios.get(`${BASE_URL_V2}/nft/valuation`, {
+          headers: this.headers,
+          params: {
+            collection_address: contractAddress,
+            token_id: tokenId,
+            blockchain: chain
+          }
+        });
+        return response.data.data || null;
+      } catch (v2Error) {
+        // If v2 fails, try v1 endpoint
+        log(`V2 NFT valuation endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
+        const response = await axios.get(`${BASE_URL_V1}/nft/valuation`, {
+          headers: this.headers,
+          params: {
+            collection_address: contractAddress,
+            token_id: tokenId,
+            blockchain: chain
+          }
+        });
+        return response.data.data || null;
+      }
     } catch (error) {
       this.handleError('getNFTValuation', error);
       return null;
@@ -439,15 +504,30 @@ export class UnleashNftsService {
    */
   async getNFTDetailedMetadata(contractAddress: string, tokenId: string, chain: string = 'ethereum'): Promise<any> {
     try {
-      const response = await axios.get(`${BASE_URL}/nft/metadata`, {
-        headers: this.headers,
-        params: {
-          blockchain: chain,
-          collection_address: contractAddress,
-          token_id: tokenId
-        }
-      });
-      return response.data || null;
+      // Try v2 endpoint first
+      try {
+        const response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
+          headers: this.headers,
+          params: {
+            blockchain: chain,
+            collection_address: contractAddress,
+            token_id: tokenId
+          }
+        });
+        return response.data || null;
+      } catch (v2Error) {
+        // If v2 fails, try v1 endpoint
+        log(`V2 NFT metadata endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
+        const response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
+          headers: this.headers,
+          params: {
+            blockchain: chain,
+            collection_address: contractAddress,
+            token_id: tokenId
+          }
+        });
+        return response.data || null;
+      }
     } catch (error) {
       this.handleError('getNFTDetailedMetadata', error);
       return null;
@@ -487,11 +567,22 @@ export class UnleashNftsService {
         params.slug = slugName;
       }
       
-      const response = await axios.get(`${BASE_URL}/nft/metadata`, {
-        headers: this.headers,
-        params
-      });
-      return response.data || null;
+      // Try v2 endpoint first
+      try {
+        const response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
+          headers: this.headers,
+          params
+        });
+        return response.data || null;
+      } catch (v2Error) {
+        // If v2 fails, try v1 endpoint
+        log(`V2 NFT metadata flex endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
+        const response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
+          headers: this.headers,
+          params
+        });
+        return response.data || null;
+      }
     } catch (error) {
       this.handleError('getNFTMetadataFlex', error);
       return null;
