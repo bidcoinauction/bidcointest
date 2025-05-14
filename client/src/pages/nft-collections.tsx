@@ -1,499 +1,478 @@
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from 'react';
+import { 
+  NFTCollection, 
+  getCollectionsByChain,
+  getCollectionMetrics,
+  getCollectionNFTs
+} from '@/lib/unleashApi';
+import { useQuery } from '@tanstack/react-query';
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { 
   Select, 
   SelectContent, 
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { formatPriceUSD, formatNumber } from '@/lib/utils';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+import { useToast } from '@/hooks/use-toast';
 import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription, 
-  CardFooter 
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Flame, TrendingUp, DollarSign, Clock } from "lucide-react";
-import { SiEthereum, SiBitcoin, SiPolygon, SiSolana } from "react-icons/si";
+  TrendingUp, 
+  Wallet, 
+  Tag, 
+  Users, 
+  Package,
+  ExternalLink,
+  Search
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Collection type definition
-interface Collection {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string;
-  bannerUrl: string;
-  creator: {
-    name: string;
-    avatar: string;
-    verified: boolean;
+export default function NFTCollectionsPage() {
+  const [selectedChain, setSelectedChain] = useState<string>('ethereum');
+  const [selectedCollection, setSelectedCollection] = useState<NFTCollection | null>(null);
+  const [page, setPage] = useState(1);
+  const limit = 8; // Collections per page
+  const { toast } = useToast();
+
+  // Fetch collections based on chain
+  const { 
+    data: collections, 
+    isLoading: isLoadingCollections,
+    refetch: refetchCollections
+  } = useQuery({
+    queryKey: ['/api/unleash/collections', selectedChain, page, limit],
+    queryFn: () => getCollectionsByChain(selectedChain, page, limit)
+  });
+
+  // Fetch collection metrics when a collection is selected
+  const {
+    data: collectionMetrics,
+    isLoading: isLoadingMetrics
+  } = useQuery({
+    queryKey: ['/api/unleash/collection/metrics', selectedCollection?.contract_address, selectedChain],
+    queryFn: () => getCollectionMetrics(selectedCollection?.contract_address || '', selectedChain),
+    enabled: !!selectedCollection
+  });
+
+  // Fetch collection NFTs when a collection is selected
+  const {
+    data: collectionNFTs,
+    isLoading: isLoadingNFTs
+  } = useQuery({
+    queryKey: ['/api/unleash/collection/nfts', selectedCollection?.contract_address, selectedChain],
+    queryFn: () => getCollectionNFTs(selectedCollection?.contract_address || '', selectedChain, 1, 4),
+    enabled: !!selectedCollection
+  });
+
+  // When chain changes, reset page and selected collection
+  useEffect(() => {
+    setPage(1);
+    setSelectedCollection(null);
+  }, [selectedChain]);
+
+  const handleSelectCollection = (collection: NFTCollection) => {
+    setSelectedCollection(collection);
   };
-  blockchain: string;
-  floorPrice: number;
-  volume24h: number;
-  volumeTotal: number;
-  items: number;
-  owners: number;
-  verified: boolean;
-  trending: boolean;
-  featured: boolean;
-}
 
-// Mock up collections data using local placeholder images
-const mockCollections: Collection[] = [
-  {
-    id: "1",
-    name: "Bored Ape Yacht Club",
-    description: "A collection of 10,000 unique Bored Ape NFTs",
-    imageUrl: "https://via.placeholder.com/500x300/171717/FFFFFF?text=Bored+Ape+Yacht+Club",
-    bannerUrl: "https://via.placeholder.com/1200x300/171717/FFFFFF?text=BAYC+Banner",
-    creator: {
-      name: "Yuga Labs",
-      avatar: "https://via.placeholder.com/100/334155/FFFFFF?text=YL",
-      verified: true
-    },
-    blockchain: "ethereum",
-    floorPrice: 30.5,
-    volume24h: 157.2,
-    volumeTotal: 32560,
-    items: 10000,
-    owners: 6452,
-    verified: true,
-    trending: true,
-    featured: true
-  },
-  {
-    id: "2",
-    name: "Azuki",
-    description: "A collection of 10,000 avatars that give you membership access to The Garden",
-    imageUrl: "https://via.placeholder.com/500x300/171717/FF6B6B?text=Azuki",
-    bannerUrl: "https://via.placeholder.com/1200x300/171717/FF6B6B?text=Azuki+Banner",
-    creator: {
-      name: "Chiru Labs",
-      avatar: "https://via.placeholder.com/100/334155/FF6B6B?text=CL",
-      verified: true
-    },
-    blockchain: "ethereum",
-    floorPrice: 14.2,
-    volume24h: 89.6,
-    volumeTotal: 24150,
-    items: 10000,
-    owners: 5721,
-    verified: true,
-    trending: true,
-    featured: true
-  },
-  {
-    id: "3",
-    name: "Doodles",
-    description: "A community-driven collectibles project featuring art by Burnt Toast",
-    imageUrl: "https://via.placeholder.com/500x300/171717/FFD166?text=Doodles",
-    bannerUrl: "https://via.placeholder.com/1200x300/171717/FFD166?text=Doodles+Banner",
-    creator: {
-      name: "Doodles",
-      avatar: "https://via.placeholder.com/100/334155/FFD166?text=D",
-      verified: true
-    },
-    blockchain: "ethereum",
-    floorPrice: 8.7,
-    volume24h: 42.3,
-    volumeTotal: 16780,
-    items: 10000,
-    owners: 4891,
-    verified: true,
-    trending: true,
-    featured: false
-  },
-  {
-    id: "4",
-    name: "Bitcoin Punks",
-    description: "Bitcoin Punks are the first BTC NFT collection on the BTC chain",
-    imageUrl: "https://via.placeholder.com/500x300/171717/F7931A?text=Bitcoin+Punks",
-    bannerUrl: "https://via.placeholder.com/1200x300/171717/F7931A?text=BTC+Punks+Banner",
-    creator: {
-      name: "Bitcoin Punks",
-      avatar: "https://via.placeholder.com/100/334155/F7931A?text=BP",
-      verified: true
-    },
-    blockchain: "bitcoin",
-    floorPrice: 0.38,
-    volume24h: 17.5,
-    volumeTotal: 8460,
-    items: 10000,
-    owners: 3240,
-    verified: true,
-    trending: true,
-    featured: true
-  },
-  {
-    id: "5",
-    name: "DeGods",
-    description: "A deflationary collection of degenerates, punks, and misfits",
-    imageUrl: "https://via.placeholder.com/500x300/171717/00FFBD?text=DeGods",
-    bannerUrl: "https://via.placeholder.com/1200x300/171717/00FFBD?text=DeGods+Banner",
-    creator: {
-      name: "DeGods",
-      avatar: "https://via.placeholder.com/100/334155/00FFBD?text=DG",
-      verified: true
-    },
-    blockchain: "solana",
-    floorPrice: 340.5,
-    volume24h: 27820,
-    volumeTotal: 412500,
-    items: 10000,
-    owners: 5623,
-    verified: true,
-    trending: true,
-    featured: false
-  },
-  {
-    id: "6",
-    name: "Moonbirds",
-    description: "A collection of 10,000 utility-enabled PFPs that feature a unique and diverse pool of traits",
-    imageUrl: "https://via.placeholder.com/500x300/171717/8247E5?text=Moonbirds",
-    bannerUrl: "https://via.placeholder.com/1200x300/171717/8247E5?text=Moonbirds+Banner",
-    creator: {
-      name: "PROOF",
-      avatar: "https://via.placeholder.com/100/334155/8247E5?text=P",
-      verified: true
-    },
-    blockchain: "ethereum",
-    floorPrice: 6.8,
-    volume24h: 34.2,
-    volumeTotal: 15430,
-    items: 10000,
-    owners: 4628,
-    verified: true,
-    trending: false,
-    featured: true
-  }
-];
+  const handleChainChange = (value: string) => {
+    setSelectedChain(value);
+  };
 
-// Blockchain icon mapping
-const BlockchainIcon = ({ blockchain }: { blockchain: string }) => {
-  switch (blockchain.toLowerCase()) {
-    case 'ethereum':
-      return <SiEthereum className="text-[#627eea]" />;
-    case 'bitcoin':
-      return <SiBitcoin className="text-[#f7931a]" />;
-    case 'polygon':
-      return <SiPolygon className="text-[#8247e5]" />;
-    case 'solana':
-      return <SiSolana className="text-[#00ffbd]" />;
-    default:
-      return <SiEthereum className="text-[#627eea]" />;
-  }
-};
-
-// Function to get currency symbol
-const getCurrencySymbol = (blockchain: string): string => {
-  switch (blockchain.toLowerCase()) {
-    case 'ethereum':
-      return 'ETH';
-    case 'bitcoin':
-      return 'BTC';
-    case 'polygon':
-      return 'MATIC';
-    case 'solana':
-      return 'SOL';
-    default:
-      return 'ETH';
-  }
-};
-
-// Collection card component
-const CollectionCard = ({ collection }: { collection: Collection }) => {
-  const currencySymbol = getCurrencySymbol(collection.blockchain);
-  const [_, setLocation] = useLocation();
-  
-  // Generate random active auctions count between 3-15
-  const activeAuctions = Math.floor(Math.random() * 12) + 3;
-  
-  // Random time remaining for most auctions (in minutes)
-  const avgTimeRemaining = Math.floor(Math.random() * 480) + 30; // 30 min to 8 hours
-  
-  // Get countdown timer display
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+  // Format metrics data for chart
+  const getChartData = () => {
+    if (!collectionMetrics) return [];
     
-    if (hours > 0) {
-      return `${hours}h ${mins}m`;
-    }
-    return `${mins}m`;
+    return [
+      { name: '24h', value: collectionMetrics.volume_24h || 0 },
+      { name: '7d', value: collectionMetrics.volume_7d || 0 },
+      { name: '30d', value: collectionMetrics.volume_30d || 0 }
+    ];
   };
-  
-  const handleViewCollection = () => {
-    // Here we would navigate to the collection detail page
-    // For now, we'll simulate going to auctions page as if we're filtering by this collection
-    setLocation(`/auctions?collection=${collection.id}`);
-  };
-  
+
   return (
-    <Card className="bg-[#1f2937] border-[#374151] overflow-hidden hover:shadow-glow transition-shadow duration-300">
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={collection.imageUrl}
-          alt={collection.name}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[rgba(0,0,0,0.7)] to-transparent"></div>
-        
-        {collection.trending && (
-          <Badge className="absolute top-3 right-3 bg-gradient-to-r from-amber-500 to-orange-500 text-black">
-            <Flame className="h-3.5 w-3.5 mr-1" />
-            Trending
-          </Badge>
-        )}
-        
-        <div className="absolute bottom-3 left-3 flex items-center">
-          <img 
-            src={collection.creator.avatar}
-            alt={collection.creator.name}
-            className="w-10 h-10 rounded-full border-2 border-white"
-          />
-          <div className="ml-2">
-            <div className="text-white font-bold text-lg">{collection.name}</div>
-            <div className="text-gray-300 text-xs flex items-center">
-              by {collection.creator.name}
-              {collection.creator.verified && (
-                <span className="ml-1 text-blue-400 bg-blue-400/20 rounded-full p-0.5">
-                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                  </svg>
-                </span>
-              )}
-            </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">NFT Collections</h1>
+          <p className="text-gray-400">Explore NFT collections and their valuations</p>
+        </div>
+        <div className="flex space-x-4 items-center">
+          <Select value={selectedChain} onValueChange={handleChainChange}>
+            <SelectTrigger className="w-[180px] bg-[#1f2937] border-[#374151]">
+              <SelectValue placeholder="Select Blockchain" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ethereum">Ethereum</SelectItem>
+              <SelectItem value="polygon">Polygon</SelectItem>
+              <SelectItem value="solana">Solana</SelectItem>
+              <SelectItem value="arbitrum">Arbitrum</SelectItem>
+              <SelectItem value="optimism">Optimism</SelectItem>
+              <SelectItem value="base">Base</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="relative w-full md:w-60">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+            <Input 
+              placeholder="Search collections" 
+              className="pl-8 bg-[#1f2937] border-[#374151]" 
+            />
           </div>
         </div>
       </div>
-      
-      <CardContent className="pt-4 pb-2">
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Floor Price</p>
-            <p className="text-white font-bold flex items-center">
-              <span className="mr-1"><BlockchainIcon blockchain={collection.blockchain} /></span>
-              {collection.floorPrice} {currencySymbol}
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400 text-xs mb-1">24h Volume</p>
-            <p className="text-white font-bold flex items-center">
-              <span className="mr-1"><BlockchainIcon blockchain={collection.blockchain} /></span>
-              {collection.volume24h} {currencySymbol}
-            </p>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Active Auctions</p>
-            <div className="flex items-center">
-              <p className="text-white font-bold">{activeAuctions}</p>
-              <Badge className="ml-2 bg-primary/20 text-primary text-xs px-2 py-0.5">
-                <Clock className="h-3 w-3 mr-1" />
-                {formatTime(avgTimeRemaining)}
-              </Badge>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Collections List */}
+        <div className="md:col-span-1">
+          <div className="bg-[#1f2937] rounded-xl border border-[#374151] overflow-hidden">
+            <div className="p-4 border-b border-[#374151]">
+              <h2 className="text-xl font-bold text-white">Collections</h2>
             </div>
-          </div>
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Total Items</p>
-            <p className="text-white font-bold">{collection.items.toLocaleString()}</p>
-          </div>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="pt-0 pb-4 flex gap-2">
-        <Button 
-          className="flex-1 bg-primary hover:bg-primary/90"
-          onClick={handleViewCollection}
-        >
-          View Auctions
-        </Button>
-        <Button 
-          variant="outline" 
-          className="flex-1 bg-transparent border-primary text-primary hover:bg-primary/10"
-        >
-          Explore NFTs
-        </Button>
-      </CardFooter>
-    </Card>
-  );
-};
-
-export default function NFTCollectionsPage() {
-  const [blockchain, setBlockchain] = useState("all");
-  const [sortBy, setSortBy] = useState("trending");
-  const [activeTab, setActiveTab] = useState("all");
-  
-  // Mock blockchain data for filtering
-  const blockchains = [
-    { id: "ethereum", name: "Ethereum", symbol: "ETH" },
-    { id: "bitcoin", name: "Bitcoin", symbol: "BTC" },
-    { id: "solana", name: "Solana", symbol: "SOL" },
-    { id: "polygon", name: "Polygon", symbol: "MATIC" }
-  ];
-  
-  const isLoadingBlockchains = false;
-
-  // Filter collections by selected blockchain
-  const filteredByBlockchain = blockchain === "all" 
-    ? mockCollections 
-    : mockCollections.filter(c => c.blockchain.toLowerCase() === blockchain.toLowerCase());
-    
-  // Set up collections with mock data
-  const collections = filteredByBlockchain;
-  const isLoadingCollections = false;
-  const error = null;
-
-  // Filter collections based on tab
-  const filteredCollections = collections?.filter(collection => {
-    if (activeTab === "all") return true;
-    if (activeTab === "trending") return collection.trending;
-    if (activeTab === "featured") return collection.featured;
-    return true;
-  });
-
-  // Sort collections based on selected sort option
-  const sortedCollections = [...(filteredCollections || [])].sort((a, b) => {
-    switch (sortBy) {
-      case "trending":
-        return (b.trending ? 1 : 0) - (a.trending ? 1 : 0);
-      case "volume":
-        return b.volume24h - a.volume24h;
-      case "floor-asc":
-        return a.floorPrice - b.floorPrice;
-      case "floor-desc":
-        return b.floorPrice - a.floorPrice;
-      default:
-        return 0;
-    }
-  });
-
-  return (
-    <main className="container mx-auto px-4 py-8">
-      <section className="mb-12">
-        <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold text-white mb-2">NFT Collections</h1>
-          <p className="text-gray-400">Explore the latest and most popular NFT collections across multiple blockchains</p>
-        </div>
-        
-        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0 mb-8">
-          <Tabs defaultValue="all" className="w-full md:w-auto" onValueChange={setActiveTab}>
-            <TabsList className="bg-[#1f2937] border border-[#374151]">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="trending" className="flex items-center">
-                <Flame className="h-4 w-4 mr-1" /> Trending
-              </TabsTrigger>
-              <TabsTrigger value="featured" className="flex items-center">
-                <Sparkles className="h-4 w-4 mr-1" /> Featured
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
-          <div className="flex flex-wrap gap-3">
-            <Select value={blockchain} onValueChange={setBlockchain}>
-              <SelectTrigger className="w-[180px] bg-[#1f2937] text-white border-[#374151]">
-                <SelectValue placeholder="All Blockchains" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1f2937] text-white border-[#374151]">
-                <SelectItem value="all">All Blockchains</SelectItem>
-                <SelectItem value="ethereum" className="flex items-center gap-2">
-                  <SiEthereum className="text-[#627eea]" /> Ethereum
-                </SelectItem>
-                <SelectItem value="bitcoin" className="flex items-center gap-2">
-                  <SiBitcoin className="text-[#f7931a]" /> Bitcoin
-                </SelectItem>
-                <SelectItem value="solana" className="flex items-center gap-2">
-                  <SiSolana className="text-[#00ffbd]" /> Solana
-                </SelectItem>
-                <SelectItem value="polygon" className="flex items-center gap-2">
-                  <SiPolygon className="text-[#8247e5]" /> Polygon
-                </SelectItem>
-              </SelectContent>
-            </Select>
             
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[180px] bg-[#1f2937] text-white border-[#374151]">
-                <SelectValue placeholder="Sort By" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#1f2937] text-white border-[#374151]">
-                <SelectItem value="trending" className="flex items-center gap-2">
-                  <Flame className="h-4 w-4" /> Trending
-                </SelectItem>
-                <SelectItem value="volume" className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" /> Volume (24h)
-                </SelectItem>
-                <SelectItem value="floor-asc" className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" /> Floor Price (Low to High)
-                </SelectItem>
-                <SelectItem value="floor-desc" className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" /> Floor Price (High to Low)
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            {isLoadingCollections ? (
+              <div className="p-4 space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-[200px]" />
+                      <Skeleton className="h-3 w-[100px]" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="divide-y divide-[#374151]">
+                  {collections && collections.length > 0 ? (
+                    collections.map((collection) => (
+                      <div 
+                        key={collection.contract_address}
+                        className={`p-4 hover:bg-[#374151] cursor-pointer transition-colors duration-150 
+                                  ${selectedCollection?.contract_address === collection.contract_address ? 'bg-[#374151]' : ''}`}
+                        onClick={() => handleSelectCollection(collection)}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 rounded-full overflow-hidden bg-[#111827]">
+                            {collection.image_url ? (
+                              <img 
+                                src={collection.image_url} 
+                                alt={collection.name} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://placehold.co/100/111827/6b7280?text=NFT';
+                                }} 
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-500">NFT</div>
+                            )}
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-white">{collection.name}</h3>
+                            <div className="flex items-center text-xs text-gray-400 mt-1">
+                              <Tag className="w-3 h-3 mr-1" />
+                              <span>{collection.token_schema || 'ERC-721'}</span>
+                              {collection.floor_price && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  <span>Floor: {formatPriceUSD(collection.floor_price)}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-gray-400">
+                      No collections found for {selectedChain}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Pagination */}
+                <div className="p-4 border-t border-[#374151] flex justify-between">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    className="bg-[#111827] border-[#374151] text-white hover:bg-[#374151]"
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!collections || collections.length < limit}
+                    onClick={() => setPage(p => p + 1)}
+                    className="bg-[#111827] border-[#374151] text-white hover:bg-[#374151]"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </div>
-        
-        {isLoadingCollections ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse">
-            {[...Array(8)].map((_, i) => (
-              <Card key={i} className="bg-[#1f2937] border-[#374151]">
-                <div className="h-48 bg-[#374151]"></div>
-                <CardContent className="pt-4 pb-2">
-                  <div className="flex items-center space-x-2 mb-4">
-                    <div className="h-10 w-10 rounded-full bg-[#374151]"></div>
-                    <div>
-                      <div className="h-4 w-32 bg-[#374151] rounded mb-2"></div>
-                      <div className="h-3 w-24 bg-[#374151] rounded"></div>
+
+        {/* Collection Details */}
+        <div className="md:col-span-2">
+          {selectedCollection ? (
+            <div className="bg-[#1f2937] rounded-xl border border-[#374151] overflow-hidden">
+              <div className="p-6 border-b border-[#374151]">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-[#111827]">
+                    {selectedCollection.image_url ? (
+                      <img 
+                        src={selectedCollection.image_url} 
+                        alt={selectedCollection.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-500">NFT</div>
+                    )}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{selectedCollection.name}</h2>
+                    <div className="flex items-center mt-1">
+                      <span className="text-sm text-gray-400 mr-2">{selectedCollection.contract_address.slice(0, 6)}...{selectedCollection.contract_address.slice(-4)}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-white" asChild>
+                        <a href={`https://${selectedChain === 'ethereum' ? '' : selectedChain + '.'}etherscan.io/address/${selectedCollection.contract_address}`} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <div className="h-3 w-16 bg-[#374151] rounded mb-2"></div>
-                      <div className="h-4 w-20 bg-[#374151] rounded"></div>
+                </div>
+                {selectedCollection.description && (
+                  <p className="mt-4 text-gray-400 text-sm">{selectedCollection.description}</p>
+                )}
+              </div>
+
+              <Tabs defaultValue="overview" className="w-full">
+                <div className="px-6 pt-4">
+                  <TabsList className="grid grid-cols-3 bg-[#111827]">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="nfts">NFTs</TabsTrigger>
+                    <TabsTrigger value="valuation">Valuation</TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value="overview" className="p-6">
+                  {isLoadingMetrics ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="bg-[#111827] rounded-lg p-4">
+                          <Skeleton className="h-4 w-20 mb-2" />
+                          <Skeleton className="h-6 w-32" />
+                        </div>
+                      ))}
                     </div>
-                    <div>
-                      <div className="h-3 w-16 bg-[#374151] rounded mb-2"></div>
-                      <div className="h-4 w-20 bg-[#374151] rounded"></div>
+                  ) : collectionMetrics ? (
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                        <Card className="bg-[#111827] border-[#374151]">
+                          <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center space-x-1">
+                              <TrendingUp className="w-4 h-4" />
+                              <span>Floor Price</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-white">{formatPriceUSD(collectionMetrics.floor_price)}</div>
+                            <div className="text-sm text-gray-400 mt-1">
+                              {collectionMetrics.price_change_24h > 0 ? (
+                                <span className="text-green-500">+{collectionMetrics.price_change_24h.toFixed(2)}%</span>
+                              ) : (
+                                <span className="text-red-500">{collectionMetrics.price_change_24h.toFixed(2)}%</span>
+                              )}
+                              <span className="ml-1">(24h)</span>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="bg-[#111827] border-[#374151]">
+                          <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center space-x-1">
+                              <Wallet className="w-4 h-4" />
+                              <span>Market Cap</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-white">{formatPriceUSD(collectionMetrics.market_cap)}</div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="bg-[#111827] border-[#374151]">
+                          <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center space-x-1">
+                              <Users className="w-4 h-4" />
+                              <span>Holders</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-white">{formatNumber(collectionMetrics.holders_count)}</div>
+                          </CardContent>
+                        </Card>
+
+                        <Card className="bg-[#111827] border-[#374151]">
+                          <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center space-x-1">
+                              <Package className="w-4 h-4" />
+                              <span>Items</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="text-2xl font-bold text-white">{formatNumber(collectionMetrics.items_count)}</div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      <div className="mt-8">
+                        <h3 className="text-xl font-bold text-white mb-4">Volume</h3>
+                        <div className="bg-[#111827] p-4 rounded-lg border border-[#374151]">
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={getChartData()}>
+                              <XAxis dataKey="name" stroke="#6b7280" />
+                              <YAxis 
+                                stroke="#6b7280"
+                                tickFormatter={(value) => {
+                                  if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+                                  if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+                                  return `$${value}`;
+                                }}
+                              />
+                              <Tooltip 
+                                formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Volume']}
+                                contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
+                                labelStyle={{ color: '#f9fafb' }}
+                              />
+                              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-6 text-center text-gray-400">
+                      No metrics available for this collection
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="nfts" className="p-6">
+                  {isLoadingNFTs ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="bg-[#111827] rounded-lg overflow-hidden">
+                          <Skeleton className="h-40 w-full" />
+                          <div className="p-3">
+                            <Skeleton className="h-5 w-3/4 mb-2" />
+                            <Skeleton className="h-4 w-1/2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : collectionNFTs && collectionNFTs.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {collectionNFTs.map((nft) => (
+                        <div key={nft.token_id} className="bg-[#111827] rounded-lg overflow-hidden border border-[#374151] transition-transform hover:transform hover:scale-[1.02]">
+                          <div className="aspect-square overflow-hidden bg-[#0d1117]">
+                            {nft.image_url ? (
+                              <img 
+                                src={nft.image_url} 
+                                alt={nft.name} 
+                                className="w-full h-full object-cover" 
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://placehold.co/400/111827/6b7280?text=NFT';
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-gray-500">No Image</div>
+                            )}
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-medium text-white truncate">{nft.name}</h3>
+                            <div className="flex justify-between items-center mt-2">
+                              <div className="text-xs text-gray-400">ID: {nft.token_id}</div>
+                              {nft.estimated_price && (
+                                <div className="text-sm font-medium text-primary">{formatPriceUSD(nft.estimated_price)}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-gray-400">
+                      No NFTs available for this collection
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex justify-center">
+                    <Button className="bg-primary hover:bg-primary-dark">
+                      Load More
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="valuation" className="p-6">
+                  <div className="bg-[#111827] rounded-lg p-6 border border-[#374151]">
+                    <h3 className="text-xl font-bold text-white mb-4">NFT Valuation</h3>
+                    <p className="text-gray-400 mb-6">
+                      UnleashNFTs provides accurate valuations for NFTs in this collection based on historical data, 
+                      market trends, and rarity analysis.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="font-medium text-white mb-2">Enter Token ID</h4>
+                        <div className="flex space-x-2">
+                          <Input className="bg-[#1f2937] border-[#374151]" placeholder="Token ID" />
+                          <Button>
+                            Get Valuation
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-[#1d2430] p-4 rounded-lg">
+                        <h4 className="font-medium text-white mb-2">Benefits</h4>
+                        <ul className="text-sm text-gray-400 space-y-2">
+                          <li>• Accurate price estimations based on rarity</li>
+                          <li>• Historical price trends and analysis</li>
+                          <li>• Confidence scores for each valuation</li>
+                          <li>• Market comparison with similar assets</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="h-3 w-12 bg-[#374151] rounded mb-2"></div>
-                      <div className="h-4 w-16 bg-[#374151] rounded"></div>
-                    </div>
-                    <div>
-                      <div className="h-3 w-12 bg-[#374151] rounded mb-2"></div>
-                      <div className="h-4 w-16 bg-[#374151] rounded"></div>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-0 pb-4">
-                  <div className="h-9 w-full bg-[#374151] rounded"></div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="bg-[#1f2937] rounded-xl p-8 text-center">
-            <p className="text-white mb-2">Failed to load NFT collections</p>
-            <p className="text-gray-400">Please try again later</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {sortedCollections?.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} />
-            ))}
-          </div>
-        )}
-      </section>
-    </main>
+                </TabsContent>
+              </Tabs>
+            </div>
+          ) : (
+            <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-8 flex flex-col items-center justify-center text-center h-full">
+              <div className="w-16 h-16 bg-[#111827] rounded-full flex items-center justify-center mb-4">
+                <Package className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Select a Collection</h3>
+              <p className="text-gray-400 max-w-md">
+                Choose an NFT collection from the list to view detailed metrics, 
+                NFTs, and valuation data powered by UnleashNFTs.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

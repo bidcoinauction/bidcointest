@@ -1,4 +1,4 @@
-import { apiRequest } from './api';
+import { fetchFromAPI } from './api';
 
 // Types exported from server/unleashNftsService.ts
 export interface NFTCollection {
@@ -64,7 +64,7 @@ export const getCollectionsByChain = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTCollection[]> => {
-  const response = await apiRequest(`/api/unleash/collections?chain=${chain}&page=${page}&limit=${limit}`);
+  const response = await fetchFromAPI<NFTCollection[]>(`/unleash/collections?chain=${chain}&page=${page}&limit=${limit}`);
   return response || [];
 };
 
@@ -77,7 +77,7 @@ export const getCollectionMetadata = async (
   address: string,
   chain: string = 'ethereum'
 ): Promise<NFTCollection | null> => {
-  const response = await apiRequest(`/api/unleash/collection/${address}?chain=${chain}`);
+  const response = await fetchFromAPI<NFTCollection>(`/unleash/collection/${address}?chain=${chain}`);
   return response || null;
 };
 
@@ -90,7 +90,7 @@ export const getCollectionMetrics = async (
   address: string,
   chain: string = 'ethereum'
 ): Promise<NFTCollectionMetrics | null> => {
-  const response = await apiRequest(`/api/unleash/collection/${address}/metrics?chain=${chain}`);
+  const response = await fetchFromAPI<NFTCollectionMetrics>(`/unleash/collection/${address}/metrics?chain=${chain}`);
   return response || null;
 };
 
@@ -105,7 +105,7 @@ export const getCollectionTrend = async (
   chain: string = 'ethereum',
   period: string = '30d'
 ): Promise<any> => {
-  const response = await apiRequest(`/api/unleash/collection/${address}/trend?chain=${chain}&period=${period}`);
+  const response = await fetchFromAPI<any>(`/unleash/collection/${address}/trend?chain=${chain}&period=${period}`);
   return response || null;
 };
 
@@ -118,7 +118,7 @@ export const getCollectionTraits = async (
   address: string,
   chain: string = 'ethereum'
 ): Promise<any> => {
-  const response = await apiRequest(`/api/unleash/collection/${address}/traits?chain=${chain}`);
+  const response = await fetchFromAPI<any>(`/unleash/collection/${address}/traits?chain=${chain}`);
   return response || null;
 };
 

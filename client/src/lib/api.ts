@@ -4,7 +4,7 @@ import { Auction, NFT, BidPack, Activity, BlockchainStats } from "@shared/schema
 const API_BASE = "/api";
 
 // Generic fetch function
-async function fetchFromAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+export async function fetchFromAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${endpoint}`, options);
   
   if (!response.ok) {
