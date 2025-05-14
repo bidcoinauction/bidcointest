@@ -41,6 +41,11 @@ export async function placeBid(auctionId: number, amount: string, bidderAddress:
   });
 }
 
+// This is an alias used in some components
+export async function apiPlaceBid(auctionId: number, amount: string, bidderAddress: string): Promise<Auction> {
+  return placeBid(auctionId, amount, bidderAddress);
+}
+
 // NFT API calls
 export async function getNFTs(): Promise<NFT[]> {
   return fetchFromAPI<NFT[]>("/nfts");
@@ -56,6 +61,36 @@ export async function getPopularCollections(): Promise<any[]> {
 
 export async function getCollectionNFTs(collectionSymbol: string): Promise<NFT[]> {
   return fetchFromAPI<NFT[]>(`/collections/${collectionSymbol}/nfts`);
+}
+
+export async function getWalletNFTs(walletAddress: string): Promise<NFT[]> {
+  return fetchFromAPI<NFT[]>(`/wallet/${walletAddress}/nfts`);
+}
+
+export async function getNFTsByCollection(collectionName: string): Promise<NFT[]> {
+  return getCollectionNFTs(collectionName);
+}
+
+export async function importNFTFromMoralis(tokenAddress: string, tokenId: string): Promise<NFT> {
+  return fetchFromAPI<NFT>(`/nfts/import`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      tokenAddress,
+      tokenId,
+    }),
+  });
+}
+
+export async function importWalletNFTs(walletAddress: string): Promise<NFT[]> {
+  return fetchFromAPI<NFT[]>(`/wallet/${walletAddress}/import`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    }
+  });
 }
 
 // BidPack API calls
@@ -87,6 +122,10 @@ export async function getUserBidPacks(userId: number): Promise<any[]> {
 // Activity API calls
 export async function getActivities(): Promise<Activity[]> {
   return fetchFromAPI<Activity[]>("/activity");
+}
+
+export async function getActivity(): Promise<Activity[]> {
+  return getActivities();
 }
 
 // Blockchain API calls

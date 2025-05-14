@@ -105,7 +105,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
   };
   
   const handleBidSubmit = async () => {
-    if (!address || !provider || !isConnected) {
+    if (!address || !isConnected) {
       toast({
         variant: "destructive",
         title: "Wallet Not Connected",
@@ -141,7 +141,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
       const success = await placeBid(
         auction.id,
         bidAmount,
-        provider
+        address
       );
       
       if (success) {
