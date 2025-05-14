@@ -135,7 +135,7 @@ export const getCollectionNFTs = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTMetadata[]> => {
-  const response = await apiRequest(`/api/unleash/collection/${address}/nfts?chain=${chain}&page=${page}&limit=${limit}`);
+  const response = await fetchFromAPI<NFTMetadata[]>(`/unleash/collection/${address}/nfts?chain=${chain}&page=${page}&limit=${limit}`);
   return response || [];
 };
 
@@ -152,7 +152,7 @@ export const getCollectionTransactions = async (
   page: number = 1,
   limit: number = 10
 ): Promise<any[]> => {
-  const response = await apiRequest(`/api/unleash/collection/${address}/transactions?chain=${chain}&page=${page}&limit=${limit}`);
+  const response = await fetchFromAPI<any[]>(`/unleash/collection/${address}/transactions?chain=${chain}&page=${page}&limit=${limit}`);
   return response || [];
 };
 
@@ -167,7 +167,7 @@ export const getCollectionsWithValuation = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTCollection[]> => {
-  const response = await apiRequest(`/api/unleash/collections-with-valuation?chain=${chain}&page=${page}&limit=${limit}`);
+  const response = await fetchFromAPI<NFTCollection[]>(`/unleash/collections-with-valuation?chain=${chain}&page=${page}&limit=${limit}`);
   return response || [];
 };
 
@@ -184,7 +184,7 @@ export const getNFTsWithValuation = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTMetadata[]> => {
-  const response = await apiRequest(`/api/unleash/nfts-with-valuation?collection=${collection}&chain=${chain}&page=${page}&limit=${limit}`);
+  const response = await fetchFromAPI<NFTMetadata[]>(`/unleash/nfts-with-valuation?collection=${collection}&chain=${chain}&page=${page}&limit=${limit}`);
   return response || [];
 };
 
@@ -199,6 +199,6 @@ export const getNFTValuation = async (
   tokenId: string,
   chain: string = 'ethereum'
 ): Promise<NFTValuation | null> => {
-  const response = await apiRequest(`/api/unleash/nft-valuation?collection=${collection}&token_id=${tokenId}&chain=${chain}`);
+  const response = await fetchFromAPI<NFTValuation>(`/unleash/nft-valuation?collection=${collection}&token_id=${tokenId}&chain=${chain}`);
   return response || null;
 };

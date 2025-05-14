@@ -50,7 +50,7 @@ export default function NFTCollectionsPage() {
     isLoading: isLoadingCollections,
     refetch: refetchCollections
   } = useQuery({
-    queryKey: ['/api/unleash/collections', selectedChain, page, limit],
+    queryKey: ['/unleash/collections', selectedChain, page, limit],
     queryFn: () => getCollectionsByChain(selectedChain, page, limit)
   });
 
