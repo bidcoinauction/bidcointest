@@ -8,7 +8,8 @@ import { formatRelativeTime } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import BidModal from "@/components/modals/BidModal";
 import PaymentMethodModal from "@/components/modals/PaymentMethodModal";
-import { Heart, Share2, ExternalLink, Trophy } from "lucide-react";
+import BidActivity from "@/components/auctions/BidActivity";
+import { Heart, Share2, ExternalLink, Trophy, TrendingUp, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
 
