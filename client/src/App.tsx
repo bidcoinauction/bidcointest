@@ -6,6 +6,7 @@ import BidPacksPage from "@/pages/bid-packs";
 import ActivityPage from "@/pages/activity";
 import AboutPage from "@/pages/about";
 import DashboardPage from "@/pages/dashboard";
+import NFTCollectionsPage from "@/pages/nft-collections";
 import NotFound from "@/pages/not-found";
 import useWebSocket from "@/hooks/useWebSocket";
 import { queryClient } from "@/lib/queryClient";
@@ -51,6 +52,7 @@ function App() {
           <Route path="/bid-packs" component={BidPacksPage}/>
           <Route path="/activity" component={ActivityPage}/>
           <Route path="/dashboard" component={DashboardPage}/>
+          <Route path="/nft-collections" component={NFTCollectionsPage}/>
           <Route path="/about" component={AboutPage}/>
           <Route component={NotFound} />
         </Switch>

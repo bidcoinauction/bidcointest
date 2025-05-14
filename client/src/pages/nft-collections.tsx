@@ -59,7 +59,7 @@ export default function NFTCollectionsPage() {
     data: collectionMetrics,
     isLoading: isLoadingMetrics
   } = useQuery({
-    queryKey: ['/api/unleash/collection/metrics', selectedCollection?.contract_address, selectedChain],
+    queryKey: ['/unleash/collection/metrics', selectedCollection?.contract_address, selectedChain],
     queryFn: () => getCollectionMetrics(selectedCollection?.contract_address || '', selectedChain),
     enabled: !!selectedCollection
   });
@@ -69,7 +69,7 @@ export default function NFTCollectionsPage() {
     data: collectionNFTs,
     isLoading: isLoadingNFTs
   } = useQuery({
-    queryKey: ['/api/unleash/collection/nfts', selectedCollection?.contract_address, selectedChain],
+    queryKey: ['/unleash/collection/nfts', selectedCollection?.contract_address, selectedChain],
     queryFn: () => getCollectionNFTs(selectedCollection?.contract_address || '', selectedChain, 1, 4),
     enabled: !!selectedCollection
   });

@@ -48,6 +48,13 @@ export default function Navigation() {
           </div>
           
           <div 
+            onClick={navigate("/nft-collections")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/nft-collections") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            NFT Collections
+          </div>
+          
+          <div 
             onClick={navigate("/about")}
             className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/about") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
           >
