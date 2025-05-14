@@ -86,7 +86,8 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   };
   
   const startingPrice = auction.startingBid || 0;
-  const currency = auction.currency || 'ETH';
+  // Always use USD for penny auctions
+  const currency = 'USD';
   
   return (
     <div className="bg-[#0a0e17] rounded-lg overflow-hidden transition-all">
@@ -186,7 +187,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           }}
           disabled={isComplete}
         >
-          Bid
+          Bid ($0.24)
         </Button>
         
         <Button 
