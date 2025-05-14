@@ -595,44 +595,44 @@ export class MemStorage implements IStorage {
     await this.createBidPack({
       name: "Starter Pack: 50 Bidcoin",
       type: "starter",
-      bidCount: 50,
-      bonusBids: 10,
-      price: "14.40",  // (50+10) bids × $0.24 = $14.40
-      originalPrice: "15.84",
-      currency: "USD",  // Currency used to purchase the Bidcoin pack
+      bidCount: 60,
+      bonusBids: 0,
+      price: "12.00",
+      originalPrice: "15.00",
+      currency: "USD",
       available: true,
     });
 
     await this.createBidPack({
       name: "Pro Pack: 125 Bidcoin",
       type: "pro",
-      bidCount: 125,
-      bonusBids: 30,
-      price: "37.20",  // (125+30) bids × $0.24 = $37.20
-      originalPrice: "40.92",
-      currency: "USD",  // Currency used to purchase the Bidcoin pack
+      bidCount: 155,
+      bonusBids: 0,
+      price: "30.00",
+      originalPrice: "37.50",
+      currency: "USD",
       available: true,
     });
 
     await this.createBidPack({
       name: "Premium Pack: 250 Bidcoin",
       type: "premium",
-      bidCount: 250,
-      bonusBids: 75,
-      price: "78.00",  // (250+75) bids × $0.24 = $78.00
-      originalPrice: "85.80",
-      currency: "USD",  // Currency used to purchase the Bidcoin pack
+      bidCount: 325,
+      bonusBids: 0,
+      price: "60.00",
+      originalPrice: "75.00",
+      currency: "USD",
       available: true,
     });
 
     await this.createBidPack({
       name: "Whale Pack: 500 Bidcoin",
       type: "whale",
-      bidCount: 500,
-      bonusBids: 150,
-      price: "156.00",  // (500+150) bids × $0.24 = $156.00
-      originalPrice: "171.60",
-      currency: "USD",  // Currency used to purchase the Bidcoin pack
+      bidCount: 650,
+      bonusBids: 0,
+      price: "120.00",
+      originalPrice: "150.00",
+      currency: "USD",
       available: true,
     });
 
