@@ -536,9 +536,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import multiple NFTs from a wallet
-  app.post('/api/moralis/import-wallet', async (req, res) => {
+  app.post('/api/wallet/:walletAddress/import', async (req, res) => {
+    const { walletAddress } = req.params;
     try {
-      const { walletAddress, limit = 5, creatorId = 1, chain = 'ethereum' } = req.body;
+      const { limit = 5, creatorId = 1, chain = 'ethereum' } = req.body;
       
       if (!walletAddress) {
         return res.status(400).json({ message: 'Wallet address is required' });
