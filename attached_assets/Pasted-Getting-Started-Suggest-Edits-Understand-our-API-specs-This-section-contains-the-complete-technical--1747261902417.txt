@@ -1,0 +1,102 @@
+Getting Started
+Suggest Edits
+Understand our API specs
+This section contains the complete technical overview of the Unleash NFTs API. You can find it here.
+
+Supported chains
+Chain Name	Chain Id (INT)
+Ethereum	1
+Polygon	137
+Avalanche	43114
+Binance Smart Chain	57
+Ordinals	8086
+Linea	59144
+Solana	900
+How to make your first API call
+To obtain your complimentary developer API key, please complete the following steps:
+
+Begin by connecting your wallet on unleashnfts.com.
+Navigate to the API KEY section, located within the "Your Portfolio" page.
+Submit your email address and proceed with the instructions outlined in the confirmation email.
+Return to this API KEY screen to retrieve your free API key.
+Explore any of the endpoints within the API reference page. For interactive API testing, ensure you provide the API key within the Authorization header.
+How to make your first API call
+Below is an example of an API request to get the list of blockchains supported by Unleash NFTs. Before running the command, make sure "your API key" in the header section is replaced with a valid api key.
+
+curl
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/blockchains?sort_by=blockchain_name&offset=0&limit=30 \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+The API response will provide the list of blockchains supported by Unleash NFTs, along with additional details about the blockchains.
+
+Below is the API response:
+
+JSON
+
+{
+  "blockchains": [
+    {
+      "metadata": {
+        "id": 1,
+        "name": "Ethereum",
+        "description": "Ethereum is the community-run technology powering the cryptocurrency, ether (ETH) and thousands of decentralized applications.",
+        "thumbnail_url": "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=002",
+        "currency_id": "eth",
+        "latest_data_timestamp": "2022-10-31T00:00:00.000Z"
+      }
+    },
+    {
+      "metadata": {
+        "id": 137,
+        "name": "Polygon",
+        "description": "Polygon, formerly known as the Matic Network, is a scaling solution that aims to provide multiple tools to improve the speed and reduce the cost and complexities of transactions on blockchain networks. ... After the rebranding, Polygon retained its MATIC cryptocurrency, the digital coin underpinning the network.",
+        "thumbnail_url": "https://polygonscan.com/images/svg/brands/polygon.svg",
+        "currency_id": "matic",
+        "latest_data_timestamp": "2022-10-31T00:00:00.000Z"
+      }
+    }
+  ],
+  "pagination": {
+    "total_items": 2,
+    "offset": 0,
+    "limit": 30,
+    "has_next": false
+  }
+}
+How to get the NFT market report
+Some of the sample market metrics are provided below, while the full list of metrics can be found here.
+
+Metric name (in API)	Metric unit	Metric description
+marketcap	[currency]	The total market value of the NFT collection calculated as the sum of each NFT valued at the average trading price of the collection.
+volume	[currency]	A measure of how much of an NFT collection was traded
+sales	count	Number of NFTs sold
+traders	count	Number of traders (either buyer and or seller)
+washtrade_volume	[currency]	Total trade value suspected of washtrade
+holders	Count	Number of traders currently holding NFTs
+transfers	Count	Number of NFTs flipped (includes both sale and non sale NFT transfers)
+Single metric:
+for example, Volume
+
+In this case, all the configuration of the API is managed by query parameters. For example, to obtain a single metric data for a blockchain, by following query parameters
+
+metrics required - metrics sales are passed
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/market/metrics?currency=usd&blockchain=1&metrics=sales&time_range=24h&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+From the response, we get the market metrics values for the selected metrics which can be used for further analysis. In Ethereum, we can obtain how much sales have stood from this endpoint.

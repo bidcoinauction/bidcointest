@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { log } from './vite';
 
+// Updated API endpoints based on the latest UnleashNFTs documentation
 const BASE_URL_V1 = 'https://api.unleashnfts.com/api/v1';
 const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2';
 // Access the API key directly from the environment variable
@@ -79,15 +80,33 @@ export class UnleashNftsService {
    */
   private async testConnection(): Promise<void> {
     try {
+      log(`Testing connection to UnleashNFTs API...`, 'unleash-nfts');
+      
       // Try to fetch supported blockchains as a simple API test
       const blockchains = await this.getSupportedBlockchains(1, 1);
+      
       if (blockchains && blockchains.length > 0) {
-        log(`UnleashNFTs API connection test successful. Found ${blockchains.length} blockchains.`, 'unleash-nfts');
+        log(`✅ UnleashNFTs API connection test SUCCESSFUL. Found ${blockchains.length} blockchains.`, 'unleash-nfts');
+        log(`Blockchain available: ${blockchains[0]?.metadata?.name || 'Unknown'}`, 'unleash-nfts');
       } else {
-        log(`UnleashNFTs API connection test completed, but no blockchains were returned.`, 'unleash-nfts');
+        log(`⚠️ UnleashNFTs API connection test completed, but no blockchains were returned.`, 'unleash-nfts');
+        log(`This might indicate an issue with the API or insufficient permissions.`, 'unleash-nfts');
       }
-    } catch (error) {
-      log(`UnleashNFTs API connection test failed: ${error.message}`, 'unleash-nfts');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+      const status = error.response?.status;
+      
+      log(`❌ UnleashNFTs API connection test FAILED: ${errorMessage}`, 'unleash-nfts');
+      
+      if (status === 401 || errorMessage.includes('API key')) {
+        // If API key is invalid, provide guidance on obtaining a new one
+        log(`The API key appears to be invalid or expired.`, 'unleash-nfts'); 
+        log(`To get a valid API key:`, 'unleash-nfts');
+        log(`1. Create an account at unleashnfts.com`, 'unleash-nfts');
+        log(`2. Navigate to your profile settings`, 'unleash-nfts');
+        log(`3. Request an API key and follow verification steps`, 'unleash-nfts');
+        log(`4. Add the new key to your environment as VITE_BITCRUNCH_API_KEY`, 'unleash-nfts');
+      }
     }
   }
 
@@ -592,19 +611,45 @@ export class UnleashNftsService {
   private handleError(method: string, error: any): void {
     const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
     const status = error.response?.status;
+    const requestUrl = error.config?.url || 'unknown';
+    const requestMethod = error.config?.method || 'unknown';
     
     // Special handling for authentication errors
     if (status === 401 || errorMessage.includes('API key')) {
       log(`UnleashNfts API AUTHENTICATION ERROR in ${method}: ${errorMessage}`, 'unleash-nfts');
       log(`Please check that the VITE_BITCRUNCH_API_KEY environment variable contains a valid API key.`, 'unleash-nfts');
-      log(`Current API key prefix: ${API_KEY ? API_KEY.substring(0, 4) + '...' : 'Not set'}`, 'unleash-nfts');
+      
+      // Show first and last 4 characters of API key for debugging
+      if (API_KEY) {
+        const firstFour = API_KEY.substring(0, 4);
+        const lastFour = API_KEY.substring(API_KEY.length - 4);
+        log(`Current API key: ${firstFour}...${lastFour}`, 'unleash-nfts');
+      } else {
+        log(`Current API key: Not set`, 'unleash-nfts');
+      }
+      
+      // Registration instructions
+      log(`To get a valid API key, register at unleashnfts.com and request a key from your profile`, 'unleash-nfts');
       
       // Log the request details for debugging
-      const requestUrl = error.config?.url || 'unknown';
-      const requestMethod = error.config?.method || 'unknown';
+      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
+    } else if (status === 429) {
+      // Rate limiting errors
+      log(`RATE LIMIT EXCEEDED in ${method}: ${errorMessage}`, 'unleash-nfts');
+      log(`UnleashNFTs has rate limits on API calls. Consider:`, 'unleash-nfts');
+      log(`1. Reducing request frequency`, 'unleash-nfts');
+      log(`2. Adding caching mechanisms`, 'unleash-nfts');
+      log(`3. Upgrading your API plan`, 'unleash-nfts');
+      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
+    } else if (status >= 500) {
+      // Server errors
+      log(`UnleashNFTs SERVER ERROR in ${method}: ${errorMessage}`, 'unleash-nfts');
+      log(`This is likely a temporary issue with the UnleashNFTs API service.`, 'unleash-nfts');
       log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
     } else {
-      log(`UnleashNfts API error in ${method}: ${errorMessage}`, 'unleash-nfts');
+      // Other errors
+      log(`UnleashNfts API error in ${method}: ${errorMessage} (Status: ${status || 'unknown'})`, 'unleash-nfts');
+      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
     }
     
     console.error(`UnleashNfts API error in ${method}:`, error);
