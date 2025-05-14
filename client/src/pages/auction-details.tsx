@@ -29,8 +29,10 @@ export default function AuctionDetailsPage() {
   const timeRemaining = auction?.endTime ? new Date(auction.endTime).getTime() - Date.now() : 0;
   
   // Check if the current user is the highest bidder
-  const isHighestBidder = auction?.bids && auction.bids.length > 0 && 
-    auction.bids[0].bidder.walletAddress === address;
+  // Bids are already sorted newest first from the server
+  const highestBid = auction?.bids && auction.bids.length > 0 ? auction.bids[0] : null;
+  const isHighestBidder = highestBid && address && 
+    highestBid.bidder.walletAddress === address;
     
   const handleAuctionComplete = () => {
     console.log("Auction complete!");
@@ -95,9 +97,57 @@ export default function AuctionDetailsPage() {
     setShowBidModal(false);
   };
   
-  const handlePlaceBid = (amount: string) => {
-    console.log("Placing bid:", amount);
-    // Implementation to place bid would go here
+  const handlePlaceBid = async (amount: string) => {
+    if (!address) {
+      toast({
+        title: "Wallet Not Connected",
+        description: "Please connect your wallet before placing a bid.",
+        variant: "destructive"
+      });
+      setShowBidModal(false);
+      return;
+    }
+    
+    try {
+      console.log("Placing bid:", amount, "on auction:", auctionId, "with address:", address);
+      
+      const response = await fetch(`/api/auctions/${auctionId}/bid`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount,
+          bidderAddress: address,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to place bid");
+      }
+      
+      const updatedAuction = await response.json();
+      
+      toast({
+        title: "Bid Placed Successfully!",
+        description: `Your bid of ${amount} ${auction?.currency} has been placed.`,
+        variant: "default",
+      });
+      
+      // Refresh the auction data
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } catch (error) {
+      console.error("Error placing bid:", error);
+      toast({
+        title: "Bid Failed",
+        description: error instanceof Error ? error.message : "Failed to place bid. Please try again.",
+        variant: "destructive",
+      });
+    }
+    
     setShowBidModal(false);
   };
   
@@ -310,7 +360,7 @@ export default function AuctionDetailsPage() {
                               {bid.amount} {auction.currency}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-gray-400">
-                              {bid.timestamp ? formatRelativeTime(bid.timestamp) : 'Unknown time'}
+                              {bid.timestamp ? formatRelativeTime(new Date(bid.timestamp)) : 'Unknown time'}
                             </td>
                           </tr>
                         ))}
