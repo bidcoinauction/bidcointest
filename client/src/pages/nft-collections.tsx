@@ -22,7 +22,13 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { formatPriceUSD, formatNumber } from '@/lib/utils';
+import { 
+  formatPriceUSD, 
+  formatNumber, 
+  formatRarity, 
+  getRarityColor, 
+  getRarityLabel 
+} from '@/lib/utils';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -387,7 +393,7 @@ export default function NFTCollectionsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       {collectionNFTs.map((nft) => (
                         <div key={nft.token_id} className="bg-[#111827] rounded-lg overflow-hidden border border-[#374151] transition-transform hover:transform hover:scale-[1.02]">
-                          <div className="aspect-square overflow-hidden bg-[#0d1117]">
+                          <div className="aspect-square overflow-hidden bg-[#0d1117] relative">
                             {nft.image_url ? (
                               <img 
                                 src={nft.image_url} 
@@ -400,6 +406,26 @@ export default function NFTCollectionsPage() {
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-gray-500">No Image</div>
                             )}
+                            
+                            {/* Rarity badge if we have traits with rarity */}
+                            {nft.traits && nft.traits.some(trait => trait.rarity !== undefined) && (
+                              <div className="absolute top-2 right-2">
+                                <div className={`px-2 py-1 rounded-full text-xs font-medium text-white ${getRarityColor(
+                                  // Average rarity of all traits with rarity value
+                                  nft.traits
+                                    .filter(trait => trait.rarity !== undefined)
+                                    .reduce((sum, trait) => sum + (trait.rarity || 0), 0) / 
+                                  nft.traits.filter(trait => trait.rarity !== undefined).length
+                                )}`}>
+                                  {getRarityLabel(
+                                    nft.traits
+                                      .filter(trait => trait.rarity !== undefined)
+                                      .reduce((sum, trait) => sum + (trait.rarity || 0), 0) / 
+                                    nft.traits.filter(trait => trait.rarity !== undefined).length
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="p-3">
                             <h3 className="font-medium text-white truncate">{nft.name}</h3>
@@ -409,6 +435,31 @@ export default function NFTCollectionsPage() {
                                 <div className="text-sm font-medium text-primary">{formatPriceUSD(nft.estimated_price)}</div>
                               )}
                             </div>
+                            
+                            {/* Show traits with rarity if available */}
+                            {nft.traits && nft.traits.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-[#374151]">
+                                <div className="text-xs text-gray-400 mb-1">Traits:</div>
+                                <div className="flex flex-wrap gap-1">
+                                  {nft.traits.slice(0, 3).map((trait, index) => (
+                                    <div 
+                                      key={index} 
+                                      className={`px-1.5 py-0.5 rounded text-xs ${trait.rarity ? 
+                                        `${getRarityColor(trait.rarity)} text-white` : 
+                                        'bg-[#1f2937] text-gray-300'}`}
+                                      title={trait.rarity ? `Rarity: ${formatRarity(trait.rarity)}` : ''}
+                                    >
+                                      {trait.trait_type}: {trait.value}
+                                    </div>
+                                  ))}
+                                  {nft.traits.length > 3 && (
+                                    <div className="px-1.5 py-0.5 rounded text-xs bg-[#1f2937] text-gray-300">
+                                      +{nft.traits.length - 3} more
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
