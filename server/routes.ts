@@ -21,6 +21,23 @@ import { EvmChain } from "@moralisweb3/common-evm-utils";
 // WebSocket clients and utility functions
 let wsClients: WebSocket[] = [];
 
+// Helper function to normalize trait rarity to string for consistent typing
+function normalizeTraitRarity(traits: Array<{
+  trait_type: string;
+  value: string;
+  rarity?: number | string | undefined;
+}>): Array<{
+  trait_type: string;
+  value: string;
+  rarity: string;
+}> {
+  return traits.map(trait => ({
+    trait_type: trait.trait_type,
+    value: trait.value,
+    rarity: trait.rarity ? trait.rarity.toString() : "0"  // Use "0" instead of null for rarity
+  }));
+}
+
 // Broadcast updates to all connected WebSocket clients
 function broadcastUpdate(type: string, data: any) {
   const message = JSON.stringify({ type, data });
@@ -605,7 +622,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const importedNFTs = [];
       
       for (const meNFT of meNFTs) {
+        // Convert Magic Eden NFT to our app format
         const nftData = magicEdenService.convertToAppNFT(meNFT, creatorId);
+        
+        // Try to enrich with UnleashNFTs data if available
+        try {
+          // First get collection data to enhance description and metadata
+          const collectionData = await unleashNftsService.getCollectionsByChain('solana', 1, 10);
+          
+          // Find a matching collection if available
+          const matchingCollection = collectionData.find(c => 
+            c.name.toLowerCase() === collectionSymbol.toLowerCase() || 
+            c.contract_address.toLowerCase() === meNFT.mintAddress.toLowerCase()
+          );
+          
+          if (matchingCollection) {
+            // Enhance with collection data
+            if (matchingCollection.name) {
+              nftData.collection = matchingCollection.name;
+            }
+            
+            if (matchingCollection.description && (!nftData.description || nftData.description === '')) {
+              nftData.description = matchingCollection.description;
+            }
+            
+            if (matchingCollection.floor_price) {
+              nftData.floorPrice = matchingCollection.floor_price.toString();
+            }
+            
+            // Try to get NFT-specific data if token ID is available
+            if (meNFT.mintAddress) {
+              try {
+                // Get collection NFTs
+                const nfts = await unleashNftsService.getCollectionNFTs(
+                  matchingCollection.contract_address,
+                  'solana',
+                  1,
+                  20
+                );
+                
+                // Find matching NFT by token ID/mint address
+                const matchingNFT = nfts.find(n => n.token_id === meNFT.mintAddress);
+                
+                if (matchingNFT) {
+                  // Override with richer data if available
+                  if (matchingNFT.description && matchingNFT.description.length > nftData.description.length) {
+                    nftData.description = matchingNFT.description;
+                  }
+                  
+                  if (matchingNFT.estimated_price) {
+                    nftData.floorPrice = matchingNFT.estimated_price.toString();
+                  }
+                  
+                  // Add traits as attributes if available
+                  if (matchingNFT.traits && matchingNFT.traits.length > 0) {
+                    // Convert traits to our attribute format with normalized rarity field
+                    const unleashAttributes = normalizeTraitRarity(matchingNFT.traits);
+                    
+                    // Combine existing attributes with UnleashNFTs attributes
+                    const existingAttributes = Array.isArray(nftData.attributes) ? nftData.attributes : [];
+                    nftData.attributes = [...existingAttributes, ...unleashAttributes];
+                  }
+                }
+              } catch (nftError) {
+                console.log('Unable to fetch specific NFT data from UnleashNFTs:', nftError);
+              }
+            }
+          }
+        } catch (unleashError) {
+          console.log('Unable to fetch UnleashNFTs data:', unleashError);
+          // Continue with basic Magic Eden data
+        }
+        
+        // Create NFT in our system
         const nft = await storage.createNFT(nftData);
         importedNFTs.push(nft);
       }
@@ -726,6 +815,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Map to our app's NFT schema
       const appNftData = moralisService.mapToAppNFT(nftData, creatorId);
       
+      // Try to enrich with UnleashNFTs data if available
+      try {
+        const unleashData = await unleashNftsService.getNFTValuation(
+          tokenAddress,
+          tokenId,
+          chain
+        );
+        
+        if (unleashData) {
+          // Enrich with floor price and price estimation if available
+          if (unleashData.estimated_price) {
+            appNftData.floorPrice = unleashData.estimated_price.toString();
+          }
+          
+          // Get additional collection data
+          const collectionData = await unleashNftsService.getCollectionMetadata(
+            tokenAddress,
+            chain
+          );
+          
+          if (collectionData) {
+            // Add collection name if available
+            if (collectionData.name) {
+              appNftData.collection = collectionData.name;
+            }
+            
+            // Enhance description if available
+            if (collectionData.description && (!appNftData.description || appNftData.description === '')) {
+              appNftData.description = collectionData.description;
+            }
+          }
+        }
+      } catch (unleashError) {
+        console.log('Unable to fetch UnleashNFTs data:', unleashError);
+        // Continue with basic Moralis data
+      }
+      
       // Create NFT in our system
       const nft = await storage.createNFT(appNftData);
       
@@ -773,7 +899,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Import each NFT
       for (const nft of limitedNfts) {
+        // Map to our app's NFT schema
         const appNftData = moralisService.mapToAppNFT(nft, creatorId);
+        
+        // Try to enrich with UnleashNFTs data if available
+        try {
+          if (nft.token_address) {
+            // Fetch collection metadata
+            const collectionData = await unleashNftsService.getCollectionMetadata(
+              nft.token_address,
+              chain
+            );
+            
+            if (collectionData) {
+              // Add collection name if available
+              if (collectionData.name) {
+                appNftData.collection = collectionData.name;
+              }
+              
+              // Enhance description if available and needed
+              if (collectionData.description && (!appNftData.description || appNftData.description === '')) {
+                appNftData.description = collectionData.description;
+              }
+              
+              // Get floor price if available
+              if (collectionData.floor_price) {
+                appNftData.floorPrice = collectionData.floor_price.toString();
+              }
+              
+              // Get collection metrics for more data
+              const collectionMetrics = await unleashNftsService.getCollectionMetrics(
+                nft.token_address,
+                chain
+              );
+              
+              if (collectionMetrics && collectionMetrics.floor_price) {
+                appNftData.floorPrice = collectionMetrics.floor_price.toString();
+              }
+            }
+            
+            // Try to get NFT-specific data
+            if (nft.token_id) {
+              // Get NFT valuation
+              const nftValuation = await unleashNftsService.getNFTValuation(
+                nft.token_address,
+                nft.token_id,
+                chain
+              );
+              
+              if (nftValuation && nftValuation.estimated_price) {
+                appNftData.floorPrice = nftValuation.estimated_price.toString();
+              }
+              
+              // Get collection NFTs to find the specific one
+              const collectionNFTs = await unleashNftsService.getCollectionNFTs(
+                nft.token_address,
+                chain
+              );
+              
+              // Find this specific NFT in the collection
+              const specificNFT = collectionNFTs.find(n => n.token_id === nft.token_id);
+              
+              if (specificNFT) {
+                // Use better description if available
+                if (specificNFT.description && specificNFT.description.length > appNftData.description.length) {
+                  appNftData.description = specificNFT.description;
+                }
+                
+                // Add traits as attributes if available
+                if (specificNFT.traits && specificNFT.traits.length > 0) {
+                  // Convert traits to our attribute format using the normalizer
+                  const unleashAttributes = normalizeTraitRarity(specificNFT.traits);
+                  
+                  // Combine with existing attributes
+                  const existingAttributes = Array.isArray(appNftData.attributes) ? appNftData.attributes : [];
+                  appNftData.attributes = [...existingAttributes, ...unleashAttributes];
+                }
+              }
+            }
+          }
+        } catch (unleashError) {
+          console.log('Unable to fetch UnleashNFTs data:', unleashError);
+          // Continue with basic Moralis data
+        }
+        
         const createdNft = await storage.createNFT(appNftData);
         importedNFTs.push(createdNft);
       }
