@@ -593,45 +593,56 @@ export class MemStorage implements IStorage {
     // Users purchase these with real cryptocurrency but can only place bids using Bidcoin
     // Each bid costs $0.24, and users can select quantity
     await this.createBidPack({
-      name: "Starter Pack: 50 Bidcoin",
+      name: "Single Bid",
+      type: "single",
+      bidCount: 1,
+      bonusBids: 0,
+      price: "0.24",
+      originalPrice: "0.24",
+      currency: "USD",
+      available: true,
+    });
+
+    await this.createBidPack({
+      name: "Starter Pack",
       type: "starter",
       bidCount: 60,
       bonusBids: 0,
       price: "12.00",
-      originalPrice: "15.00",
+      originalPrice: "14.40",
       currency: "USD",
       available: true,
     });
 
     await this.createBidPack({
-      name: "Pro Pack: 125 Bidcoin",
+      name: "Pro Pack",
       type: "pro",
       bidCount: 155,
       bonusBids: 0,
       price: "30.00",
-      originalPrice: "37.50",
+      originalPrice: "37.20",
       currency: "USD",
       available: true,
     });
 
     await this.createBidPack({
-      name: "Premium Pack: 250 Bidcoin",
+      name: "Premium Pack",
       type: "premium",
       bidCount: 325,
       bonusBids: 0,
       price: "60.00",
-      originalPrice: "75.00",
+      originalPrice: "78.00",
       currency: "USD",
       available: true,
     });
 
     await this.createBidPack({
-      name: "Whale Pack: 500 Bidcoin",
+      name: "Whale Pack",
       type: "whale",
       bidCount: 650,
       bonusBids: 0,
       price: "120.00",
-      originalPrice: "150.00",
+      originalPrice: "156.00",
       currency: "USD",
       available: true,
     });

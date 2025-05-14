@@ -11,6 +11,8 @@ import { useState } from "react";
 
 const PackIcon = ({ type }: { type: string }) => {
   switch (type) {
+    case "single":
+      return <CreditCard className="text-blue-400 text-xl" />;
     case "starter":
       return <Bolt className="text-accent text-xl" />;
     case "pro":
@@ -163,7 +165,7 @@ export default function BidPacksPage() {
         <div className="md:flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-display font-bold text-white mb-2">BidPacks</h1>
-            <p className="text-gray-400 max-w-2xl">Purchase bid packs to participate in auctions. Each bid pack contains a set number of bids you can use across all auctions.</p>
+            <p className="text-gray-400 max-w-2xl">Purchase bid packs to save 10-20% compared to single bids. Choose from a variety of pack sizes or buy bids individually. All bids can be used across any auction.</p>
           </div>
         </div>
         
