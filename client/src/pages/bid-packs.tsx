@@ -28,6 +28,8 @@ const PackIcon = ({ type }: { type: string }) => {
 
 function getPackBadgeColor(type: string) {
   switch (type) {
+    case "single":
+      return "bg-blue-500/20 text-blue-400";
     case "starter":
       return "bg-accent/20 text-accent";
     case "pro":
@@ -43,14 +45,16 @@ function getPackBadgeColor(type: string) {
 
 function getPackLabel(type: string) {
   switch (type) {
+    case "single":
+      return "Single Bid";
     case "starter":
-      return "Most Popular";
+      return "Save 16%";
     case "pro":
-      return "Best Value";
+      return "Save 19%";
     case "premium":
-      return "Exclusive";
+      return "Save 20%";
     case "whale":
-      return "Ultimate";
+      return "Save 23%";
     default:
       return "Pack";
   }
@@ -58,6 +62,8 @@ function getPackLabel(type: string) {
 
 function getPackButtonColor(type: string) {
   switch (type) {
+    case "single":
+      return "bg-blue-500 hover:bg-blue-600";
     case "starter":
       return "bg-accent hover:bg-[#ea580c]";
     case "pro":
