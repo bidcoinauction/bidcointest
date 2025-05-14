@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
@@ -37,6 +37,51 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     }
   });
   
+  // Automatic bid simulation function
+  const simulateRandomBid = useCallback(() => {
+    // Generate a new random bidder
+    const randomBidders = [
+      "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
+      "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8",
+      "0x1A90f32fDb08E7A17D25A4D27AaAaD67D3Dc3303",
+      "0x9a8E43C44e37A52e219371c45Db11a057c6c7FFe",
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+    ];
+    const randomBidder = randomBidders[Math.floor(Math.random() * randomBidders.length)];
+    
+    // Increment bid count
+    setLocalBidCount(prev => prev + 1);
+    
+    // Add $0.03 to current bid
+    setLocalCurrentBid(prev => {
+      const newValue = prev + 0.03;
+      return Number(newValue.toFixed(2));
+    });
+    
+    // Update leader
+    setLocalLeader(randomBidder);
+    
+    // Reset timer (Bidcoin reset mechanism to 1 minute)
+    const resetTime = new Date();
+    resetTime.setSeconds(resetTime.getSeconds() + 60);
+    setLocalEndTime(resetTime);
+  }, []);
+
+  // Set up automatic bid simulation
+  useEffect(() => {
+    // Start automatic bid simulation on a random interval
+    const simulationInterval = setInterval(() => {
+      if (!isComplete) {
+        simulateRandomBid();
+      }
+    }, Math.random() * 15000 + 5000); // Random interval between 5-20 seconds
+    
+    return () => {
+      clearInterval(simulationInterval);
+    };
+  }, [isComplete, simulateRandomBid]);
+
   // Listen for bid events via WebSocket
   useEffect(() => {
     const handleBidUpdate = (data: any) => {
@@ -48,7 +93,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         
         // Reset timer (Bidcoin reset mechanism)
         const resetTime = new Date();
-        resetTime.setSeconds(resetTime.getSeconds() + 10);
+        resetTime.setSeconds(resetTime.getSeconds() + 60);
         
         // If bid in last 3 seconds, add +3 seconds (prevent sniping)
         if (secondsRemaining < 3) {
@@ -64,7 +109,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     
     return () => {
       // Cleanup subscription
-      unsubscribe;
+      unsubscribe();
     };
   }, [auction.id, subscribe, secondsRemaining]);
   

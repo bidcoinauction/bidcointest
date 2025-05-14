@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getFeaturedAuctions } from "@/lib/api";
 import useCountdown from "@/hooks/useCountdown";
 import BidModal from "@/components/modals/BidModal";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPriceUSD, formatCurrency, formatAddress } from "@/lib/utils";
 
@@ -14,7 +14,7 @@ export default function FeaturedAuction() {
   const [localPrice, setLocalPrice] = useState<number>(0.04);
   const [localBidCount, setLocalBidCount] = useState<number>(3);
   const [localEndTime, setLocalEndTime] = useState<Date>(new Date(Date.now() + 60 * 1000));
-  const [bidSimulation, setBidSimulation] = useState<NodeJS.Timeout | null>(null);
+  const [localLeader, setLocalLeader] = useState<string>("");
   
   const { data: featuredAuctions, isLoading, error } = useQuery({
     queryKey: ["/api/auctions/featured"],
@@ -23,8 +23,57 @@ export default function FeaturedAuction() {
 
   const featuredAuction = featuredAuctions?.[0];
   
-  // Get current auction leader/bidder
-  const currentLeader = featuredAuction?.bids?.[0]?.bidder?.walletAddress || 
+  // Automatic bid simulation function
+  const simulateRandomBid = useCallback(() => {
+    // Generate a new random bidder
+    const randomBidders = [
+      "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
+      "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8",
+      "0x1A90f32fDb08E7A17D25A4D27AaAaD67D3Dc3303",
+      "0x9a8E43C44e37A52e219371c45Db11a057c6c7FFe",
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+    ];
+    const randomBidder = randomBidders[Math.floor(Math.random() * randomBidders.length)];
+    
+    // Increment bid count
+    setLocalBidCount(prev => prev + 1);
+    
+    // Add $0.03 to current price
+    setLocalPrice(prev => {
+      const newValue = prev + 0.03;
+      return Number(newValue.toFixed(2));
+    });
+    
+    // Update leader
+    setLocalLeader(randomBidder);
+    
+    // Reset timer (Bidcoin reset mechanism to 1 minute)
+    const resetTime = new Date();
+    resetTime.setSeconds(resetTime.getSeconds() + 60);
+    setLocalEndTime(resetTime);
+  }, []);
+  
+  // Set up automatic bid simulation
+  useEffect(() => {
+    if (!featuredAuction) return;
+    
+    // Initialize leader
+    setLocalLeader(featuredAuction.bids?.[0]?.bidder?.walletAddress || featuredAuction.creator.walletAddress || "");
+    
+    // Start automatic bid simulation on a random interval
+    const simulationInterval = setInterval(() => {
+      simulateRandomBid();
+    }, Math.random() * 20000 + 10000); // Random interval between 10-30 seconds
+    
+    return () => {
+      clearInterval(simulationInterval);
+    };
+  }, [featuredAuction, simulateRandomBid]);
+  
+  // Get current auction leader/bidder (either from local state or from the fetched data)
+  const currentLeader = localLeader || 
+                        featuredAuction?.bids?.[0]?.bidder?.walletAddress || 
                         featuredAuction?.creator?.walletAddress || "";
   
   // Use local end time for countdown
