@@ -101,7 +101,7 @@ function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: B
       </div>
       <h3 className="font-display text-lg font-bold text-white mb-1">{pack.name}</h3>
       <div className="flex flex-col space-y-2 mb-3">
-        <p className="text-gray-400 text-sm">{pack.bidCount + pack.bonusBids} bids</p>
+        <p className="text-gray-400 text-sm">{pack.bidCount} bids</p>
       </div>
       
       {/* Quantity selector */}
@@ -163,7 +163,7 @@ export default function BidPacksPage() {
         <div className="md:flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-display font-bold text-white mb-2">BidPacks</h1>
-            <p className="text-gray-400 max-w-2xl">Purchase bid packs to participate in auctions. Each bid pack contains a set number of bids plus bonus bids.</p>
+            <p className="text-gray-400 max-w-2xl">Purchase bid packs to participate in auctions. Each bid pack contains a set number of bids you can use across all auctions.</p>
           </div>
         </div>
         
@@ -274,7 +274,7 @@ export default function BidPacksPage() {
                     </li>
                     <li className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-secondary mt-0.5 mr-2 flex-shrink-0" />
-                      <span className="text-gray-300">Receive bonus bids with larger packs</span>
+                      <span className="text-gray-300">Get more value with larger packs</span>
                     </li>
                   </ul>
                 </div>
@@ -307,7 +307,7 @@ export default function BidPacksPage() {
               <div className="bg-gradient-to-r from-primary/20 to-accent/20 p-5 rounded-lg border border-primary/30">
                 <h3 className="text-lg font-medium text-white mb-2">Why Use BidPacks?</h3>
                 <p className="text-gray-300 mb-4">
-                  BidPacks provide a more cost-effective way to participate in auctions compared to individual transactions. By purchasing bids in bulk, you save on transaction fees and get bonus bids with larger packs.
+                  BidPacks provide a more cost-effective way to participate in auctions compared to individual transactions. By purchasing bids in bulk, you save on transaction fees and get more value with larger packs.
                 </p>
                 <Button variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
                   Learn More <ArrowRight className="h-4 w-4 ml-2" />
@@ -318,84 +318,7 @@ export default function BidPacksPage() {
         </Tabs>
       </section>
       
-      <section className="mb-12">
-        <div className="bg-[#1f2937] rounded-xl overflow-hidden border border-[#374151]">
-          <div className="md:flex">
-            <div className="md:w-1/2 p-8">
-              <h2 className="text-2xl font-display font-bold text-white mb-4">BidPack Subscription</h2>
-              <p className="text-gray-300 mb-6">
-                Subscribe to our monthly BidPack plan and save up to 30% on bids. Perfect for regular auction participants.
-              </p>
-              
-              <div className="bg-[#111827] p-4 rounded-lg mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <h3 className="font-medium text-white">Premium Subscription</h3>
-                  <span className="bg-secondary/20 text-secondary px-2 py-1 rounded-full text-xs">Save 30%</span>
-                </div>
-                <ul className="space-y-2 mb-4">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-secondary mr-2" />
-                    <span className="text-gray-300">250 bids monthly</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-secondary mr-2" />
-                    <span className="text-gray-300">Early access to new auctions</span>
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-secondary mr-2" />
-                    <span className="text-gray-300">Cancel anytime</span>
-                  </li>
-                </ul>
-                <div className="flex items-baseline mb-4">
-                  <span className="text-white font-display text-2xl font-bold">$60.00</span>
-                  <span className="text-gray-400 text-sm ml-2">/month</span>
-                </div>
-                <Button className="w-full bg-secondary hover:bg-secondary-dark text-white">
-                  Subscribe Now
-                </Button>
-              </div>
-            </div>
-            
-            <div className="md:w-1/2 relative bg-gradient-to-br from-primary/30 to-secondary/30">
-              <div className="relative p-8 flex flex-col justify-center h-full">
-                <h3 className="text-xl font-display font-bold text-white mb-4">Subscription Benefits</h3>
-                <ul className="space-y-4 mb-6">
-                  <li className="flex items-start">
-                    <div className="bg-white/10 rounded-full p-1 mr-3 mt-0.5">
-                      <CheckCircle className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-white">Cost Savings</h4>
-                      <p className="text-gray-300 text-sm">Save up to 30% compared to individual pack purchases</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-white/10 rounded-full p-1 mr-3 mt-0.5">
-                      <CheckCircle className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-white">Convenience</h4>
-                      <p className="text-gray-300 text-sm">Bids automatically renew each month</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-white/10 rounded-full p-1 mr-3 mt-0.5">
-                      <CheckCircle className="h-4 w-4 text-white" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-white">Flexibility</h4>
-                      <p className="text-gray-300 text-sm">Cancel or modify your subscription at any time</p>
-                    </div>
-                  </li>
-                </ul>
-                <Button className="w-full bg-white/20 hover:bg-white/30 text-white">
-                  Compare Plans
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+
     </div>
   );
 }
