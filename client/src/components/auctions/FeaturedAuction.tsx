@@ -7,6 +7,7 @@ import useCountdown from "@/hooks/useCountdown";
 import BidModal from "@/components/modals/BidModal";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatPriceUSD, formatCurrency, formatAddress } from "@/lib/utils";
 
 export default function FeaturedAuction() {
   const [showBidModal, setShowBidModal] = useState(false);
@@ -17,6 +18,10 @@ export default function FeaturedAuction() {
   });
 
   const featuredAuction = featuredAuctions?.[0];
+  
+  // Get current auction leader/bidder
+  const currentLeader = featuredAuction?.bids?.[0]?.bidder?.walletAddress || 
+                        featuredAuction?.creator?.walletAddress || "";
   
   const { formattedTime } = useCountdown({
     endTime: featuredAuction?.endTime || new Date(Date.now() + 24 * 60 * 60 * 1000),
@@ -99,17 +104,35 @@ export default function FeaturedAuction() {
               </div>
               <p className="text-gray-300 mb-4">{featuredAuction.nft.description}</p>
               
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-2 gap-4 mb-2">
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Current Bid</p>
                   <p className="font-display text-xl font-bold text-white">
-                    <span className="text-accent-light">{featuredAuction.currentBid} {featuredAuction.currency}</span>
+                    <span className="text-accent-light">{formatPriceUSD(featuredAuction.currentBid?.toString() || "0")}</span>
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {formatCurrency(featuredAuction.currentBid?.toString() || "0", featuredAuction.currency)}
                   </p>
                 </div>
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Ending In</p>
                   <p className="font-mono text-xl font-bold text-white auction-timer">
                     {formattedTime}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-background/50 p-3 rounded-lg">
+                  <p className="text-gray-400 text-xs mb-1">Leader</p>
+                  <p className="text-xs text-white font-mono">
+                    {formatAddress(currentLeader)}
+                  </p>
+                </div>
+                <div className="bg-background/50 p-3 rounded-lg">
+                  <p className="text-gray-400 text-xs mb-1">Bid Value</p>
+                  <p className="text-xs text-green-500">
+                    +$0.03 per bid
                   </p>
                 </div>
               </div>
