@@ -1,12 +1,55 @@
 // Import the base fetchFromAPI function but we'll create a specialized version
 import { fetchFromAPI as baseFetchFromAPI } from './api';
+import axios from 'axios';
+
+/**
+ * Helper function for API status tracking and error handling
+ */
+// Try to get API key from localStorage first, then environment variable
+const getSavedApiKey = (): string => {
+  try {
+    const savedKey = typeof window !== 'undefined' ? localStorage.getItem('unleashNfts_apiKey') : null;
+    return savedKey || import.meta.env.VITE_BITCRUNCH_API_KEY || "0c4b62cce16246d181310c3b57512529";
+  } catch (e) {
+    return import.meta.env.VITE_BITCRUNCH_API_KEY || "0c4b62cce16246d181310c3b57512529";
+  }
+};
+
+// Define API status object with detailed state management
+const apiStatus = {
+  apiKey: getSavedApiKey(),
+  isConnected: false,
+  lastError: null as string | null,
+  useFallbackEndpoints: false,
+  rateLimitHit: false,
+  lastApiVersion: 'v2', // Track which API version we're using
+  lastUpdated: Date.now()
+};
+
+// API connection attempts tracking - helps with error handling
+const connectionAttempts = {
+  v2: {
+    successful: false,
+    lastAttempt: 0
+  },
+  v1: {
+    successful: false,
+    lastAttempt: 0
+  }
+};
 
 // Modified fetch function with API key from our state
-async function fetchFromAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+async function fetchFromAPI<T>(endpoint: string, options?: RequestInit, apiVersion: 'v1' | 'v2' = 'v2'): Promise<T> {
   // Create new options object with our API key in headers
   const apiKey = apiStatus.apiKey;
+  
+  if (!apiKey) {
+    throw new Error('UnleashNFTs API key is missing. Please update it in settings.');
+  }
+  
   const headers = {
     'x-api-key': apiKey,
+    'Accept': 'application/json',
     ...(options?.headers || {})
   };
   
@@ -16,7 +59,52 @@ async function fetchFromAPI<T>(endpoint: string, options?: RequestInit): Promise
     headers
   };
   
-  return baseFetchFromAPI<T>(endpoint, mergedOptions);
+  try {
+    // Use the specified API version
+    apiStatus.lastApiVersion = apiVersion;
+    connectionAttempts[apiVersion].lastAttempt = Date.now();
+    
+    const response = await baseFetchFromAPI<T>(`https://api.unleashnfts.com/api/${apiVersion}/${endpoint}`, mergedOptions);
+    
+    // Mark this API version as successful
+    connectionAttempts[apiVersion].successful = true;
+    apiStatus.isConnected = true;
+    apiStatus.lastError = null;
+    apiStatus.rateLimitHit = false;
+    apiStatus.lastUpdated = Date.now();
+    
+    return response;
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    apiStatus.lastError = errorMessage;
+    
+    // Handle different error scenarios
+    if (errorMessage.includes('401') || errorMessage.includes('Invalid API key')) {
+      apiStatus.isConnected = false;
+      throw new Error('Invalid API key. Please update your UnleashNFTs API key in settings.');
+    }
+    
+    if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+      apiStatus.rateLimitHit = true;
+      throw new Error('Rate limit exceeded. Please try again later or upgrade your API plan.');
+    }
+    
+    // If using v2 and it failed, attempt fallback to v1
+    if (apiVersion === 'v2' && !connectionAttempts.v1.successful) {
+      try {
+        console.log('Falling back to v1 API endpoint');
+        apiStatus.useFallbackEndpoints = true;
+        return await fetchFromAPI<T>(endpoint, options, 'v1');
+      } catch (fallbackError) {
+        // Both v2 and v1 failed
+        apiStatus.isConnected = false;
+        throw new Error(`API connection failed: ${errorMessage}. Fallback also failed.`);
+      }
+    }
+    
+    apiStatus.isConnected = false;
+    throw error;
+  }
 }
 
 // Types exported from server/unleashNftsService.ts
@@ -73,112 +161,140 @@ export interface NFTValuation {
 }
 
 /**
- * Helper function for API status tracking and error handling
+ * Check if the UnleashNFTs API is operational and get current API status
  */
-// Try to get API key from localStorage first, then environment variable
-const getSavedApiKey = (): string => {
-  try {
-    const savedKey = typeof window !== 'undefined' ? localStorage.getItem('unleashnfts_api_key') : null;
-    return savedKey || import.meta.env.VITE_BITCRUNCH_API_KEY || "";
-  } catch (e) {
-    return import.meta.env.VITE_BITCRUNCH_API_KEY || "";
+export const getApiStatus = () => ({
+  ...apiStatus,
+  // Add user-friendly status message based on current state
+  statusMessage: getStatusMessage()
+});
+
+/**
+ * Generate a user-friendly status message based on current API state
+ */
+function getStatusMessage(): string {
+  if (apiStatus.isConnected) {
+    return `Connected (API v${apiStatus.lastApiVersion})`;
   }
-};
-
-let apiStatus = {
-  isWorking: false,
-  lastError: null as Error | null,
-  lastSuccessfulCall: null as Date | null,
-  connectionTested: false,
-  apiKey: getSavedApiKey()
-};
+  
+  if (apiStatus.rateLimitHit) {
+    return "Rate limit exceeded";
+  }
+  
+  if (apiStatus.lastError?.includes('401') || apiStatus.lastError?.includes('Invalid API key')) {
+    return "Invalid API key";
+  }
+  
+  if (!apiStatus.apiKey) {
+    return "API key not set";
+  }
+  
+  return apiStatus.lastError || "Not connected";
+}
 
 /**
- * Check if the UnleashNFTs API is operational
- */
-export const getApiStatus = () => apiStatus;
-
-/**
- * Update the API key for UnleashNFTs API
- * Note: This is a temporary solution for testing purposes
- * In a production environment, the API key should be managed server-side
+ * Update the API key for UnleashNFTs API and save to local storage
  */
 export const updateApiKey = (newApiKey: string): void => {
   if (!newApiKey || newApiKey.trim() === '') {
     throw new Error('API key cannot be empty');
   }
   
-  apiStatus.apiKey = newApiKey.trim();
-  apiStatus.isWorking = false;
-  apiStatus.connectionTested = false;
+  // Reset connection status when changing the key
+  apiStatus.isConnected = false;
   apiStatus.lastError = null;
-  apiStatus.lastSuccessfulCall = null;
+  apiStatus.useFallbackEndpoints = false;
+  apiStatus.rateLimitHit = false;
   
-  // Store the API key in local storage for persistence during the session
-  localStorage.setItem('unleashnfts_api_key', newApiKey.trim());
+  // Update API key and save to localStorage for persistence
+  apiStatus.apiKey = newApiKey.trim();
+  localStorage.setItem('unleashNfts_apiKey', newApiKey.trim());
+  
+  // Reset connection tracking
+  connectionAttempts.v1.successful = false;
+  connectionAttempts.v2.successful = false;
+  
+  console.log('[unleash-nfts] API key updated');
 };
 
 /**
- * Test the API connection by making a simple request
+ * Test the API connection by making a simple request to both v1 and v2 endpoints
  */
 export const testApiConnection = async (): Promise<{success: boolean, message: string, details?: any}> => {
   try {
-    // Try to get a single blockchain to test connection
-    const blockchains = await fetchFromAPI<any[]>('/unleash/blockchains?limit=1');
-    
-    if (blockchains && blockchains.length > 0) {
-      apiStatus.isWorking = true;
-      apiStatus.lastSuccessfulCall = new Date();
-      apiStatus.connectionTested = true;
-      apiStatus.lastError = null;
-      return {
-        success: true, 
-        message: 'Connection successful', 
-        details: {
-          blockchains: blockchains.length,
-          firstBlockchain: blockchains[0]?.metadata?.name || 'Unknown'
-        }
-      };
-    } else {
-      apiStatus.isWorking = false;
-      apiStatus.lastError = new Error('No data returned from API');
-      apiStatus.connectionTested = true;
-      return {success: false, message: 'Connection successful but no data returned'};
-    }
-  } catch (error) {
-    apiStatus.isWorking = false;
-    apiStatus.lastError = error instanceof Error ? error : new Error(String(error));
-    apiStatus.connectionTested = true;
-    
-    // Provide specific guidance based on error
-    let message = 'Connection failed';
-    let details = {};
-    
-    if (error instanceof Error) {
-      const errorMsg = error.message.toLowerCase();
+    // First try the v2 API
+    try {
+      console.log('[unleash-nfts] Testing v2 API connection...');
+      const v2Response = await fetchFromAPI<any>('blockchains?sort_by=blockchain_name&offset=0&limit=1', undefined, 'v2');
       
-      if (errorMsg.includes('api key') || errorMsg.includes('401')) {
-        message = 'Authentication error: Invalid API key. Please update your API key.';
-        details = {
-          errorType: 'authentication',
-          suggestion: 'Please obtain a valid API key from UnleashNFTs (formerly BitCrunch)'
+      if (v2Response && Array.isArray(v2Response.result)) {
+        console.log('[unleash-nfts] 🟢 v2 API connection successful');
+        return {
+          success: true,
+          message: 'Successfully connected to the UnleashNFTs API (v2)',
+          details: v2Response
         };
-      } else if (errorMsg.includes('429')) {
-        message = 'Rate limit exceeded. Please try again later.';
-        details = {
-          errorType: 'rateLimit',
-          suggestion: 'Wait a few minutes before trying again or upgrade your API plan'
-        };
-      } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
-        message = 'Network error: Unable to connect to UnleashNFTs servers';
-        details = {
-          errorType: 'network',
-          suggestion: 'Check your internet connection and try again'
+      }
+    } catch (v2Error) {
+      console.log('[unleash-nfts] v2 API test failed, trying v1...');
+      // If v2 fails, try v1
+      try {
+        const v1Response = await fetchFromAPI<any>('blockchains?sort_by=blockchain_name&offset=0&limit=1', undefined, 'v1');
+        
+        if (v1Response && Array.isArray(v1Response.result)) {
+          console.log('[unleash-nfts] 🟢 v1 API connection successful');
+          apiStatus.useFallbackEndpoints = true;
+          return {
+            success: true,
+            message: 'Successfully connected to the UnleashNFTs API (v1)',
+            details: v1Response
+          };
+        }
+      } catch (v1Error) {
+        // Both v1 and v2 failed
+        console.error('[unleash-nfts] ❌ Both v1 and v2 API tests failed');
+        
+        // Determine the most specific error message
+        const errorMsg = v1Error instanceof Error ? v1Error.message : String(v1Error);
+        
+        if (errorMsg.includes('401') || errorMsg.includes('Invalid API key')) {
+          return {
+            success: false,
+            message: 'Invalid API key. Please check your API key and try again.',
+            details: v1Error
+          };
+        }
+        
+        if (errorMsg.includes('429') || errorMsg.includes('rate limit')) {
+          return {
+            success: false,
+            message: 'Rate limit exceeded. Please try again in a few minutes or upgrade your API plan.',
+            details: v1Error
+          };
+        }
+        
+        return {
+          success: false,
+          message: 'Failed to connect to UnleashNFTs API. Please check your internet connection and try again.',
+          details: v1Error
         };
       }
     }
     
-    return {success: false, message, details};
+    // If execution reaches here, it means responses were received but in unexpected format
+    console.log('[unleash-nfts] ⚠️ API connection test completed, but received unexpected response format');
+    return {
+      success: false,
+      message: 'API connection successful but received unexpected response format',
+      details: null
+    };
+  } catch (error) {
+    console.error('[unleash-nfts] ❌ UnleashNFTs API connection test failed', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to connect to the UnleashNFTs API',
+      details: error
+    };
   }
 };
 
@@ -194,21 +310,19 @@ export const getCollectionsByChain = async (
   limit: number = 10
 ): Promise<NFTCollection[]> => {
   try {
-    const response = await fetchFromAPI<NFTCollection[]>(`/unleash/collections?chain=${chain}&page=${page}&limit=${limit}`);
+    const endpoint = `collections?chain=${chain}&page=${page}&limit=${limit}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
     
-    // Update API status on success
-    apiStatus.isWorking = true;
-    apiStatus.lastSuccessfulCall = new Date();
-    apiStatus.lastError = null;
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
     
-    return response || [];
+    if (response && Array.isArray(response.result)) {
+      return response.result;
+    }
+    
+    return [];
   } catch (error) {
-    // Update API status on error
-    apiStatus.isWorking = false;
-    apiStatus.lastError = error instanceof Error ? error : new Error(String(error));
-    
-    console.error(`Error fetching collections for chain ${chain}:`, error);
-    throw error;
+    console.error(`[unleash-nfts] Failed to get collections for chain ${chain}:`, error);
+    return [];
   }
 };
 
@@ -222,21 +336,19 @@ export const getCollectionMetadata = async (
   chain: string = 'ethereum'
 ): Promise<NFTCollection | null> => {
   try {
-    const response = await fetchFromAPI<NFTCollection>(`/unleash/collection/${address}?chain=${chain}`);
+    const endpoint = `collection/${address}?chain=${chain}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
     
-    // Update API status on success
-    apiStatus.isWorking = true;
-    apiStatus.lastSuccessfulCall = new Date();
-    apiStatus.lastError = null;
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
     
-    return response || null;
+    if (response && response.result) {
+      return response.result;
+    }
+    
+    return null;
   } catch (error) {
-    // Update API status on error
-    apiStatus.isWorking = false;
-    apiStatus.lastError = error instanceof Error ? error : new Error(String(error));
-    
-    console.error(`Error fetching collection metadata for ${address} on ${chain}:`, error);
-    throw error;
+    console.error(`[unleash-nfts] Failed to get collection metadata for ${address}:`, error);
+    return null;
   }
 };
 
@@ -249,8 +361,21 @@ export const getCollectionMetrics = async (
   address: string,
   chain: string = 'ethereum'
 ): Promise<NFTCollectionMetrics | null> => {
-  const response = await fetchFromAPI<NFTCollectionMetrics>(`/unleash/collection/${address}/metrics?chain=${chain}`);
-  return response || null;
+  try {
+    const endpoint = `collection/${address}/metrics?chain=${chain}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && response.result) {
+      return response.result;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get collection metrics for ${address}:`, error);
+    return null;
+  }
 };
 
 /**
@@ -264,8 +389,21 @@ export const getCollectionTrend = async (
   chain: string = 'ethereum',
   period: string = '30d'
 ): Promise<any> => {
-  const response = await fetchFromAPI<any>(`/unleash/collection/${address}/trend?chain=${chain}&period=${period}`);
-  return response || null;
+  try {
+    const endpoint = `collection/${address}/trend?chain=${chain}&period=${period}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && response.result) {
+      return response.result;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get collection trend for ${address}:`, error);
+    return [];
+  }
 };
 
 /**
@@ -277,8 +415,21 @@ export const getCollectionTraits = async (
   address: string,
   chain: string = 'ethereum'
 ): Promise<any> => {
-  const response = await fetchFromAPI<any>(`/unleash/collection/${address}/traits?chain=${chain}`);
-  return response || null;
+  try {
+    const endpoint = `collection/${address}/traits?chain=${chain}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && response.result) {
+      return response.result;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get collection traits for ${address}:`, error);
+    return [];
+  }
 };
 
 /**
@@ -294,8 +445,21 @@ export const getCollectionNFTs = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTMetadata[]> => {
-  const response = await fetchFromAPI<NFTMetadata[]>(`/unleash/collection/${address}/nfts?chain=${chain}&page=${page}&limit=${limit}`);
-  return response || [];
+  try {
+    const endpoint = `collection/${address}/nfts?chain=${chain}&page=${page}&limit=${limit}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && Array.isArray(response.result)) {
+      return response.result;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get NFTs for collection ${address}:`, error);
+    return [];
+  }
 };
 
 /**
@@ -311,8 +475,21 @@ export const getCollectionTransactions = async (
   page: number = 1,
   limit: number = 10
 ): Promise<any[]> => {
-  const response = await fetchFromAPI<any[]>(`/unleash/collection/${address}/transactions?chain=${chain}&page=${page}&limit=${limit}`);
-  return response || [];
+  try {
+    const endpoint = `collection/${address}/transactions?chain=${chain}&page=${page}&limit=${limit}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && Array.isArray(response.result)) {
+      return response.result;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get transactions for collection ${address}:`, error);
+    return [];
+  }
 };
 
 /**
@@ -326,8 +503,21 @@ export const getCollectionsWithValuation = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTCollection[]> => {
-  const response = await fetchFromAPI<NFTCollection[]>(`/unleash/collections-with-valuation?chain=${chain}&page=${page}&limit=${limit}`);
-  return response || [];
+  try {
+    const endpoint = `valuation/collections?chain=${chain}&page=${page}&limit=${limit}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && Array.isArray(response.result)) {
+      return response.result;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get collections with valuation:`, error);
+    return [];
+  }
 };
 
 /**
@@ -343,8 +533,21 @@ export const getNFTsWithValuation = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTMetadata[]> => {
-  const response = await fetchFromAPI<NFTMetadata[]>(`/unleash/nfts-with-valuation?collection=${collection}&chain=${chain}&page=${page}&limit=${limit}`);
-  return response || [];
+  try {
+    const endpoint = `valuation/nfts?collection=${collection}&chain=${chain}&page=${page}&limit=${limit}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && Array.isArray(response.result)) {
+      return response.result;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get NFTs with valuation:`, error);
+    return [];
+  }
 };
 
 /**
@@ -358,8 +561,21 @@ export const getNFTValuation = async (
   tokenId: string,
   chain: string = 'ethereum'
 ): Promise<NFTValuation | null> => {
-  const response = await fetchFromAPI<NFTValuation>(`/unleash/nft-valuation?collection=${collection}&token_id=${tokenId}&chain=${chain}`);
-  return response || null;
+  try {
+    const endpoint = `valuation/nft?collection=${collection}&token_id=${tokenId}&chain=${chain}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && response.result) {
+      return response.result;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get NFT valuation:`, error);
+    return null;
+  }
 };
 
 /**
@@ -394,10 +610,21 @@ export const getNFTDetailedMetadata = async (
   tokenId: string,
   chain: string = 'ethereum'
 ): Promise<NFTDetailedMetadata | null> => {
-  const response = await fetchFromAPI<NFTDetailedMetadata>(
-    `/unleash/nft/metadata?contract_address=${contractAddress}&token_id=${tokenId}&blockchain=${chain}`
-  );
-  return response || null;
+  try {
+    const endpoint = `nft/${contractAddress}/${tokenId}?chain=${chain}`;
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    
+    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
+    
+    if (response && response.result) {
+      return response.result;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get detailed NFT metadata:`, error);
+    return null;
+  }
 };
 
 /**
@@ -427,7 +654,7 @@ export const getNFTMetadataFlex = async ({
     throw new Error('Either contractAddress or slugName is required');
   }
   
-  let url = `/unleash/nft/metadata?token_id=${tokenId}&blockchain=${chain}`;
+  let url = `nft/metadata?token_id=${tokenId}&chain=${chain}`;
   
   if (contractAddress) {
     url += `&contract_address=${contractAddress}`;
@@ -437,6 +664,12 @@ export const getNFTMetadataFlex = async ({
     url += `&slug_name=${slugName}`;
   }
   
-  const response = await fetchFromAPI<NFTDetailedMetadata>(url);
-  return response || null;
+  try {
+    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
+    const response = await fetchFromAPI<NFTDetailedMetadata>(url, undefined, apiVersion);
+    return response || null;
+  } catch (error) {
+    console.error(`[unleash-nfts] Failed to get NFT metadata:`, error);
+    return null;
+  }
 };
