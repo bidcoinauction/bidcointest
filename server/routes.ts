@@ -565,6 +565,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: 'Failed to fetch NFT valuation' });
     }
   });
+  
+  // Detailed NFT metadata endpoint
+  app.get('/api/unleash/nft/metadata', async (req, res) => {
+    try {
+      const { contract_address, slug_name, token_id, blockchain = 'ethereum' } = req.query;
+      
+      if (!token_id) {
+        return res.status(400).json({ message: 'token_id is required' });
+      }
+      
+      if (!contract_address && !slug_name) {
+        return res.status(400).json({ 
+          message: 'Either contract_address or slug_name is required' 
+        });
+      }
+      
+      const metadata = await unleashNftsService.getNFTMetadataFlex({
+        contractAddress: contract_address as string | undefined,
+        slugName: slug_name as string | undefined,
+        tokenId: token_id as string,
+        chain: blockchain as string
+      });
+      
+      return res.json(metadata || { message: 'No metadata found' });
+    } catch (error) {
+      console.error('Error fetching NFT metadata:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFT metadata' });
+    }
+  });
 
   // Magic Eden API integration
   app.get('/api/magiceden/collections', async (req, res) => {

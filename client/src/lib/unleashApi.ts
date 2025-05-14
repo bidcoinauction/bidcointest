@@ -202,3 +202,82 @@ export const getNFTValuation = async (
   const response = await fetchFromAPI<NFTValuation>(`/unleash/nft-valuation?collection=${collection}&token_id=${tokenId}&chain=${chain}`);
   return response || null;
 };
+
+/**
+ * Interface for detailed NFT metadata
+ */
+export interface NFTDetailedMetadata {
+  collection_name?: string;
+  contract_address?: string;
+  token_id?: string;
+  name?: string;
+  description?: string;
+  image_url?: string;
+  animation_url?: string;
+  external_url?: string;
+  traits?: Array<{
+    trait_type: string;
+    value: string;
+    rarity?: number;
+    display_type?: string;
+  }>;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Get detailed NFT metadata by contract address and token ID
+ * @param contractAddress The collection contract address
+ * @param tokenId The NFT token ID
+ * @param chain The blockchain name (defaults to ethereum)
+ */
+export const getNFTDetailedMetadata = async (
+  contractAddress: string,
+  tokenId: string,
+  chain: string = 'ethereum'
+): Promise<NFTDetailedMetadata | null> => {
+  const response = await fetchFromAPI<NFTDetailedMetadata>(
+    `/unleash/nft/metadata?contract_address=${contractAddress}&token_id=${tokenId}&blockchain=${chain}`
+  );
+  return response || null;
+};
+
+/**
+ * Get NFT metadata using either contract address or slug name
+ * @param params Configuration object
+ * @param params.contractAddress The collection contract address
+ * @param params.slugName The collection slug name
+ * @param params.tokenId The NFT token ID
+ * @param params.chain The blockchain name (defaults to ethereum)
+ */
+export const getNFTMetadataFlex = async ({
+  contractAddress,
+  slugName,
+  tokenId,
+  chain = 'ethereum'
+}: {
+  contractAddress?: string;
+  slugName?: string;
+  tokenId: string;
+  chain?: string;
+}): Promise<NFTDetailedMetadata | null> => {
+  if (!tokenId) {
+    throw new Error('tokenId is required');
+  }
+  
+  if (!contractAddress && !slugName) {
+    throw new Error('Either contractAddress or slugName is required');
+  }
+  
+  let url = `/unleash/nft/metadata?token_id=${tokenId}&blockchain=${chain}`;
+  
+  if (contractAddress) {
+    url += `&contract_address=${contractAddress}`;
+  }
+  
+  if (slugName) {
+    url += `&slug_name=${slugName}`;
+  }
+  
+  const response = await fetchFromAPI<NFTDetailedMetadata>(url);
+  return response || null;
+};

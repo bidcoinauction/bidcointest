@@ -279,6 +279,73 @@ export class UnleashNftsService {
       return null;
     }
   }
+  
+  /**
+   * Get detailed NFT metadata by contract address and token ID
+   * @param contractAddress The collection contract address
+   * @param tokenId The NFT token ID
+   * @param chain The blockchain name (ethereum, polygon, etc.)
+   */
+  async getNFTDetailedMetadata(contractAddress: string, tokenId: string, chain: string = 'ethereum'): Promise<any> {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/v2/nft/metadata`, {
+        headers: this.headers,
+        params: {
+          blockchain: chain,
+          contract_address: contractAddress,
+          token_id: tokenId
+        }
+      });
+      return response.data || null;
+    } catch (error) {
+      this.handleError('getNFTDetailedMetadata', error);
+      return null;
+    }
+  }
+  
+  /**
+   * Get NFT metadata by either contract address or slug name
+   * @param options Configuration object
+   * @param options.contractAddress The collection contract address
+   * @param options.slugName The collection slug name
+   * @param options.tokenId The NFT token ID
+   * @param options.chain The blockchain name (ethereum, polygon, etc.)
+   */
+  async getNFTMetadataFlex({ 
+    contractAddress, 
+    slugName, 
+    tokenId, 
+    chain = 'ethereum' 
+  }: { 
+    contractAddress?: string; 
+    slugName?: string; 
+    tokenId: string; 
+    chain?: string;
+  }): Promise<any> {
+    try {
+      const params: Record<string, string> = {
+        blockchain: chain,
+        token_id: tokenId
+      };
+      
+      if (contractAddress) {
+        params.contract_address = contractAddress;
+      }
+      
+      if (slugName) {
+        params.slug_name = slugName;
+      }
+      
+      const response = await axios.get(`${BASE_URL}/api/v2/nft/metadata`, {
+        headers: this.headers,
+        params
+      });
+      return response.data || null;
+    } catch (error) {
+      this.handleError('getNFTMetadataFlex', error);
+      return null;
+    }
+  }
 
   private handleError(method: string, error: any): void {
     const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
