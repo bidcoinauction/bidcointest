@@ -32,7 +32,8 @@ interface BidModalProps {
 }
 
 export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimumBid }: BidModalProps) {
-  const [bidAmount, setBidAmount] = useState<string>((minimumBid || 0).toFixed(4));
+  // Fixed values for penny auction mechanics
+  const [bidAmount, setBidAmount] = useState<string>("0.03");
   const [isPending, setIsPending] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("basic");
   const [selectedStrategy, setSelectedStrategy] = useState<BidStrategyType>("beginner-friendly");
@@ -40,49 +41,68 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
   
   const { toast } = useToast();
   const { address, isConnected } = useWallet();
-  // Mock balance for demo purposes 
-  const balance = "10.0";
+  // Mock balance for demo purposes (in USD)
+  const balance = "100.0";
   const queryClient = useQueryClient();
   
-  const minBid = minimumBid;
+  // In penny auctions, bids are fixed price increments
+  const minBid = 0.03; // Fixed $0.03 price increment
   
   const handleMaxBid = () => {
-    if (balance) {
-      const maxAmount = parseFloat(balance);
-      // Set max bid to 90% of wallet balance to account for gas fees
-      setBidAmount((Math.min(maxAmount * 0.9, parseFloat(balance))).toFixed(4));
-    }
+    // No maximum bid in penny auctions - each bid is a fixed $0.03 increment
+    setBidAmount("0.03");
+    toast({
+      title: "Penny Auction Mechanics",
+      description: "Each bid costs $0.24 but only increases the price by $0.03",
+    });
   };
   
   const handleSelectStrategy = (strategy: BidStrategyType) => {
     setSelectedStrategy(strategy);
     setShowPrompt(false);
     
-    // Apply strategy-specific bid suggestions
+    // In penny auctions, the bid amount is always fixed
+    // We're just applying different strategies for when to bid
+    setBidAmount("0.03");
+    
+    // Show strategy-specific toasts
     switch (strategy) {
       case "aggressive":
-        // For aggressive, suggest a slightly higher bid
-        setBidAmount((minBid * 1.05).toFixed(4));
+        toast({
+          title: "Aggressive Strategy Selected",
+          description: "Bid frequently to intimidate other bidders",
+        });
         break;
       case "patient":
-        // For patient strategy, suggest the minimum bid
-        setBidAmount(minBid.toFixed(4));
+        toast({
+          title: "Patient Strategy Selected",
+          description: "Wait for the right moment to place strategic bids",
+        });
         break;
       case "last-second":
-        // For last-second, ready the minimum bid
-        setBidAmount(minBid.toFixed(4));
+        toast({
+          title: "Last-Second Strategy Selected", 
+          description: "Wait until the final seconds to place your bid",
+        });
         break;
       case "feint":
-        // For feint, suggest the exact minimum
-        setBidAmount(minBid.toFixed(4));
+        toast({
+          title: "Feint Strategy Selected",
+          description: "Mislead competitors with your bidding pattern",
+        });
         break;
       case "early-bird":
-        // For early bird, suggest a slightly higher bid to discourage others
-        setBidAmount((minBid * 1.02).toFixed(4));
+        toast({
+          title: "Early Bird Strategy Selected",
+          description: "Start bidding early to establish presence",
+        });
         break;
       default:
         // Default beginner-friendly approach
-        setBidAmount(minBid.toFixed(4));
+        toast({
+          title: "Beginner Strategy Selected",
+          description: "Focus on learning the mechanics and setting clear limits",
+        });
     }
   };
   
