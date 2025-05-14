@@ -129,9 +129,6 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             <div className="text-sm text-white font-medium">
               {formatPriceUSD(localCurrentBid || 0)}
             </div>
-            <div className="text-xs text-gray-400">
-              {formatCurrency(localCurrentBid || 0, currency)}
-            </div>
           </div>
           
           <div>

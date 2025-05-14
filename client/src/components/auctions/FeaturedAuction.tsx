@@ -110,9 +110,6 @@ export default function FeaturedAuction() {
                   <p className="font-display text-xl font-bold text-white">
                     <span className="text-accent-light">{formatPriceUSD(featuredAuction.currentBid?.toString() || "0")}</span>
                   </p>
-                  <p className="text-xs text-gray-400">
-                    {formatCurrency(featuredAuction.currentBid?.toString() || "0", featuredAuction.currency)}
-                  </p>
                 </div>
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Ending In</p>

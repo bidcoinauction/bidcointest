@@ -128,16 +128,9 @@ export function formatPriceUSD(price: number | string): string {
   // 
   // The values in the database are relatively high (like 0.8 ETH),
   // but we want to display them as small dollar amounts for penny auctions
-  // In a real system, we'd use actual exchange rates
   
-  // Just use the number directly as dollars but keep it small
-  // For example, 0.8 ETH becomes $0.03
-  const usdPrice = numPrice * 0.04;
+  // Always display a fixed value for demos ($0.04) until we implement real conversion
+  // This ensures consistent display across featured and regular auction cards
   
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(usdPrice);
+  return "$0.04";
 }
