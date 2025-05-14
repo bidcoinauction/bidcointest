@@ -50,6 +50,8 @@ export default function NFTCollectionsPage() {
   const [page, setPage] = useState(1);
   const [tokenIdInput, setTokenIdInput] = useState<string>('');
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
+  const [apiTestInProgress, setApiTestInProgress] = useState(false);
+  const [apiTestResult, setApiTestResult] = useState<{success: boolean, message: string, details?: any} | null>(null);
   const limit = 8; // Collections per page
   const { toast } = useToast();
 
@@ -260,13 +262,53 @@ export default function NFTCollectionsPage() {
                           Please register at <a href="https://unleashnfts.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">unleashnfts.com</a> to 
                           obtain a valid API key, then ask your administrator to update the environment variable.
                         </p>
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 justify-center">
                           <Button 
                             onClick={() => refetchCollections()}
                             size="sm"
                             className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
                           >
                             Try Again
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              const testApiConnectionAsync = async () => {
+                                try {
+                                  setApiTestInProgress(true);
+                                  const result = await testApiConnection();
+                                  setApiTestResult(result);
+                                  
+                                  if (result.success) {
+                                    toast({
+                                      title: "API Connection Successful",
+                                      description: "Successfully connected to the UnleashNFTs API.",
+                                    });
+                                    refetchCollections();
+                                  } else {
+                                    toast({
+                                      title: "API Connection Failed",
+                                      description: result.message,
+                                      variant: "destructive"
+                                    });
+                                  }
+                                } catch (error) {
+                                  toast({
+                                    title: "API Test Error",
+                                    description: error instanceof Error ? error.message : "Unknown error",
+                                    variant: "destructive"
+                                  });
+                                } finally {
+                                  setApiTestInProgress(false);
+                                }
+                              };
+                              
+                              testApiConnectionAsync();
+                            }}
+                            size="sm"
+                            disabled={apiTestInProgress}
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs"
+                          >
+                            {apiTestInProgress ? 'Testing...' : 'Test Connection'}
                           </Button>
                           <Button
                             onClick={() => window.open('https://unleashnfts.com', '_blank')}
@@ -276,6 +318,19 @@ export default function NFTCollectionsPage() {
                             Get API Key
                           </Button>
                         </div>
+                        
+                        {apiTestResult && (
+                          <div className={`mt-4 p-2 rounded text-xs ${apiTestResult.success ? 'bg-green-900/20 border border-green-900/50' : 'bg-red-900/20 border border-red-900/50'}`}>
+                            <p className={apiTestResult.success ? 'text-green-400' : 'text-red-400'}>
+                              {apiTestResult.message}
+                            </p>
+                            {apiTestResult.details?.suggestion && (
+                              <p className="text-gray-400 mt-1">
+                                Suggestion: {apiTestResult.details.suggestion}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (

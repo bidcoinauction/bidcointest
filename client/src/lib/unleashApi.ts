@@ -71,7 +71,7 @@ export const getApiStatus = () => apiStatus;
 /**
  * Test the API connection by making a simple request
  */
-export const testApiConnection = async (): Promise<{success: boolean, message: string}> => {
+export const testApiConnection = async (): Promise<{success: boolean, message: string, details?: any}> => {
   try {
     // Try to get a single blockchain to test connection
     const blockchains = await fetchFromAPI<any[]>('/unleash/blockchains?limit=1');
@@ -81,7 +81,14 @@ export const testApiConnection = async (): Promise<{success: boolean, message: s
       apiStatus.lastSuccessfulCall = new Date();
       apiStatus.connectionTested = true;
       apiStatus.lastError = null;
-      return {success: true, message: 'Connection successful'};
+      return {
+        success: true, 
+        message: 'Connection successful', 
+        details: {
+          blockchains: blockchains.length,
+          firstBlockchain: blockchains[0]?.metadata?.name || 'Unknown'
+        }
+      };
     } else {
       apiStatus.isWorking = false;
       apiStatus.lastError = new Error('No data returned from API');
@@ -95,16 +102,33 @@ export const testApiConnection = async (): Promise<{success: boolean, message: s
     
     // Provide specific guidance based on error
     let message = 'Connection failed';
+    let details = {};
+    
     if (error instanceof Error) {
       const errorMsg = error.message.toLowerCase();
+      
       if (errorMsg.includes('api key') || errorMsg.includes('401')) {
         message = 'Authentication error: Invalid API key. Please update your API key.';
+        details = {
+          errorType: 'authentication',
+          suggestion: 'Please obtain a valid API key from UnleashNFTs (formerly BitCrunch)'
+        };
       } else if (errorMsg.includes('429')) {
         message = 'Rate limit exceeded. Please try again later.';
+        details = {
+          errorType: 'rateLimit',
+          suggestion: 'Wait a few minutes before trying again or upgrade your API plan'
+        };
+      } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
+        message = 'Network error: Unable to connect to UnleashNFTs servers';
+        details = {
+          errorType: 'network',
+          suggestion: 'Check your internet connection and try again'
+        };
       }
     }
     
-    return {success: false, message};
+    return {success: false, message, details};
   }
 };
 
