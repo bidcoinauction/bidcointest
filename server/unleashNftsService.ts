@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { log } from './vite';
 
-const BASE_URL = 'https://api.unleashnfts.com/api/v2';
+const BASE_URL_V1 = 'https://api.unleashnfts.com/api/v1';
+const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2';
 // Access the API key directly from the environment variable
 // In server-side code, we need to access process.env directly, not import.meta.env
 const API_KEY = process.env.VITE_BITCRUNCH_API_KEY;

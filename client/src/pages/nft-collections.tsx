@@ -235,8 +235,23 @@ export default function NFTCollectionsPage() {
                       </div>
                     ))
                   ) : (
-                    <div className="p-6 text-center text-gray-400">
-                      No collections found for {selectedChain}
+                    <div className="p-6 text-center">
+                      <div className="bg-[#1d2430] p-4 rounded-md border border-[#374151] mx-auto max-w-md">
+                        <div className="mb-3 bg-[#111827] rounded-full h-10 w-10 flex items-center justify-center mx-auto">
+                          <Search className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <h3 className="text-white text-lg font-medium mb-2">API Connection Issue</h3>
+                        <p className="text-gray-400 mb-3 text-sm">
+                          We're currently unable to retrieve NFT collections. This might be due to an API authentication error.
+                        </p>
+                        <Button 
+                          onClick={() => refetchCollections()}
+                          size="sm"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                        >
+                          Try Again
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -405,8 +420,21 @@ export default function NFTCollectionsPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="text-center py-8 text-gray-400">
-                      No metrics available for this collection
+                    <div className="bg-[#1d2430] p-6 rounded-lg border border-[#374151] text-center max-w-md mx-auto">
+                      <div className="mb-4 bg-[#111827] rounded-full h-12 w-12 flex items-center justify-center mx-auto">
+                        <TrendingUp className="h-6 w-6 text-indigo-400" />
+                      </div>
+                      <h3 className="text-white text-lg font-medium mb-2">Collection Metrics Unavailable</h3>
+                      <p className="text-gray-400 mb-4">
+                        We're currently unable to retrieve metrics for this collection due to an API connection issue.
+                      </p>
+                      <Button 
+                        onClick={() => refetchCollections()}
+                        size="sm"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                      >
+                        Refresh Data
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
