@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { getAuction } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export default function AuctionDetailsPage() {
   const auctionId = params ? parseInt(params.id) : 0;
   const [showBidModal, setShowBidModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const { address } = useWallet();
   
@@ -111,7 +112,7 @@ export default function AuctionDetailsPage() {
     try {
       console.log("Placing bid:", amount, "on auction:", auctionId, "with address:", address);
       
-      const response = await fetch(`/api/auctions/${auctionId}/bid`, {
+      const response = await fetch(`/api/bids`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -119,6 +120,7 @@ export default function AuctionDetailsPage() {
         body: JSON.stringify({
           amount,
           bidderAddress: address,
+          auctionId
         }),
       });
       
@@ -135,10 +137,10 @@ export default function AuctionDetailsPage() {
         variant: "default",
       });
       
-      // Refresh the auction data
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Refresh the auction data using React Query
+      queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auctionId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/auctions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/activity'] });
     } catch (error) {
       console.error("Error placing bid:", error);
       toast({

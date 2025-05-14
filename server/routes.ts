@@ -320,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const bidData = z.object({
         auctionId: z.number(),
         amount: z.string(),
-        walletAddress: z.string(),
+        bidderAddress: z.string(),
       }).parse(req.body);
       
       // Get auction
@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get user by wallet address
-      const bidder = await storage.getUserByWalletAddress(bidData.walletAddress);
+      const bidder = await storage.getUserByWalletAddress(bidData.bidderAddress);
       if (!bidder) {
         return res.status(404).json({ message: 'User not found for wallet address' });
       }
@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createActivity({
         type: "bid",
         nftId: auction.nftId,
-        from: bidData.walletAddress.substring(0, 6) + '...' + bidData.walletAddress.substring(bidData.walletAddress.length - 4),
+        from: bidData.bidderAddress.substring(0, 6) + '...' + bidData.bidderAddress.substring(bidData.bidderAddress.length - 4),
         to: `@${auction.creator.username}`,
         price: newBidAmount,
         currency: auction.currency || "ETH",
