@@ -74,7 +74,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const tokenDisplay = auction.nft.tokenId ? `#${auction.nft.tokenId}` : `#${Math.floor(Math.random() * 100000)}`;
   
   // Format bid value display
-  const bidValueDisplay = "+$0.24 per bid";
+  const bidValueDisplay = "+$0.03 per bid";
   
   // Format time left for timestamp display (HH:MM:SS format)
   const formatTimeLeft = () => {
@@ -186,7 +186,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           Starting: $0.00
         </div>
         <div className="text-gray-400">
-          Bid Cost: $0.24 • Each bid adds: +$0.24
+          Bid Cost: $0.25 • Each bid adds: +$0.03
         </div>
       </div>
 
@@ -199,7 +199,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             currentBid: localCurrentBid.toString(),
             bidCount: localBidCount
           }}
-          minimumBid={localCurrentBid + 0.24}
+          minimumBid={localCurrentBid + 0.03}
           onPlaceBid={(amount) => {
             console.log(`Placed bid: ${amount}`);
             setShowBidModal(false);

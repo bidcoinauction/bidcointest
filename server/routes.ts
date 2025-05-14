@@ -260,13 +260,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Penny auction logic:
-      // 1. Each bid costs $0.24 (or equivalent in crypto)
-      // 2. Each bid only increases price by $0.24 (the cost of the bid)
+      // 1. Each bid costs $0.25 (or equivalent in crypto)
+      // 2. Each bid only increases price by $0.03 (3 pennies per bid)
       // 3. Each bid extends auction time
       
-      // Calculate the new bid amount (current bid + $0.24)
+      // Calculate the new bid amount (current bid + $0.03)
       const currentBid = Number(auction.currentBid || auction.startingBid);
-      const bidIncrement = 0.24; // $0.24 increment per bid (matching the cost of bidding)
+      const bidIncrement = 0.03; // $0.03 increment per bid
       const newBidAmount = (currentBid + bidIncrement).toFixed(4); // Format to 4 decimal places
       
       // Extend auction time (add 10-15 seconds per bid)

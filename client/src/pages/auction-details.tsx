@@ -60,7 +60,7 @@ export default function AuctionDetailsPage() {
   const seconds = countdownTime % 60;
   const isActive = !isComplete;
   
-  const bidIncrement = 0.24; // Fixed bid increment of $0.24 (converted to crypto equivalent)
+  const bidIncrement = 0.03; // Fixed bid increment of $0.03 (3 pennies, converted to crypto equivalent)
   const minimumBid = auction?.currentBid ? parseFloat(auction.currentBid) + bidIncrement : parseFloat(auction?.startingBid || "0");
   
   const handleOpenBidModal = () => {
