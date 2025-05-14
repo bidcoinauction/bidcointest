@@ -128,10 +128,7 @@ export default function NFTExplorerPage() {
       setIsImporting(true);
       
       const result = await importWalletNFTs(
-        walletAddress,
-        5, // limit
-        1, // creator ID
-        selectedChain
+        walletAddress
       );
       
       toast({
