@@ -11,7 +11,7 @@ export function useBidPacks() {
   const [quantity, setQuantity] = useState(1);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { address, provider, isConnected } = useWallet();
+  const { address, isConnected } = useWallet();
 
   // Fetch all bid packs
   const {
@@ -26,18 +26,18 @@ export function useBidPacks() {
   // Mutation for purchasing a bid pack
   const purchaseMutation = useMutation({
     mutationFn: async ({ packId, quantity }: { packId: number, quantity: number }) => {
-      if (!isConnected || !address || !provider || !selectedPack) {
+      if (!isConnected || !address || !selectedPack) {
         throw new Error("Wallet not connected or pack not selected");
       }
 
       // Calculate total price based on quantity
       const totalPrice = (parseFloat(selectedPack.price) * quantity).toFixed(2);
 
-      // First execute the web3 transaction
+      // First execute the web3 transaction 
+      // Note: We're using a simplified web3 transaction that doesn't need a provider
       await web3PurchaseBidPack(
         packId.toString(),
-        totalPrice.toString(),
-        provider
+        totalPrice.toString()
       );
 
       // Then record the purchase in our database

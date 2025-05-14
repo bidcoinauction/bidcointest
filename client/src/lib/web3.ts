@@ -122,20 +122,24 @@ export async function placeBid(
 export async function purchaseBidPack(
   packId: string,
   amount: string,
-  walletAddress: string
+  provider?: ethers.BrowserProvider
 ): Promise<boolean> {
   try {
     // This is a simplified implementation
     // In a real app, this would interact with a smart contract
-    console.log(`Purchasing bid pack ${packId} for ${amount} from ${walletAddress}`);
+    console.log(`Purchasing bid pack ${packId} for ${amount}`);
     
     // Simulate transaction
-    // In a real implementation, we would call a contract method
-    // const contract = new ethers.Contract(contractAddress, ABI, signer);
-    // const tx = await contract.purchaseBidPack(packId, { value: ethers.parseEther(amount) });
-    // await tx.wait();
+    // In a real implementation, we would call a contract method using the provider
+    // if (provider) {
+    //   const signer = await provider.getSigner();
+    //   const contract = new ethers.Contract(contractAddress, ABI, signer);
+    //   const tx = await contract.purchaseBidPack(packId, { value: ethers.parseEther(amount) });
+    //   await tx.wait();
+    // }
     
-    // For development, we'll always return success
+    // For development, we'll always return success after a short delay to simulate transaction time
+    await new Promise(resolve => setTimeout(resolve, 800));
     return true;
   } catch (error) {
     console.error("Error purchasing bid pack:", error);
