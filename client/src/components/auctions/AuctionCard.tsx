@@ -187,7 +187,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           }}
           disabled={isComplete}
         >
-          Bid ($0.24)
+          Bid Now
         </Button>
         
         <Button 

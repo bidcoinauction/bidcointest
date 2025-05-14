@@ -367,7 +367,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
             onClick={handleBidSubmit}
             disabled={isPending}
           >
-            {isPending ? "Processing..." : "Place Bid ($0.24)"}
+            {isPending ? "Processing..." : "Place Bid"}
           </Button>
           <Button
             variant="outline"
