@@ -591,46 +591,47 @@ export class MemStorage implements IStorage {
     // Create bid packs
     // These packs provide Bidcoin which is the platform's internal bidding currency
     // Users purchase these with real cryptocurrency but can only place bids using Bidcoin
+    // Each bid costs $0.24, and users can select quantity
     await this.createBidPack({
-      name: "Starter Pack: 10 Bidcoin",
+      name: "Starter Pack: 50 Bidcoin",
       type: "starter",
-      bidCount: 10,
-      bonusBids: 2,
-      price: "0.01",
-      originalPrice: "0.015",
-      currency: "BTC",  // Currency used to purchase the Bidcoin pack
-      available: true,
-    });
-
-    await this.createBidPack({
-      name: "Pro Pack: 50 Bidcoin",
-      type: "pro",
       bidCount: 50,
-      bonusBids: 15,
-      price: "0.04",
-      originalPrice: "0.065",
+      bonusBids: 10,
+      price: "12.00",  // 50 bids × $0.24 = $12.00
+      originalPrice: "15.00",
       currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
     await this.createBidPack({
-      name: "Premium Pack: 125 Bidcoin",
-      type: "premium",
+      name: "Pro Pack: 125 Bidcoin",
+      type: "pro",
       bidCount: 125,
-      bonusBids: 50,
-      price: "0.09",
-      originalPrice: "0.15",
+      bonusBids: 30,
+      price: "30.00",  // 125 bids × $0.24 = $30.00
+      originalPrice: "37.50",
       currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
     await this.createBidPack({
-      name: "Whale Pack: 300 Bidcoin",
+      name: "Premium Pack: 250 Bidcoin",
+      type: "premium",
+      bidCount: 250,
+      bonusBids: 75,
+      price: "60.00",  // 250 bids × $0.24 = $60.00
+      originalPrice: "75.00",
+      currency: "BTC",  // Currency used to purchase the Bidcoin pack
+      available: true,
+    });
+
+    await this.createBidPack({
+      name: "Whale Pack: 500 Bidcoin",
       type: "whale",
-      bidCount: 300,
+      bidCount: 500,
       bonusBids: 150,
-      price: "0.18",
-      originalPrice: "0.30",
+      price: "120.00",  // 500 bids × $0.24 = $120.00
+      originalPrice: "150.00",
       currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
@@ -884,7 +885,7 @@ export class MemStorage implements IStorage {
       
       // Step 3: Check if the user has Bidcoin bids available
       // All bids are made using Bidcoin (platform's internal currency)
-      // Each bid costs $0.25 in Bidcoin regardless of the NFT's native cryptocurrency
+      // Each bid costs $0.24 in Bidcoin regardless of the NFT's native cryptocurrency
       const userBidPackResult = await this.consumeBid(bidderId);
       if (!userBidPackResult.success) {
         return { 

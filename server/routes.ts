@@ -260,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Penny auction logic:
-      // 1. Each bid costs $0.25 (or equivalent in crypto)
+      // 1. Each bid costs $0.24 (in Bidcoin)
       // 2. Each bid only increases price by $0.03 (3 pennies per bid)
       // 3. Each bid extends auction time
       

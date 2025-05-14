@@ -8,6 +8,7 @@ import { BidPack } from "@shared/schema";
 
 export function useBidPacks() {
   const [selectedPack, setSelectedPack] = useState<BidPack | null>(null);
+  const [quantity, setQuantity] = useState(1);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { address, provider, isConnected } = useWallet();
@@ -24,30 +25,43 @@ export function useBidPacks() {
 
   // Mutation for purchasing a bid pack
   const purchaseMutation = useMutation({
-    mutationFn: async (packId: number) => {
+    mutationFn: async ({ packId, quantity }: { packId: number, quantity: number }) => {
       if (!isConnected || !address || !provider || !selectedPack) {
         throw new Error("Wallet not connected or pack not selected");
       }
 
+      // Calculate total price based on quantity
+      const totalPrice = (parseFloat(selectedPack.price) * quantity).toFixed(2);
+
       // First execute the web3 transaction
       await web3PurchaseBidPack(
         packId.toString(),
-        selectedPack.price.toString(),
+        totalPrice.toString(),
         provider
       );
 
       // Then record the purchase in our database
-      return purchaseBidPack(packId, address);
+      // Note: In a real implementation, we would need to update the API to handle quantity
+      // For now, we call purchaseBidPack multiple times based on quantity
+      const purchases = [];
+      for (let i = 0; i < quantity; i++) {
+        purchases.push(purchaseBidPack(packId, address));
+      }
+      
+      return Promise.all(purchases);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/bidpacks"] });
       
+      const totalBids = selectedPack ? (selectedPack.bidCount + selectedPack.bonusBids) * quantity : 0;
+      
       toast({
         title: "Purchase Successful",
-        description: `You've successfully purchased the ${selectedPack?.name} bid pack`,
+        description: `You've successfully purchased ${quantity} ${selectedPack?.name} (${totalBids} bids total)`,
       });
       
       setSelectedPack(null);
+      setQuantity(1);
     },
     onError: (error) => {
       toast({
@@ -58,7 +72,7 @@ export function useBidPacks() {
     }
   });
 
-  const purchasePack = (pack: BidPack) => {
+  const purchasePack = (pack: BidPack, qty: number = 1) => {
     if (!isConnected) {
       toast({
         variant: "destructive",
@@ -69,7 +83,8 @@ export function useBidPacks() {
     }
     
     setSelectedPack(pack);
-    purchaseMutation.mutate(pack.id);
+    setQuantity(qty);
+    purchaseMutation.mutate({ packId: pack.id, quantity: qty });
   };
 
   return {

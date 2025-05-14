@@ -69,7 +69,26 @@ function getPackButtonColor(type: string) {
   }
 }
 
-function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: BidPack) => void }) {
+function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: BidPack, quantity: number) => void }) {
+  const [quantity, setQuantity] = useState(1);
+  
+  // Calculate total price based on quantity
+  const totalPrice = (parseFloat(pack.price) * quantity).toFixed(2);
+  const totalOriginalPrice = (parseFloat(pack.originalPrice) * quantity).toFixed(2);
+  
+  // Calculate total bid count based on quantity
+  const totalBids = (pack.bidCount + pack.bonusBids) * quantity;
+  
+  const incrementQuantity = () => {
+    setQuantity(prev => prev + 1);
+  };
+  
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+
   return (
     <div className="bg-[#1f2937]/80 rounded-xl p-5 border border-[#374151] hover:shadow-glow transition-shadow duration-300">
       <div className="flex justify-between items-start mb-4">
@@ -81,14 +100,47 @@ function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: B
         </span>
       </div>
       <h3 className="font-display text-lg font-bold text-white mb-1">{pack.name}</h3>
-      <p className="text-gray-400 text-sm mb-3">{pack.bidCount} bids + {pack.bonusBids} bonus bids</p>
-      <div className="flex items-baseline justify-between mb-4">
-        <span className="text-white font-display text-2xl font-bold">{pack.price} {pack.currency}</span>
-        <span className="text-gray-400 text-sm line-through">{pack.originalPrice} {pack.currency}</span>
+      <div className="flex flex-col space-y-2 mb-3">
+        <p className="text-gray-400 text-sm">{pack.bidCount} bids + {pack.bonusBids} bonus bids</p>
+        <p className="text-xs text-primary">Each bid costs $0.24</p>
       </div>
+      
+      {/* Quantity selector */}
+      <div className="flex items-center justify-between mb-4 bg-[#374151]/50 p-2 rounded-lg">
+        <span className="text-white text-sm">Quantity:</span>
+        <div className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={decrementQuantity} 
+            className="h-8 w-8 p-0 rounded-md border-[#4b5563]"
+            disabled={quantity <= 1}
+          >
+            -
+          </Button>
+          <span className="text-white font-medium w-8 text-center">{quantity}</span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={incrementQuantity} 
+            className="h-8 w-8 p-0 rounded-md border-[#4b5563]"
+          >
+            +
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex items-baseline justify-between mb-4">
+        <div className="flex flex-col">
+          <span className="text-white font-display text-2xl font-bold">{totalPrice} {pack.currency}</span>
+          <span className="text-gray-400 text-xs">Total {totalBids} bids</span>
+        </div>
+        <span className="text-gray-400 text-sm line-through">{totalOriginalPrice} {pack.currency}</span>
+      </div>
+      
       <Button 
         className={`w-full ${getPackButtonColor(pack.type)} text-white font-medium py-2 rounded-lg transition-colors`}
-        onClick={() => onPurchase(pack)}
+        onClick={() => onPurchase(pack, quantity)}
       >
         Buy Now
       </Button>
