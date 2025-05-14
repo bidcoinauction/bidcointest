@@ -7,7 +7,7 @@ import {
   importWalletNFTs
 } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { useWallet } from "@/hooks/useWallet";
+import useWallet from "@/hooks/useWallet";
 import { 
   Card, 
   CardContent, 

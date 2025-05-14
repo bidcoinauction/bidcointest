@@ -55,6 +55,13 @@ export default function Navigation() {
           </div>
           
           <div 
+            onClick={navigate("/dashboard")}
+            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/dashboard") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+          >
+            Dashboard
+          </div>
+          
+          <div 
             onClick={navigate("/activity")}
             className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/activity") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
           >

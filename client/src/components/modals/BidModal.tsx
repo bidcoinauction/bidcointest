@@ -40,7 +40,9 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
   const [showPrompt, setShowPrompt] = useState(true);
   
   const { toast } = useToast();
-  const { address, provider, balance, isConnected } = useWallet();
+  const { address, isConnected } = useWallet();
+  // Mock balance for demo purposes 
+  const balance = "10.0";
   const queryClient = useQueryClient();
   
   const minBid = minimumBid;

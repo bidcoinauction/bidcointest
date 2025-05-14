@@ -1,98 +1,115 @@
-import { useState, useCallback, useEffect } from "react";
-import { 
-  connectWallet, 
-  disconnectWallet, 
-  WalletType, 
-  WalletConnection, 
-  ConnectionState 
-} from "@/lib/web3";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { useToast } from './use-toast';
 
-export function useWallet() {
-  const [walletConnection, setWalletConnection] = useState<WalletConnection>({
-    address: null,
-    balance: null,
-    chainId: null,
-    provider: null,
-    state: ConnectionState.DISCONNECTED,
-    error: null
-  });
-  
+type WalletProvider = 'metamask' | 'wallet-connect' | 'phantom';
+
+interface UseWalletReturn {
+  address: string | null;
+  connect: (provider: WalletProvider) => Promise<void>;
+  disconnect: () => void;
+  isConnected: boolean;
+  isConnecting: boolean;
+  chainId: number | null;
+  switchChain: (chainId: number) => Promise<void>;
+}
+
+const useWallet = (): UseWalletReturn => {
+  const [address, setAddress] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [chainId, setChainId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  // Check for existing connection on mount
+  // Check for existing wallet connection on mount
   useEffect(() => {
-    const savedAddress = localStorage.getItem("walletAddress");
-    const savedType = localStorage.getItem("walletType") as WalletType | null;
+    const storedAddress = localStorage.getItem('wallet_address');
+    const storedChainId = localStorage.getItem('wallet_chain_id');
     
-    if (savedAddress && savedType) {
-      connect(savedType);
+    if (storedAddress) {
+      setAddress(storedAddress);
+      setChainId(storedChainId ? parseInt(storedChainId) : null);
     }
   }, []);
 
-  // Connect to wallet
-  const connect = useCallback(async (walletType: WalletType) => {
+  const connect = async (provider: WalletProvider) => {
+    setIsConnecting(true);
+    
     try {
-      setWalletConnection(prev => ({ ...prev, state: ConnectionState.CONNECTING }));
+      // Mock implementation - in real app this would interact with actual wallets
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const connection = await connectWallet(walletType);
+      // For demo purposes, generate a random wallet address
+      // In a real implementation, this would come from the wallet provider
+      const mockAddress = `0x${Array.from({length: 40}, () => 
+        '0123456789abcdef'[Math.floor(Math.random() * 16)]
+      ).join('')}`;
       
-      if (connection.state === ConnectionState.CONNECTED && connection.address) {
-        // Save wallet info to local storage
-        localStorage.setItem("walletAddress", connection.address);
-        localStorage.setItem("walletType", walletType);
-        
-        setWalletConnection(connection);
-        
-        toast({
-          title: "Wallet Connected",
-          description: `Connected to ${walletType} wallet`,
-        });
-      } else {
-        throw new Error(connection.error || "Failed to connect to wallet");
-      }
-    } catch (error) {
-      console.error("Wallet connection error:", error);
+      // Default to Ethereum Mainnet
+      const mockChainId = 1;
       
-      setWalletConnection({
-        address: null,
-        balance: null,
-        chainId: null,
-        provider: null,
-        state: ConnectionState.ERROR,
-        error: error instanceof Error ? error.message : "Unknown error"
+      setAddress(mockAddress);
+      setChainId(mockChainId);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('wallet_address', mockAddress);
+      localStorage.setItem('wallet_chain_id', mockChainId.toString());
+      
+      toast({
+        title: "Wallet Connected",
+        description: `Connected to ${provider} wallet`,
       });
-      
+    } catch (error) {
       toast({
         variant: "destructive",
         title: "Connection Failed",
         description: error instanceof Error ? error.message : "Failed to connect wallet",
       });
+    } finally {
+      setIsConnecting(false);
     }
-  }, [toast]);
+  };
 
-  // Disconnect from wallet
-  const disconnect = useCallback(() => {
-    localStorage.removeItem("walletAddress");
-    localStorage.removeItem("walletType");
-    
-    setWalletConnection(disconnectWallet());
+  const disconnect = () => {
+    setAddress(null);
+    setChainId(null);
+    localStorage.removeItem('wallet_address');
+    localStorage.removeItem('wallet_chain_id');
     
     toast({
       title: "Wallet Disconnected",
       description: "Your wallet has been disconnected",
     });
-  }, [toast]);
+  };
+
+  const switchChain = async (newChainId: number) => {
+    try {
+      // In a real implementation, this would request the wallet to switch chains
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setChainId(newChainId);
+      localStorage.setItem('wallet_chain_id', newChainId.toString());
+      
+      toast({
+        title: "Network Changed",
+        description: `Switched to chain ID: ${newChainId}`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Network Switch Failed",
+        description: error instanceof Error ? error.message : "Failed to switch network",
+      });
+    }
+  };
 
   return {
-    ...walletConnection,
+    address,
     connect,
     disconnect,
-    isConnected: walletConnection.state === ConnectionState.CONNECTED,
-    isConnecting: walletConnection.state === ConnectionState.CONNECTING,
-    isDisconnected: walletConnection.state === ConnectionState.DISCONNECTED,
-    hasError: walletConnection.state === ConnectionState.ERROR
+    isConnected: !!address,
+    isConnecting,
+    chainId,
+    switchChain,
   };
-}
+};
 
 export default useWallet;
