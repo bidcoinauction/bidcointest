@@ -104,8 +104,7 @@ function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: B
       </div>
       <h3 className="font-display text-lg font-bold text-white mb-1">{pack.name}</h3>
       <div className="flex flex-col space-y-2 mb-3">
-        <p className="text-gray-400 text-sm">{pack.bidCount} bids + {pack.bonusBids} bonus bids</p>
-        <p className="text-xs text-primary">Each bid costs $0.24</p>
+        <p className="text-gray-400 text-sm">{pack.bidCount + pack.bonusBids} bids</p>
       </div>
       
       {/* Quantity selector */}

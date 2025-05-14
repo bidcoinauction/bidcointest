@@ -148,7 +148,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
       toast({
         variant: "destructive",
         title: "Insufficient Funds",
-        description: `Your balance is $${balance}. Each bid costs $0.24.`,
+        description: `Your balance is $${balance}. You need more bids to continue.`,
       });
       return;
     }
@@ -157,7 +157,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
       setIsPending(true);
       
       // Add strategy-specific messaging
-      let successMessage = `Your bid has been placed! Auction price increased by $0.03`;
+      let successMessage = `Your bid has been placed! Auction price has increased`;
       let strategyTip = "";
       
       switch (selectedStrategy) {
