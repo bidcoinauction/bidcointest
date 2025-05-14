@@ -286,15 +286,35 @@ export default function AuctionDetailsPage() {
           
           <div className="bg-[#1f2937] p-5 rounded-xl border border-[#374151] mb-6">
             <h3 className="text-lg font-display font-bold text-white mb-4">NFT Properties</h3>
-            <div className="grid grid-cols-3 gap-3">
-              {auction.nft.attributes && auction.nft.attributes.map((attr, index) => (
-                <div key={index} className="bg-[#111827] rounded-lg p-3 text-center">
-                  <p className="text-gray-400 text-xs mb-1">{attr.trait_type}</p>
-                  <p className="text-white font-medium text-sm truncate">{attr.value}</p>
-                  <p className="text-primary text-xs mt-1">{attr.rarity}</p>
-                </div>
-              ))}
-            </div>
+            {auction.nft.attributes && auction.nft.attributes.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {auction.nft.attributes.map((attr, index) => (
+                  <div key={index} className="bg-[#111827] rounded-lg p-3 text-center">
+                    <p className="text-gray-400 text-xs mb-1">{attr.trait_type}</p>
+                    <p className="text-white font-medium text-sm truncate">{attr.value}</p>
+                    {attr.rarity && (
+                      <div className="mt-1 flex items-center justify-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          parseFloat(attr.rarity) < 10 ? 'bg-blue-100 text-blue-800' : 
+                          parseFloat(attr.rarity) < 30 ? 'bg-green-100 text-green-800' : 
+                          parseFloat(attr.rarity) < 50 ? 'bg-yellow-100 text-yellow-800' : 
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {parseFloat(attr.rarity) < 10 ? 'Rare' : 
+                           parseFloat(attr.rarity) < 30 ? 'Uncommon' : 
+                           parseFloat(attr.rarity) < 50 ? 'Common' : 
+                           'Basic'} {attr.rarity}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-[#111827] rounded-lg p-4 text-center">
+                <p className="text-gray-400">No properties found for this NFT</p>
+              </div>
+            )}
           </div>
           
           <div className="bg-[#1f2937] rounded-xl border border-[#374151]">
@@ -314,15 +334,54 @@ export default function AuctionDetailsPage() {
                   <span className="text-white">{auction.nft.tokenId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Creator Royalty</span>
-                  <span className="text-white">{auction.nft.royalty}%</span>
+                  <span className="text-gray-400">Contract Address</span>
+                  <span className="text-white truncate max-w-[180px]">{formatAddress(auction.nft.contractAddress)}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Collection</span>
+                  <span className="text-white">{auction.nft.collection || "Unknown Collection"}</span>
+                </div>
+                {auction.nft.royalty && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Creator Royalty</span>
+                    <span className="text-white">{auction.nft.royalty}%</span>
+                  </div>
+                )}
+                {auction.nft.floorPrice && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Floor Price</span>
+                    <span className="text-white">{auction.nft.floorPrice} ETH</span>
+                  </div>
+                )}
+                {auction.nft.items && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Collection Size</span>
+                    <span className="text-white">{auction.nft.items.toLocaleString()} items</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="border-t border-[#374151] p-5">
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">View on Explorer</span>
-                <Button variant="ghost" size="sm" className="text-primary hover:text-primary-light">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-primary hover:text-primary-light"
+                  onClick={() => {
+                    let explorerUrl;
+                    if (auction.nft.blockchain === 'ethereum') {
+                      explorerUrl = `https://etherscan.io/token/${auction.nft.contractAddress}?a=${auction.nft.tokenId}`;
+                    } else if (auction.nft.blockchain === 'polygon') {
+                      explorerUrl = `https://polygonscan.com/token/${auction.nft.contractAddress}?a=${auction.nft.tokenId}`;
+                    } else if (auction.nft.blockchain === 'solana') {
+                      explorerUrl = `https://solscan.io/token/${auction.nft.tokenId}`;
+                    } else {
+                      explorerUrl = `https://explorer.blockchain.com`;
+                    }
+                    window.open(explorerUrl, '_blank');
+                  }}
+                >
                   <ExternalLink className="h-4 w-4 mr-1" /> Explorer
                 </Button>
               </div>
@@ -432,9 +491,59 @@ export default function AuctionDetailsPage() {
                 <TabsTrigger value="history">Price History</TabsTrigger>
               </TabsList>
               <TabsContent value="about" className="mt-6">
-                <div className="text-gray-300 prose prose-invert max-w-none">
-                  <p>{auction.nft.description}</p>
+                {/* NFT Description */}
+                <div className="mb-6">
+                  <h4 className="text-white font-semibold mb-3">NFT Description</h4>
+                  <div className="text-gray-300 prose prose-invert max-w-none">
+                    <p>{auction.nft.description || "No description available for this NFT."}</p>
+                  </div>
                 </div>
+                
+                {/* Collection Info */}
+                {auction.nft.collection && (
+                  <div className="pt-4 border-t border-[#374151]">
+                    <h4 className="text-white font-semibold mb-3">Collection Information</h4>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden mr-3">
+                          {auction.nft.collectionImage ? (
+                            <img 
+                              src={auction.nft.collectionImage} 
+                              alt={auction.nft.collection} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-700 flex items-center justify-center text-gray-400">
+                              <span className="text-2xl font-bold">{auction.nft.collection.charAt(0)}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">{auction.nft.collection}</h5>
+                          {auction.nft.items && (
+                            <p className="text-sm text-gray-400">{auction.nft.items.toLocaleString()} items</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {auction.nft.floorPrice && (
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="bg-[#111827] p-2 rounded flex-1">
+                            <p className="text-xs text-gray-400">Floor Price</p>
+                            <p className="text-sm text-white font-medium">{auction.nft.floorPrice} ETH</p>
+                          </div>
+                          
+                          {auction.nft.volume24h && (
+                            <div className="bg-[#111827] p-2 rounded flex-1">
+                              <p className="text-xs text-gray-400">24h Volume</p>
+                              <p className="text-sm text-white font-medium">{auction.nft.volume24h} ETH</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </TabsContent>
               <TabsContent value="activity" className="mt-6">
                 <BidActivity auctionId={auctionId} />
