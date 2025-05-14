@@ -58,6 +58,11 @@ export default function AuctionDetailsPage() {
     }
   }, [auction]);
   
+  // Function to navigate to NFT Collections page for API key management
+  const navigateToApiSettings = () => {
+    window.location.href = '/nft-collections';
+  };
+
   // Fetch detailed metadata from UnleashNFTs API
   useEffect(() => {
     if (!auction || !auction.nft) return;
@@ -85,16 +90,39 @@ export default function AuctionDetailsPage() {
         if (metadata) {
           console.log('Detailed metadata loaded:', metadata);
           setDetailedMetadata(metadata);
+        } else {
+          console.log('No detailed metadata available from UnleashNFTs API');
         }
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         console.error('Error fetching detailed metadata:', error);
+        
+        // Handle specific API errors
+        if (errorMessage.includes('401') || errorMessage.includes('Invalid API key')) {
+          toast({
+            title: "API Authentication Error",
+            description: "Invalid API key for UnleashNFTs. Please update your API key in NFT Collections page settings.",
+            variant: "destructive",
+            action: (
+              <Button variant="outline" onClick={navigateToApiSettings}>
+                Update API Key
+              </Button>
+            )
+          });
+        } else if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+          toast({
+            title: "API Rate Limit Exceeded",
+            description: "Too many requests to UnleashNFTs API. Please try again later or upgrade your API plan.",
+            variant: "destructive"
+          });
+        }
       } finally {
         setLoading(false);
       }
     };
     
     fetchDetailedMetadata();
-  }, [auction]);
+  }, [auction, toast]);
   
   // Automatic bid simulation function
   const simulateRandomBid = useCallback(() => {
@@ -414,6 +442,23 @@ export default function AuctionDetailsPage() {
                 <div className="flex justify-between">
                   <span className="text-gray-400">Collection</span>
                   <span className="text-white">{auction.nft.collection || "Unknown Collection"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">UnleashNFTs API</span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${detailedMetadata ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    <span className="text-white">{detailedMetadata ? 'Connected' : 'Not connected'}</span>
+                    {!detailedMetadata && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="ml-2 text-xs py-0 h-6" 
+                        onClick={navigateToApiSettings}
+                      >
+                        Fix
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {auction.nft.royalty && (
                   <div className="flex justify-between">
