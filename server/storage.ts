@@ -38,6 +38,17 @@ export interface IStorage {
   getBidsByAuction(auctionId: number): Promise<Bid[]>;
   createBid(bid: InsertBid): Promise<Bid>;
   
+  // Penny Auction Mechanics
+  processAuctionBid(auctionId: number, bidderId: number): Promise<{
+    success: boolean;
+    auction?: Auction;
+    bid?: Bid;
+    userBidPack?: UserBidPack;
+    error?: string;
+  }>;
+  extendAuctionTime(auctionId: number, extensionSeconds: number): Promise<Auction>;
+  incrementAuctionPrice(auctionId: number, incrementAmount: number): Promise<Auction>;
+  
   // BidPack operations
   getBidPack(id: number): Promise<BidPack | undefined>;
   getBidPacks(): Promise<BidPack[]>;
@@ -47,6 +58,11 @@ export interface IStorage {
   getUserBidPacks(userId: number): Promise<UserBidPack[]>;
   createUserBidPack(userBidPack: InsertUserBidPack): Promise<UserBidPack>;
   updateUserBidPackCount(id: number, bidsRemaining: number): Promise<UserBidPack>;
+  consumeBid(userId: number): Promise<{
+    success: boolean;
+    userBidPack?: UserBidPack;
+    error?: string;
+  }>;
   
   // Activity operations
   getActivities(): Promise<Activity[]>;
@@ -55,6 +71,22 @@ export interface IStorage {
   // Auction History operations
   getAuctionHistory(auctionId: number): Promise<AuctionHistory[]>;
   createAuctionHistory(history: InsertAuctionHistory): Promise<AuctionHistory>;
+  
+  // Blockchain Integration
+  recordBidOnBlockchain(bidId: number): Promise<{
+    success: boolean;
+    transactionId?: string;
+    error?: string;
+  }>;
+  verifyBidTransaction(transactionId: string): Promise<boolean>;
+  
+  // Settlement Process
+  finalizeAuction(auctionId: number): Promise<{
+    success: boolean;
+    winner?: User;
+    finalPrice?: string;
+    error?: string;
+  }>;
   
   // BitCrunch related operations
   getBlockchainStats(): Promise<BlockchainStats>;
@@ -328,8 +360,7 @@ export class MemStorage implements IStorage {
       ]
     });
 
-    // Create auctions - setup with penny auction values
-    // Start at 0 or low values, increment in small amounts (0.03)
+    // Create auctions
     const oneDay = 24 * 60 * 60 * 1000;
     const threeDays = 3 * oneDay;
     const fiveDays = 5 * oneDay;
@@ -338,9 +369,8 @@ export class MemStorage implements IStorage {
     const auction1 = await this.createAuction({
       nftId: nft1.id,
       startingBid: "0",
-      currentBid: "0.1221", // Increments of 0.03 with 40 bids + 0.0001 for precision
+      currentBid: "0.24",
       currency: "ETH",
-      bidCount: 40,
       endTime: new Date(Date.now() + oneDay),
       featured: true,
       creatorId: user1.id,
@@ -348,10 +378,9 @@ export class MemStorage implements IStorage {
 
     const auction2 = await this.createAuction({
       nftId: nft2.id,
-      startingBid: "0",
-      currentBid: "0.1526", // 50 bids
+      startingBid: "0.2",
+      currentBid: "0.34",
       currency: "ETH",
-      bidCount: 50,
       endTime: new Date(Date.now() + fiveDays),
       featured: false,
       creatorId: user2.id,
@@ -359,10 +388,9 @@ export class MemStorage implements IStorage {
 
     const auction3 = await this.createAuction({
       nftId: nft3.id,
-      startingBid: "0",
-      currentBid: "0.0125", // 4 bids
+      startingBid: "0.015",
+      currentBid: "0.027",
       currency: "SOL",
-      bidCount: 4,
       endTime: new Date(Date.now() + threeDays),
       featured: false,
       creatorId: user3.id,
@@ -370,10 +398,9 @@ export class MemStorage implements IStorage {
 
     const auction4 = await this.createAuction({
       nftId: nft4.id,
-      startingBid: "0",
-      currentBid: "0.1132", // 37 bids
+      startingBid: "10.0",
+      currentBid: "15.5",
       currency: "ETH",
-      bidCount: 37,
       endTime: new Date(Date.now() - oneDay),
       featured: false,
       creatorId: user4.id,
@@ -381,10 +408,9 @@ export class MemStorage implements IStorage {
 
     const auction5 = await this.createAuction({
       nftId: nft5.id,
-      startingBid: "0",
-      currentBid: "0.2325", // 77 bids
+      startingBid: "1200.0",
+      currentBid: "1390.0",
       currency: "SOL",
-      bidCount: 77,
       endTime: new Date(Date.now() + tenDays),
       featured: true,
       creatorId: user5.id,
@@ -392,10 +418,9 @@ export class MemStorage implements IStorage {
 
     const auction6 = await this.createAuction({
       nftId: nft6.id,
-      startingBid: "0",
-      currentBid: "0.0154", // 5 bids
+      startingBid: "25.0",
+      currentBid: "34.0",
       currency: "SOL",
-      bidCount: 5,
       endTime: new Date(Date.now() + (oneDay * 2)),
       featured: true,
       creatorId: user6.id,
@@ -403,167 +428,139 @@ export class MemStorage implements IStorage {
 
     const auction7 = await this.createAuction({
       nftId: nft7.id,
-      startingBid: "0",
-      currentBid: "1.0153", // High value item with 338 bids
+      startingBid: "2.0",
+      currentBid: "2.88",
       currency: "ETH",
-      bidCount: 338,
       endTime: new Date(Date.now() + (oneDay * 9)),
       featured: true,
       creatorId: user7.id,
     });
 
-    // Create bids with penny auction values
-    // Last few bids for each auction only
-    
-    // Auction 1 bids (latest 3 of 40 bids)
+    // Create bids
     await this.createBid({
       auctionId: auction1.id,
       bidderId: user2.id,
-      amount: "0.1161", // 38th bid
+      amount: "0.6",
     });
 
     await this.createBid({
       auctionId: auction1.id,
       bidderId: user3.id,
-      amount: "0.1191", // 39th bid
+      amount: "0.75",
     });
 
     await this.createBid({
       auctionId: auction1.id,
       bidderId: user5.id,
-      amount: "0.1221", // 40th bid
+      amount: "0.875",
     });
-    
-    // Auction 2 bids (latest 3 of 50 bids)
+
     await this.createBid({
       auctionId: auction2.id,
       bidderId: user1.id,
-      amount: "0.1466", // 48th bid
+      amount: "0.22",
     });
 
     await this.createBid({
       auctionId: auction2.id,
       bidderId: user4.id,
-      amount: "0.1496", // 49th bid
+      amount: "0.28",
     });
 
     await this.createBid({
       auctionId: auction2.id,
       bidderId: user5.id,
-      amount: "0.1526", // 50th bid
-    });
-    
-    // Auction 3 bids (all 4 bids)
-    await this.createBid({
-      auctionId: auction3.id,
-      bidderId: user1.id,
-      amount: "0.0035", // 1st bid
+      amount: "0.34",
     });
 
     await this.createBid({
       auctionId: auction3.id,
       bidderId: user2.id,
-      amount: "0.0065", // 2nd bid
+      amount: "0.018",
     });
 
     await this.createBid({
       auctionId: auction3.id,
       bidderId: user4.id,
-      amount: "0.0095", // 3rd bid
+      amount: "0.022",
     });
 
     await this.createBid({
       auctionId: auction3.id,
       bidderId: user6.id,
-      amount: "0.0125", // 4th bid
+      amount: "0.027",
     });
-    
-    // Auction 4 bids (latest 3 of 37 bids)
+
     await this.createBid({
       auctionId: auction4.id,
       bidderId: user1.id,
-      amount: "0.1072", // 35th bid
+      amount: "110.0",
     });
 
     await this.createBid({
       auctionId: auction4.id,
       bidderId: user3.id,
-      amount: "0.1102", // 36th bid
+      amount: "125.0",
     });
 
     await this.createBid({
       auctionId: auction4.id,
       bidderId: user7.id,
-      amount: "0.1132", // 37th bid
+      amount: "145.0",
     });
-    
-    // Auction 5 bids (latest 3 of 77 bids)
+
     await this.createBid({
       auctionId: auction5.id,
       bidderId: user1.id,
-      amount: "0.2265", // 75th bid
+      amount: "1250.0",
     });
 
     await this.createBid({
       auctionId: auction5.id,
       bidderId: user2.id,
-      amount: "0.2295", // 76th bid
+      amount: "1320.0",
     });
 
     await this.createBid({
       auctionId: auction5.id,
       bidderId: user3.id,
-      amount: "0.2325", // 77th bid
-    });
-    
-    // Auction 6 bids (all 5 bids)
-    await this.createBid({
-      auctionId: auction6.id,
-      bidderId: user2.id,
-      amount: "0.0034", // 1st bid
+      amount: "1390.0",
     });
 
     await this.createBid({
       auctionId: auction6.id,
       bidderId: user4.id,
-      amount: "0.0064", // 2nd bid
+      amount: "28.0",
     });
 
     await this.createBid({
       auctionId: auction6.id,
       bidderId: user5.id,
-      amount: "0.0094", // 3rd bid
-    });
-
-    await this.createBid({
-      auctionId: auction6.id,
-      bidderId: user6.id,
-      amount: "0.0124", // 4th bid
+      amount: "31.5",
     });
 
     await this.createBid({
       auctionId: auction6.id,
       bidderId: user7.id,
-      amount: "0.0154", // 5th bid
+      amount: "34.0",
     });
-    
-    // Auction 7 bids (last 3 of 338 bids)
+
     await this.createBid({
       auctionId: auction7.id,
       bidderId: user1.id,
-      amount: "1.0093", // 336th bid
+      amount: "2.2",
     });
 
     await this.createBid({
       auctionId: auction7.id,
       bidderId: user2.id,
-      amount: "1.0123", // 337th bid
+      amount: "2.55",
     });
 
     await this.createBid({
       auctionId: auction7.id,
       bidderId: user3.id,
-      amount: "1.0153", // 338th bid
+      amount: "2.88",
     });
 
     // Create auction histories
@@ -860,6 +857,134 @@ export class MemStorage implements IStorage {
     this.auctions.set(id, updatedAuction);
 
     return this.getAuction(id) as Promise<Auction>;
+  }
+  
+  // Penny Auction Mechanics
+  async processAuctionBid(auctionId: number, bidderId: number): Promise<{
+    success: boolean;
+    auction?: Auction;
+    bid?: Bid;
+    userBidPack?: UserBidPack;
+    error?: string;
+  }> {
+    try {
+      // Step 1: Check if the auction exists
+      const auction = await this.getAuction(auctionId);
+      if (!auction) {
+        return { success: false, error: `Auction with id ${auctionId} not found` };
+      }
+      
+      // Step 2: Check if the auction is still active
+      const now = new Date();
+      if (new Date(auction.endTime) < now) {
+        return { success: false, error: 'Auction has ended' };
+      }
+      
+      // Step 3: Check if the user has bids available
+      const userBidPackResult = await this.consumeBid(bidderId);
+      if (!userBidPackResult.success) {
+        return { 
+          success: false, 
+          error: userBidPackResult.error || 'No bids available' 
+        };
+      }
+      
+      // Step 4: Calculate the new price (current price + $0.03)
+      const currentBid = Number(auction.currentBid || auction.startingBid);
+      const bidIncrement = 0.03; // $0.03 increment per bid
+      const newBidAmount = (currentBid + bidIncrement).toFixed(4);
+      
+      // Step 5: Extend the auction time
+      const extensionSeconds = Math.floor(Math.random() * 6) + 10; // 10-15 seconds
+      let newEndTime = new Date(auction.endTime);
+      newEndTime.setSeconds(newEndTime.getSeconds() + extensionSeconds);
+      
+      // Step 6: Update the auction with new bid amount, end time, and increment bid count
+      const updatedBidCount = (auction.bidCount || 0) + 1;
+      const updatedAuction = await this.updateAuctionBid(
+        auctionId, 
+        newBidAmount, 
+        updatedBidCount, 
+        newEndTime
+      );
+      
+      // Step 7: Create bid record
+      const bid = await this.createBid({
+        auctionId,
+        bidderId,
+        amount: newBidAmount
+      });
+      
+      // Step 8: Record bid on blockchain (in a real implementation)
+      const blockchainRecord = await this.recordBidOnBlockchain(bid.id);
+      if (!blockchainRecord.success) {
+        console.warn(`Failed to record bid on blockchain: ${blockchainRecord.error}`);
+        // Continue anyway, we'll retry later
+      }
+      
+      // Step 9: Create auction history record
+      await this.createAuctionHistory({
+        auctionId,
+        description: `New bid of ${newBidAmount} placed`,
+        icon: 'hammer'
+      });
+      
+      // Step 10: Create activity record
+      await this.createActivity({
+        type: 'bid',
+        nftId: auction.nftId,
+        from: 'system',
+        to: bidderId.toString(),
+        price: newBidAmount,
+        currency: auction.currency || 'ETH'
+      });
+      
+      return {
+        success: true,
+        auction: updatedAuction,
+        bid,
+        userBidPack: userBidPackResult.userBidPack
+      };
+    } catch (error) {
+      console.error('Error processing auction bid:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+  
+  async extendAuctionTime(auctionId: number, extensionSeconds: number): Promise<Auction> {
+    const auction = await this.getAuction(auctionId);
+    if (!auction) {
+      throw new Error(`Auction with id ${auctionId} not found`);
+    }
+    
+    let newEndTime = new Date(auction.endTime);
+    newEndTime.setSeconds(newEndTime.getSeconds() + extensionSeconds);
+    
+    return this.updateAuctionBid(
+      auctionId, 
+      auction.currentBid || auction.startingBid, 
+      auction.bidCount || 0, 
+      newEndTime
+    );
+  }
+  
+  async incrementAuctionPrice(auctionId: number, incrementAmount: number): Promise<Auction> {
+    const auction = await this.getAuction(auctionId);
+    if (!auction) {
+      throw new Error(`Auction with id ${auctionId} not found`);
+    }
+    
+    const currentBid = Number(auction.currentBid || auction.startingBid);
+    const newBidAmount = (currentBid + incrementAmount).toFixed(4);
+    
+    return this.updateAuctionBid(
+      auctionId, 
+      newBidAmount, 
+      auction.bidCount || 0
+    );
   }
 
   /* Bid operations */
