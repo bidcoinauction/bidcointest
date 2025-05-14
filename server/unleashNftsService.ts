@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { log } from './vite';
 
-const BASE_URL = 'https://api.unleashnfts.com';
+const BASE_URL = 'https://api.unleashnfts.com/api/v2';
 // Access the API key directly from the environment variable
 // In server-side code, we need to access process.env directly, not import.meta.env
 const API_KEY = process.env.VITE_BITCRUNCH_API_KEY;
@@ -77,11 +77,11 @@ export class UnleashNftsService {
    */
   async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10): Promise<NFTCollection[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/collections`, {
+      const response = await axios.get(`${BASE_URL}/nft/collections`, {
         headers: this.headers,
         params: {
-          chain,
-          page,
+          blockchain: chain,
+          offset: (page - 1) * limit,
           limit
         }
       });
@@ -99,9 +99,12 @@ export class UnleashNftsService {
    */
   async getCollectionMetadata(contractAddress: string, chain: string): Promise<NFTCollection | null> {
     try {
-      const response = await axios.get(`${BASE_URL}/collection/${contractAddress}`, {
+      const response = await axios.get(`${BASE_URL}/nft/collection/info`, {
         headers: this.headers,
-        params: { chain }
+        params: { 
+          collection_address: contractAddress,
+          blockchain: chain 
+        }
       });
       return response.data.data || null;
     } catch (error) {
@@ -117,9 +120,12 @@ export class UnleashNftsService {
    */
   async getCollectionMetrics(contractAddress: string, chain: string): Promise<NFTCollectionMetrics | null> {
     try {
-      const response = await axios.get(`${BASE_URL}/collection/${contractAddress}/metrics`, {
+      const response = await axios.get(`${BASE_URL}/nft/collection/metrics`, {
         headers: this.headers,
-        params: { chain }
+        params: { 
+          collection_address: contractAddress,
+          blockchain: chain 
+        }
       });
       return response.data.data || null;
     } catch (error) {
@@ -248,12 +254,12 @@ export class UnleashNftsService {
    */
   async getNFTsWithValuation(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<NFTMetadata[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/nfts-with-valuation`, {
+      const response = await axios.get(`${BASE_URL}/nft/tokens`, {
         headers: this.headers,
         params: {
-          collection: contractAddress,
-          chain,
-          page,
+          collection_address: contractAddress,
+          blockchain: chain,
+          offset: (page - 1) * limit,
           limit
         }
       });
