@@ -1,4 +1,23 @@
-import { fetchFromAPI } from './api';
+// Import the base fetchFromAPI function but we'll create a specialized version
+import { fetchFromAPI as baseFetchFromAPI } from './api';
+
+// Modified fetch function with API key from our state
+async function fetchFromAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  // Create new options object with our API key in headers
+  const apiKey = apiStatus.apiKey;
+  const headers = {
+    'x-api-key': apiKey,
+    ...(options?.headers || {})
+  };
+  
+  // Merge with existing options
+  const mergedOptions = {
+    ...options,
+    headers
+  };
+  
+  return baseFetchFromAPI<T>(endpoint, mergedOptions);
+}
 
 // Types exported from server/unleashNftsService.ts
 export interface NFTCollection {
@@ -56,17 +75,48 @@ export interface NFTValuation {
 /**
  * Helper function for API status tracking and error handling
  */
+// Try to get API key from localStorage first, then environment variable
+const getSavedApiKey = (): string => {
+  try {
+    const savedKey = typeof window !== 'undefined' ? localStorage.getItem('unleashnfts_api_key') : null;
+    return savedKey || import.meta.env.VITE_BITCRUNCH_API_KEY || "";
+  } catch (e) {
+    return import.meta.env.VITE_BITCRUNCH_API_KEY || "";
+  }
+};
+
 let apiStatus = {
   isWorking: false,
   lastError: null as Error | null,
   lastSuccessfulCall: null as Date | null,
-  connectionTested: false
+  connectionTested: false,
+  apiKey: getSavedApiKey()
 };
 
 /**
  * Check if the UnleashNFTs API is operational
  */
 export const getApiStatus = () => apiStatus;
+
+/**
+ * Update the API key for UnleashNFTs API
+ * Note: This is a temporary solution for testing purposes
+ * In a production environment, the API key should be managed server-side
+ */
+export const updateApiKey = (newApiKey: string): void => {
+  if (!newApiKey || newApiKey.trim() === '') {
+    throw new Error('API key cannot be empty');
+  }
+  
+  apiStatus.apiKey = newApiKey.trim();
+  apiStatus.isWorking = false;
+  apiStatus.connectionTested = false;
+  apiStatus.lastError = null;
+  apiStatus.lastSuccessfulCall = null;
+  
+  // Store the API key in local storage for persistence during the session
+  localStorage.setItem('unleashnfts_api_key', newApiKey.trim());
+};
 
 /**
  * Test the API connection by making a simple request

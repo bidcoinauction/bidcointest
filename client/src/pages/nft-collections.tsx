@@ -152,6 +152,61 @@ export default function NFTCollectionsPage() {
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">NFT Collections</h1>
           <p className="text-gray-400">Explore NFT collections and their valuations</p>
+          
+          {/* API Status Indicator */}
+          <div className="flex items-center mt-2">
+            <span 
+              className={`w-2 h-2 rounded-full mr-2 ${isCollectionsError ? 'bg-red-500' : (collections && collections.length > 0) ? 'bg-green-500' : 'bg-yellow-500'}`}
+            ></span>
+            <span className="text-xs text-gray-400">
+              {isCollectionsError ? 'API Error' : (collections && collections.length > 0) ? 'API Connected' : 'Waiting for API connection'}
+            </span>
+            <Button
+              onClick={() => {
+                const testApiConnectionAsync = async () => {
+                  try {
+                    setApiTestInProgress(true);
+                    toast({
+                      title: "Testing API Connection",
+                      description: "Connecting to UnleashNFTs API...",
+                    });
+                    const result = await testApiConnection();
+                    setApiTestResult(result);
+                    
+                    if (result.success) {
+                      toast({
+                        title: "API Connection Successful",
+                        description: "Successfully connected to the UnleashNFTs API.",
+                      });
+                      refetchCollections();
+                    } else {
+                      toast({
+                        title: "API Connection Failed",
+                        description: result.message,
+                        variant: "destructive"
+                      });
+                    }
+                  } catch (error) {
+                    toast({
+                      title: "API Test Error",
+                      description: error instanceof Error ? error.message : "Unknown error",
+                      variant: "destructive"
+                    });
+                  } finally {
+                    setApiTestInProgress(false);
+                  }
+                };
+                
+                testApiConnectionAsync();
+              }}
+              size="sm"
+              variant="ghost"
+              disabled={apiTestInProgress}
+              className="text-xs ml-2 h-6 px-2 text-gray-400 hover:text-white"
+            >
+              {apiTestInProgress ? 'Testing...' : 'Test API'}
+            </Button>
+          </div>
         </div>
         <div className="flex space-x-4 items-center">
           <Select value={selectedChain} onValueChange={handleChainChange}>
