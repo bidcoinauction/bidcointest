@@ -55,7 +55,9 @@ export class UnleashNftsService {
 
   constructor() {
     // Provide more information for debugging
-    log(`Initializing UnleashNftsService with API key: ${API_KEY ? 'Present' : 'Not found'}`, 'unleash-nfts');
+    const firstFour = API_KEY ? API_KEY.substring(0, 4) : '';
+    const lastFour = API_KEY ? API_KEY.substring(API_KEY.length - 4) : '';
+    log(`Initializing UnleashNftsService with API key: ${API_KEY ? `${firstFour}...${lastFour}` : 'Not found'}`, 'unleash-nfts');
 
     this.headers = {
       'accept': 'application/json',
@@ -236,11 +238,11 @@ export class UnleashNftsService {
    */
   async getCollectionsWithValuation(chain: string, page: number = 1, limit: number = 10): Promise<NFTCollection[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/collections-with-valuation`, {
+      const response = await axios.get(`${BASE_URL}/nft/collections/with-valuation`, {
         headers: this.headers,
         params: {
-          chain,
-          page,
+          blockchain: chain,
+          offset: (page - 1) * limit,
           limit
         }
       });

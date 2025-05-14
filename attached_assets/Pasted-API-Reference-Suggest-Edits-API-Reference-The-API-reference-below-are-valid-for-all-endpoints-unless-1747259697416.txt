@@ -1,0 +1,146 @@
+API Reference
+Suggest Edits
+API Reference
+The API reference below are valid for all endpoints unless explicitly mentioned
+
+Currencies
+All currencies values are string-serialized to prevent any rounding issue with any libraries using float values. The
+API should always return monetary values in the requested currency (which can be selected by the user), and if their
+original currency is different, also return the original value.
+
+Percentages
+Percentages are expected to be returned as a ratio (e.g, the percentage divided by 100), where the formatting of
+the percentage is done by the client. A percentage of 39.4% is thus returned by the API as 0.394 (39.4 / 100.0).
+The API only needs to return the rations with 4 digits of precision (e.g. ratio 0.0001 for 0.01%)
+
+Missing/unavailable data
+If data points are requested that are not available, the response is expected to return the key for that data point,
+with a value of 'NA' (see MetricValue definition)
+
+Infinity
+Some metrics such as change over time metrics can result in either positive or negative infinity. As the JSON
+data types don't cater for infinity, we expect the responses to encode positive infinity as 'INF_POS' and
+negative infinity as 'INF_NEG'.
+
+Date / Datetime
+Date and datetime values are expected to be formatted as a string in ISO 8601 format
+
+Trend time ranges and periods
+Trending data that can be requested by the /trend endpoints will return data aggregated to periods, depending on
+the requested time frame. These periods are fixed, meaning you cannot ask for 24 hours time range with 1 minute
+granularity.
+
+Time range	Parameter	Period of one data point	Number of data points returned
+24 hours	24h	1 hour	24
+7 days	7d	4 hour	42
+30 days	30d	1 day	30
+90 days	90d	1 day	90
+all	range	1 day	Depends on time_range_start and time_range_end
+Metrics
+These are descriptions of the metrics that can be requested through the API. Not all metrics are available for all
+entities. Which metrics are requestable are documented per API endpoint.
+
+Most of the metrics also have a change metric (called as {metricname}_change). These represent the change
+over time of the specific metric as a percentage (positive for rise or negative for decline). It compares the last
+full requested time period, to the period of the same length before that. For instance if the time period is 7d (7 days)
+it will compare the metric value of the last full 7 days, with the value of the 7 days before that. As it's a
+comparison between a previous period, it's not available for the 'all' time range.
+
+Metric	Metric description	Value type
+assets	Number of assets in collection	count
+assets_change	Change in assets	percentage
+holders	Number of traders currently holding NFTs	count
+holders_change	Change in holders	percentage
+holders_diamond_hands	Number of diamond hands that hold one or more NFTs from this collection	count
+holders_diamond_hands_change	Change in holders_diamond_hands	percentage
+holders_sharks	Number of sharks that hold one or more NFTs from this collection	count
+holders_sharks_change	Change in holders_sharks	percentage
+holders_tokens_1	Number of traders currently holding 1 NFT from collection	count
+holders_tokens_2	Number of traders currently holding 2 NFTs from collection	count
+holders_tokens_3_5	Number of traders currently holding 3-5 NFTs from collection	count
+holders_tokens_6_9	Number of traders currently holding 6-9 NFTs from collection	count
+holders_tokens_10_15	Number of traders currently holding 10-15 NFTs from collection	count
+holders_tokens_16_25	Number of traders currently holding 16-25 NFTs from collection	count
+holders_tokens_9plus	Number of traders currently holding >9 NFTs from collection	count
+holders_tokens_25plus	Number of traders currently holding >25 NFTs from collection	count
+holders_whales	Number of whales that hold one or more NFTs from this collection	count
+holders_whales_change	Change in holders_whales	percentage
+marketcap	The total market value of the NFT collection calculated as the sum of each NFT valued at the average trading price of the collection	currency value
+marketcap_change	Change in marketcap	percentage
+marketstate	Overall state of the market	index value (1-100)
+price	Last price (highest last price of any NFT in case of collection)	currency value
+price_avg	Average price at which NFTs are sold	currency value
+price_avg_change	Change in price_avg	percentage
+price_ceiling	Highest price at which an NFT in the collection was sold for	currency value
+price_floor	Lowest price at which an NFT in the collection is up for sale	currency value
+rarity_score	Rarity score of an NFT (higher is more rare)	number
+rarity_rank	Rarity rank of an NFT within a collection (lower is more rare)	number
+sales	Number of NFTs sold	count
+sales_change	Change in sales	percentage
+trade_activity	Overall trade activity based on trades and traders	index value (1-100)
+traders	Number of traders (buyer and/or seller)	count
+traders_change	Change in traders	percentage
+traders_ratio	Percentage of active traders in requestion time_range compared to total number of traders	percentage
+traders_ratio_change	Change in traders_ratio	percentage
+traders_buyers	Number of buying traders	count
+traders_buyers_change	Change in traders_buyers	percentage
+traders_change	Change in traders	percentage
+traders_sellers	Number of selling traders	count
+traders_sellers_change	Change in traders_sellers	percentage
+transactions	Number of transactions (one transaction can be multiple NFTs sold)	count
+transactions_change	Change in transactions	percentage
+transactions_mint	Number of mint transactions. One transaction can relate to multiple NFTs	count
+transactions_mint_change	Change in transactions_mint	percentage
+transactions_burn	Number of burn transactions. One transaction can relate to multiple NFTs	count
+transactions_burn_change	Change in transactions_burn	percentage
+transactions_buy	Number of buy transactions. One transaction can relate to multiple NFTs	count
+transactions_buy_change	Change in transactions_buy	percentage
+transactions_sell	Number of sell transactions. One transaction can relate to multiple NFTs	count
+transactions_sell_change	Change in transactions_sell	percentage
+transfers	Number of NFTs flipped (includes both sale and non sale NFT transfers)	count
+transfers_change	Change in transfers	percentage
+volume	A measure of how much of an NFT collection was traded	currency value
+volume_change	Change in volume	percentage
+washtrade_assets	Number of assets involved in washtrade	count
+washtrade_assets_change	Change in washtrade_assets	percentage
+washtrade_level	Level of washtrade activity	index value (1-100)
+washtrade_suspect_sales	Number of sales suspect of washtrade	count
+washtrade_suspect_sales_change	Change in washtrade_suspect_sales	percentage
+washtrade_suspect_sales_ratio	Percentage of sales suspected of washtrade compared to the total amount of sales	percentage
+washtrade_suspect_sales_ratio_change	Change in washtrade_suspect_sales_ratio	percentage
+washtrade_volume	Total trade vale suspect of washtrade	currency value
+washtrade_volume_change	Change in washtrade_volume	percentage
+washtrade_wallets	Number of wallets involved in washtrade	count
+washtrade_wallets_change	Change in washtrade_wallets	percentage
+Whale
+Whales are the wallets that hold NFTs worth $1M. Whales' status will be deprived the moment they lose the worth of the NFTs they are holding. Whales can become normal wallets anytime when they are no longer holding NFTS that is worth $1M.
+
+Shark
+Sharks are the wallets that have done wash trading volume of over $1M.
+
+Market state index (marketstate) values
+The Market state index provides a high-level score on the state of NFTs sale in a blockchain or an NFT marketplace.
+
+Score	Market activity status
+1 - 20	Very low
+21 - 40	Low
+41 - 60	Moderate
+61 - 80	High
+81 - 100	Very high
+Washtrade level index (washtrade_level) values
+This index represents the level of wash trade on the selected blockchain. It is calculated by looking at the percentage of wash trade volume over the non-wash trade volume.
+
+Data points to calculate the index
+
+Volume
+Wash Trades
+Wash Trade transactions
+This index is also available on the Marketplace and on the collection level.
+
+Score	Washtrade activity status
+1 - 5	Low
+6 - 10	Moderate
+11 - 20	High
+21 - 35	Very high
+36 - 55	Dangerously high
+56 - 100	Stay away from trading acitivities
