@@ -187,16 +187,6 @@ export default function FeaturedAuction() {
                   </p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-primary">
-                  <img src={featuredAuction.creator.avatar || '/placeholder-avatar.jpg'} alt={`${featuredAuction.creator.username} avatar`} className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400">Created by</p>
-                  <p className="text-sm font-medium text-white">{featuredAuction.creator.username}</p>
-                </div>
-              </div>
             </div>
             
             <div className="flex gap-3 mt-2">
@@ -210,23 +200,16 @@ export default function FeaturedAuction() {
                     return Number(newValue.toFixed(2));
                   });
                   
+                  // Update random leader
+                  const randomBidders = [
+                    "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
+                    "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+                    "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8"
+                  ];
+                  setLocalLeader(randomBidders[Math.floor(Math.random() * randomBidders.length)]);
+                  
                   // Extend the auction time
                   setLocalEndTime(new Date(Date.now() + 60 * 1000));
-                  
-                  // Auto-simulate additional bids
-                  if (bidSimulation) {
-                    clearTimeout(bidSimulation);
-                  }
-                  
-                  const simulateBid = setTimeout(() => {
-                    setLocalBidCount(prev => prev + 1);
-                    setLocalPrice(prev => {
-                      const newValue = prev + 0.03;
-                      return Number(newValue.toFixed(2));
-                    });
-                  }, 10000);
-                  
-                  setBidSimulation(simulateBid);
                 }}
               >
                 Place Bid

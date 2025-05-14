@@ -18,7 +18,6 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [isTracked, setIsTracked] = useState(false);
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
   const [localCurrentBid, setLocalCurrentBid] = useState<number>(0.04);
-  const [bidSimulation, setBidSimulation] = useState<NodeJS.Timeout | null>(null);
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
   
   // Get real-time auction data via WebSocket
@@ -214,20 +213,13 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
               resetTime.setSeconds(resetTime.getSeconds() + 60);
               setLocalEndTime(resetTime);
               
-              // Auto-simulate additional bids
-              if (bidSimulation) {
-                clearTimeout(bidSimulation);
-              }
-              
-              const simulateBid = setTimeout(() => {
-                setLocalBidCount(prev => prev + 1);
-                setLocalCurrentBid(prev => {
-                  const newValue = prev + 0.03;
-                  return Number(newValue.toFixed(2));
-                });
-              }, 10000);
-              
-              setBidSimulation(simulateBid);
+              // Update random leader
+              const randomBidders = [
+                "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
+                "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+                "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8"
+              ];
+              setLocalLeader(randomBidders[Math.floor(Math.random() * randomBidders.length)]);
             }
           }}
           disabled={isComplete}
