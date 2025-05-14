@@ -53,6 +53,37 @@ const useWallet = (): UseWalletReturn => {
       localStorage.setItem('wallet_address', mockAddress);
       localStorage.setItem('wallet_chain_id', mockChainId.toString());
       
+      // Register the user with this wallet address in our system
+      try {
+        // Generate random username based on wallet address
+        const username = `user_${mockAddress.substring(2, 8)}`;
+        
+        // Create the user via API
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            walletAddress: mockAddress,
+            avatarUrl: `https://api.dicebear.com/7.x/identicon/svg?seed=${mockAddress}`,
+            role: 'user',
+          }),
+        });
+        
+        // If user already exists with this wallet, that's fine (400 status)
+        if (!response.ok) {
+          const responseData = await response.json();
+          // Only log error if it's not the "wallet already exists" error
+          if (response.status !== 400 || !responseData.message?.includes('already exists')) {
+            console.error('Failed to create user:', responseData.message);
+          }
+        }
+      } catch (error) {
+        console.error('Error registering user:', error);
+      }
+      
       toast({
         title: "Wallet Connected",
         description: `Connected to ${provider} wallet`,
