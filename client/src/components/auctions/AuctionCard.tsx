@@ -23,9 +23,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   // Get real-time auction data via WebSocket
   const { subscribe } = useWebSocket();
   
-  // Timer system - each bid resets to 10 seconds per Bidcoin mechanics
+  // Timer system - always show 1 minute for demo purposes
   const [localEndTime, setLocalEndTime] = useState<Date>(
-    auction.endTime ? new Date(auction.endTime) : new Date(Date.now() + 10000)
+    new Date(Date.now() + 60 * 1000)
   );
   
   const { formattedTime, isComplete, secondsRemaining } = useCountdown({
@@ -76,13 +76,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   // Format bid value display
   const bidValueDisplay = "+$0.03 per bid";
   
-  // Format time left for timestamp display (HH:MM:SS format)
+  // Format time left for timestamp display (always show as 01:00 for demo)
   const formatTimeLeft = () => {
-    const hours = Math.floor(secondsRemaining / 3600);
-    const minutes = Math.floor((secondsRemaining % 3600) / 60);
-    const seconds = Math.floor(secondsRemaining % 60);
-    
-    return `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return "01:00";
   };
   
   const startingPrice = auction.startingBid || 0;

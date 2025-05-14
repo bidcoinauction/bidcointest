@@ -23,8 +23,9 @@ export default function FeaturedAuction() {
   const currentLeader = featuredAuction?.bids?.[0]?.bidder?.walletAddress || 
                         featuredAuction?.creator?.walletAddress || "";
   
+  // Always start with 1 minute remaining for demo purposes
   const { formattedTime } = useCountdown({
-    endTime: featuredAuction?.endTime || new Date(Date.now() + 24 * 60 * 60 * 1000),
+    endTime: new Date(Date.now() + 60 * 1000),
   });
 
   if (isLoading) {
@@ -114,7 +115,7 @@ export default function FeaturedAuction() {
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Ending In</p>
                   <p className="font-mono text-xl font-bold text-white auction-timer">
-                    {formattedTime}
+                    01:00
                   </p>
                 </div>
               </div>
