@@ -163,7 +163,7 @@ export default function BidPacksSection() {
     return (
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-display font-bold text-white">BidPacks (Ordinals)</h2>
+          <h2 className="text-2xl font-display font-bold text-white">BidPacks</h2>
           <div 
             className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center cursor-pointer"
             onClick={() => window.location.href = "/bid-packs"}
@@ -199,7 +199,7 @@ export default function BidPacksSection() {
     return (
       <section className="mb-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-display font-bold text-white">BidPacks (Ordinals)</h2>
+          <h2 className="text-2xl font-display font-bold text-white">BidPacks</h2>
         </div>
         <div className="bg-[#1f2937] rounded-xl p-8 text-center">
           <p className="text-white mb-2">Failed to load bid packs</p>
@@ -212,7 +212,7 @@ export default function BidPacksSection() {
   return (
     <section className="mb-12">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-display font-bold text-white">BidPacks (Ordinals)</h2>
+        <h2 className="text-2xl font-display font-bold text-white">BidPacks</h2>
         <div 
           className="text-primary hover:text-[#818cf8] font-medium text-sm flex items-center cursor-pointer"
           onClick={() => window.location.href = "/bid-packs"}
