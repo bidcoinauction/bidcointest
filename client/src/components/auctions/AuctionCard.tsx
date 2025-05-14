@@ -186,7 +186,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           Starting: $0.00
         </div>
         <div className="text-gray-400">
-          Bid Cost: $0.24 • Each bid adds: +$0.03
+          Bid Cost: $0.24 • Each bid adds: +$0.24
         </div>
       </div>
 
@@ -199,7 +199,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             currentBid: localCurrentBid.toString(),
             bidCount: localBidCount
           }}
-          minimumBid={localCurrentBid + 0.01}
+          minimumBid={localCurrentBid + 0.24}
           onPlaceBid={(amount) => {
             console.log(`Placed bid: ${amount}`);
             setShowBidModal(false);
