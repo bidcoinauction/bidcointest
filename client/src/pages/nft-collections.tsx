@@ -5,8 +5,11 @@ import {
   getCollectionMetrics,
   getCollectionNFTs,
   getNFTValuation,
-  getNFTDetailedMetadata
+  getNFTDetailedMetadata,
+  testApiConnection,
+  getApiStatus
 } from '@/lib/unleashApi';
+import { ApiKeyModal } from '@/components/modals/ApiKeyModal';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Tabs, 
@@ -39,7 +42,8 @@ import {
   Users, 
   Package,
   ExternalLink,
-  Search
+  Search,
+  Settings
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -52,6 +56,7 @@ export default function NFTCollectionsPage() {
   const [selectedTokenId, setSelectedTokenId] = useState<string | null>(null);
   const [apiTestInProgress, setApiTestInProgress] = useState(false);
   const [apiTestResult, setApiTestResult] = useState<{success: boolean, message: string, details?: any} | null>(null);
+  const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(false);
   const limit = 8; // Collections per page
   const { toast } = useToast();
 
@@ -209,6 +214,16 @@ export default function NFTCollectionsPage() {
           </div>
         </div>
         <div className="flex space-x-4 items-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-1 text-gray-400 hover:text-white"
+            onClick={() => setIsApiKeyModalOpen(true)}
+          >
+            <Settings className="h-4 w-4" />
+            <span className="text-sm">API Settings</span>
+          </Button>
+          
           <Select value={selectedChain} onValueChange={handleChainChange}>
             <SelectTrigger className="w-[180px] bg-[#1f2937] border-[#374151]">
               <SelectValue placeholder="Select Blockchain" />
@@ -827,6 +842,16 @@ export default function NFTCollectionsPage() {
           )}
         </div>
       </div>
+      
+      {/* API Key Modal */}
+      <ApiKeyModal 
+        isOpen={isApiKeyModalOpen} 
+        onClose={() => setIsApiKeyModalOpen(false)} 
+        onSuccess={() => {
+          setIsApiKeyModalOpen(false);
+          refetchCollections();
+        }} 
+      />
     </div>
   );
 }
