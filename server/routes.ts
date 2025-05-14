@@ -267,7 +267,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate the new bid amount (current bid + $0.03)
       const currentBid = Number(auction.currentBid || auction.startingBid);
       const bidIncrement = 0.03; // $0.03 increment per bid
-      const newBidAmount = (currentBid + bidIncrement).toFixed(4); // Format to 4 decimal places
+      
+      // Get the NFT to check its floor price
+      const nft = await storage.getNFT(auction.nftId);
+      if (!nft) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      // Ensure we don't exceed the floor price discount threshold
+      // We want to provide a 70-90% discount off the floor price
+      const floorPrice = nft.floorPrice ? Number(nft.floorPrice) : 100.0;
+      const maxPriceRatio = 0.3; // 70% discount (max price is 30% of floor)
+      const maxPrice = floorPrice * maxPriceRatio;
+      
+      // Determine the new bid amount, capping at the maximum price if needed
+      let newBidAmount: string;
+      if (currentBid + bidIncrement >= maxPrice) {
+        console.log(`Bid would exceed max price threshold. Capping at ${maxPrice}`);
+        newBidAmount = maxPrice.toFixed(4);
+      } else {
+        newBidAmount = (currentBid + bidIncrement).toFixed(4);
+      }
       
       // Extend auction time (add 10-15 seconds per bid)
       let newEndTime = new Date(auction.endTime);

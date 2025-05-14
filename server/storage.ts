@@ -892,7 +892,31 @@ export class MemStorage implements IStorage {
       // Step 4: Calculate the new price (current price + $0.03)
       const currentBid = Number(auction.currentBid || auction.startingBid);
       const bidIncrement = 0.03; // $0.03 increment per bid
-      const newBidAmount = (currentBid + bidIncrement).toFixed(4);
+      
+      // Get the NFT's floor price to ensure we don't exceed it
+      const nft = await this.getNFT(auction.nftId);
+      if (!nft) {
+        return { success: false, error: 'NFT not found' };
+      }
+      
+      // Get the floor price (with fallback to a reasonable default)
+      const floorPrice = nft.floorPrice ? Number(nft.floorPrice) : 100.0;
+      
+      // Calculate target maximum price (70-90% discount from floor price)
+      // We'll use 30% of floor price as the absolute maximum auction can reach
+      const maxPriceRatio = 0.3; // 70% discount
+      const maxPrice = floorPrice * maxPriceRatio;
+      
+      // Check if new bid would exceed our maximum price threshold
+      let newBidAmount: string;
+      if (currentBid + bidIncrement >= maxPrice) {
+        // If we would exceed max price, cap it at the maximum
+        console.log(`Bid would exceed max price threshold. Capping at ${maxPrice}`);
+        newBidAmount = maxPrice.toFixed(4);
+      } else {
+        // Normal case - increment by the standard $0.03
+        newBidAmount = (currentBid + bidIncrement).toFixed(4);
+      }
       
       // Step 5: Extend the auction time
       const extensionSeconds = Math.floor(Math.random() * 6) + 10; // 10-15 seconds
