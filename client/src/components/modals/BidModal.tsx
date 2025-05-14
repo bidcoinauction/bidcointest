@@ -139,16 +139,16 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
       toast({
         variant: "destructive",
         title: "Invalid Bid Amount",
-        description: `Minimum bid is ${minBid} ${auction.currency}`,
+        description: `Each bid costs $0.24 and increases auction price by $0.03`,
       });
       return;
     }
     
-    if (balance && bidValue > parseFloat(balance)) {
+    if (balance && 0.24 > parseFloat(balance)) {
       toast({
         variant: "destructive",
         title: "Insufficient Funds",
-        description: `Your balance is ${balance} ${auction.currency}`,
+        description: `Your balance is $${balance}. Each bid costs $0.24.`,
       });
       return;
     }
@@ -248,7 +248,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
               </div>
               <div>
                 <h4 className="text-white font-medium text-lg">{auction.nft.name}</h4>
-                <p className="text-gray-400 text-sm">Current bid: <span className="text-white">{auction.currentBid || 0} {auction.currency}</span></p>
+                <p className="text-gray-400 text-sm">Current bid: <span className="text-white">${auction.currentBid || 0}</span></p>
                 <div className="flex items-center mt-1">
                   <span className="text-gray-400 text-xs mr-2">Total bids:</span>
                   <span className="text-white text-xs">{auction.bidCount || 0}</span>
@@ -271,43 +271,40 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
             </div>
             
             <div className="mb-6">
-              <label className="block text-gray-400 text-sm mb-2">Your bid ({auction.currency})</label>
-              <div className="flex">
-                <Input
-                  type="number"
-                  min={minBid}
-                  step="0.01"
-                  placeholder={minBid.toString()}
-                  className="bg-background text-white border border-[#374151] rounded-l-lg px-4 py-3 w-full focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={bidAmount}
-                  onChange={(e) => setBidAmount(e.target.value)}
-                />
-                <Button
-                  className="bg-primary hover:bg-[#4f46e5] text-white font-medium px-4 py-3 rounded-r-lg transition-colors"
-                  onClick={handleMaxBid}
-                >
-                  Max
-                </Button>
+              <label className="block text-gray-400 text-sm mb-2">Bid Information</label>
+              <div className="bg-[#111827] p-4 rounded-lg">
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Bid cost:</span>
+                  <span className="text-white">$0.24</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Price increase:</span>
+                  <span className="text-white">$0.03</span>
+                </div>
+                <div className="flex justify-between mb-2">
+                  <span className="text-gray-400">Timer extension:</span>
+                  <span className="text-white">60 seconds</span>
+                </div>
               </div>
-              <p className="text-xs text-gray-400 mt-2">Minimum bid: {minBid} {auction.currency}</p>
+              <p className="text-xs text-gray-400 mt-2">Each bid costs $0.24 but only increases auction price by $0.03</p>
             </div>
             
             <div className="bg-[#111827] p-4 rounded-lg mb-6">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">Your balance:</span>
-                <span className="text-white">{balance || "0.00"} {auction.currency}</span>
+                <span className="text-white">${balance || "0.00"}</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-400">Bid amount:</span>
-                <span className="text-white">{bidAmount} {auction.currency}</span>
+                <span className="text-gray-400">Bid cost:</span>
+                <span className="text-white">$0.24</span>
               </div>
               <div className="flex justify-between mb-2">
-                <span className="text-gray-400">Transaction fee:</span>
-                <span className="text-white">0.002 {auction.currency}</span>
+                <span className="text-gray-400">Processing fee:</span>
+                <span className="text-white">$0.00</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-background">
-                <span className="text-gray-200 font-medium">Total:</span>
-                <span className="text-white font-medium">{(parseFloat(bidAmount) + 0.002).toFixed(3)} {auction.currency}</span>
+                <span className="text-gray-200 font-medium">Total per bid:</span>
+                <span className="text-white font-medium">$0.24</span>
               </div>
             </div>
           </TabsContent>
