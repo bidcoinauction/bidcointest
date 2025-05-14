@@ -4,7 +4,15 @@ import { getAuction } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useCountdown from "@/hooks/useCountdown";
-import { formatRelativeTime, formatAddress, formatPriceUSD } from "@/lib/utils";
+import { 
+  formatRelativeTime, 
+  formatAddress, 
+  formatPriceUSD, 
+  getRarityColor, 
+  getRarityLabel, 
+  formatRarity,
+  getBlockchainExplorerUrl
+} from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import BidModal from "@/components/modals/BidModal";
 import PaymentMethodModal from "@/components/modals/PaymentMethodModal";
@@ -13,6 +21,7 @@ import { Heart, Share2, ExternalLink, Trophy, TrendingUp, Award } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { getNFTDetailedMetadata } from "@/lib/unleashApi";
 
 export default function AuctionDetailsPage() {
   const [, params] = useRoute("/auctions/:id");
@@ -23,6 +32,8 @@ export default function AuctionDetailsPage() {
   const [localBidCount, setLocalBidCount] = useState<number>(3);
   const [localEndTime, setLocalEndTime] = useState<Date>(new Date(Date.now() + 60 * 1000));
   const [localLeader, setLocalLeader] = useState<string>("");
+  const [detailedMetadata, setDetailedMetadata] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -45,6 +56,44 @@ export default function AuctionDetailsPage() {
       setLocalBidCount(bidCount);
       setLocalLeader(auction.bids?.[0]?.bidder?.walletAddress || auction.creator.walletAddress || "");
     }
+  }, [auction]);
+  
+  // Fetch detailed metadata from UnleashNFTs API
+  useEffect(() => {
+    if (!auction || !auction.nft) return;
+    
+    const fetchDetailedMetadata = async () => {
+      try {
+        setLoading(true);
+        
+        // Get the contract address and token ID from the NFT
+        const { contractAddress, tokenId, blockchain } = auction.nft;
+        
+        if (!contractAddress || !tokenId) {
+          console.log('Missing contract address or token ID for detailed metadata');
+          setLoading(false);
+          return;
+        }
+        
+        // Call the UnleashNFTs API to get the detailed metadata
+        const metadata = await getNFTDetailedMetadata(
+          contractAddress, 
+          tokenId, 
+          blockchain || 'ethereum'
+        );
+        
+        if (metadata) {
+          console.log('Detailed metadata loaded:', metadata);
+          setDetailedMetadata(metadata);
+        }
+      } catch (error) {
+        console.error('Error fetching detailed metadata:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDetailedMetadata();
   }, [auction]);
   
   // Automatic bid simulation function
@@ -286,24 +335,47 @@ export default function AuctionDetailsPage() {
           
           <div className="bg-[#1f2937] p-5 rounded-xl border border-[#374151] mb-6">
             <h3 className="text-lg font-display font-bold text-white mb-4">NFT Properties</h3>
-            {auction.nft.attributes && auction.nft.attributes.length > 0 ? (
+            {loading && (
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="bg-[#111827] rounded-lg p-3 text-center animate-pulse">
+                    <div className="h-4 bg-[#1f2937] rounded mb-2"></div>
+                    <div className="h-5 bg-[#1f2937] rounded mb-2"></div>
+                    <div className="h-4 bg-[#1f2937] rounded w-1/2 mx-auto"></div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Show enhanced metadata from UnleashNFTs when available */}
+            {!loading && detailedMetadata && detailedMetadata.traits && detailedMetadata.traits.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {detailedMetadata.traits.map((attr: any, index: number) => (
+                  <div key={index} className="bg-[#111827] rounded-lg p-3 text-center">
+                    <p className="text-gray-400 text-xs mb-1">{attr.trait_type}</p>
+                    <p className="text-white font-medium text-sm truncate">{attr.value}</p>
+                    {attr.rarity !== undefined && (
+                      <div className="mt-1 flex items-center justify-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white ${getRarityColor(attr.rarity)}`}>
+                          {getRarityLabel(attr.rarity)} ({formatRarity(attr.rarity)})
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : 
+            /* Fallback to original attributes if detailed metadata is not available */
+            !loading && auction.nft.attributes && auction.nft.attributes.length > 0 ? (
               <div className="grid grid-cols-3 gap-3">
                 {auction.nft.attributes.map((attr, index) => (
                   <div key={index} className="bg-[#111827] rounded-lg p-3 text-center">
                     <p className="text-gray-400 text-xs mb-1">{attr.trait_type}</p>
                     <p className="text-white font-medium text-sm truncate">{attr.value}</p>
-                    {attr.rarity && (
+                    {attr.rarity !== undefined && (
                       <div className="mt-1 flex items-center justify-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          parseFloat(attr.rarity) < 10 ? 'bg-blue-100 text-blue-800' : 
-                          parseFloat(attr.rarity) < 30 ? 'bg-green-100 text-green-800' : 
-                          parseFloat(attr.rarity) < 50 ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {parseFloat(attr.rarity) < 10 ? 'Rare' : 
-                           parseFloat(attr.rarity) < 30 ? 'Uncommon' : 
-                           parseFloat(attr.rarity) < 50 ? 'Common' : 
-                           'Basic'} {attr.rarity}%
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white ${getRarityColor(attr.rarity)}`}>
+                          {getRarityLabel(attr.rarity)} ({formatRarity(attr.rarity)})
                         </span>
                       </div>
                     )}
@@ -311,9 +383,11 @@ export default function AuctionDetailsPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-[#111827] rounded-lg p-4 text-center">
-                <p className="text-gray-400">No properties found for this NFT</p>
-              </div>
+              !loading && (
+                <div className="bg-[#111827] rounded-lg p-4 text-center">
+                  <p className="text-gray-400">No properties found for this NFT</p>
+                </div>
+              )
             )}
           </div>
           
