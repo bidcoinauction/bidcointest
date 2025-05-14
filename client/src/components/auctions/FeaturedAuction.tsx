@@ -134,7 +134,7 @@ export default function FeaturedAuction() {
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Bids</p>
                   <p className="text-xs text-white">
-                    {featuredAuction.bidCount || 3} bids
+                    {localBidCount} bids
                   </p>
                 </div>
               </div>
@@ -153,7 +153,32 @@ export default function FeaturedAuction() {
             <div className="flex gap-3 mt-2">
               <Button 
                 className="bid-button flex-1 bg-primary hover:bg-[#4f46e5] text-white font-bold py-3 px-4 rounded-lg transition-all shadow-glow"
-                onClick={() => setShowBidModal(true)}
+                onClick={() => {
+                  // Simulate a bid
+                  setLocalBidCount(prev => prev + 1);
+                  setLocalPrice(prev => {
+                    const newValue = prev + 0.03;
+                    return Number(newValue.toFixed(2));
+                  });
+                  
+                  // Extend the auction time
+                  setLocalEndTime(new Date(Date.now() + 60 * 1000));
+                  
+                  // Auto-simulate additional bids
+                  if (bidSimulation) {
+                    clearTimeout(bidSimulation);
+                  }
+                  
+                  const simulateBid = setTimeout(() => {
+                    setLocalBidCount(prev => prev + 1);
+                    setLocalPrice(prev => {
+                      const newValue = prev + 0.03;
+                      return Number(newValue.toFixed(2));
+                    });
+                  }, 10000);
+                  
+                  setBidSimulation(simulateBid);
+                }}
               >
                 Place Bid
               </Button>
