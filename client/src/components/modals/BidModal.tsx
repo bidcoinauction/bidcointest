@@ -157,7 +157,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
       setIsPending(true);
       
       // Add strategy-specific messaging
-      let successMessage = `Your bid of ${bidAmount} ${auction.currency} has been placed`;
+      let successMessage = `Your bid has been placed! Auction price increased by $0.03`;
       let strategyTip = "";
       
       switch (selectedStrategy) {
@@ -367,7 +367,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
             onClick={handleBidSubmit}
             disabled={isPending}
           >
-            {isPending ? "Processing..." : "Confirm Bid"}
+            {isPending ? "Processing..." : "Place Bid ($0.24)"}
           </Button>
           <Button
             variant="outline"
