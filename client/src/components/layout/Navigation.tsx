@@ -27,27 +27,6 @@ export default function Navigation() {
           </div>
           
           <div 
-            onClick={navigate("/nft-collections")}
-            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/nft-collections") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
-          >
-            NFT Collections
-          </div>
-          
-          <div 
-            onClick={navigate("/nft-explorer")}
-            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/nft-explorer") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
-          >
-            NFT Explorer
-          </div>
-          
-          <div 
-            onClick={navigate("/ordinals")}
-            className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/ordinals") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
-          >
-            Ordinals
-          </div>
-          
-          <div 
             onClick={navigate("/bid-packs")}
             className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/bid-packs") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
           >
