@@ -589,47 +589,49 @@ export class MemStorage implements IStorage {
     });
 
     // Create bid packs
+    // These packs provide Bidcoin which is the platform's internal bidding currency
+    // Users purchase these with real cryptocurrency but can only place bids using Bidcoin
     await this.createBidPack({
-      name: "Starter Pack",
+      name: "Starter Pack: 10 Bidcoin",
       type: "starter",
       bidCount: 10,
       bonusBids: 2,
       price: "0.01",
       originalPrice: "0.015",
-      currency: "BTC",
+      currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
     await this.createBidPack({
-      name: "Pro Pack",
+      name: "Pro Pack: 50 Bidcoin",
       type: "pro",
       bidCount: 50,
       bonusBids: 15,
       price: "0.04",
       originalPrice: "0.065",
-      currency: "BTC",
+      currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
     await this.createBidPack({
-      name: "Premium Pack",
+      name: "Premium Pack: 125 Bidcoin",
       type: "premium",
       bidCount: 125,
       bonusBids: 50,
       price: "0.09",
       originalPrice: "0.15",
-      currency: "BTC",
+      currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
     await this.createBidPack({
-      name: "Whale Pack",
+      name: "Whale Pack: 300 Bidcoin",
       type: "whale",
       bidCount: 300,
       bonusBids: 150,
       price: "0.18",
       originalPrice: "0.30",
-      currency: "BTC",
+      currency: "BTC",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
@@ -880,18 +882,21 @@ export class MemStorage implements IStorage {
         return { success: false, error: 'Auction has ended' };
       }
       
-      // Step 3: Check if the user has bids available
+      // Step 3: Check if the user has Bidcoin bids available
+      // All bids are made using Bidcoin (platform's internal currency)
+      // Each bid costs $0.25 in Bidcoin regardless of the NFT's native cryptocurrency
       const userBidPackResult = await this.consumeBid(bidderId);
       if (!userBidPackResult.success) {
         return { 
           success: false, 
-          error: userBidPackResult.error || 'No bids available' 
+          error: userBidPackResult.error || 'Insufficient Bidcoin balance' 
         };
       }
       
-      // Step 4: Calculate the new price (current price + $0.03)
+      // Step 4: Calculate the new display price (current price + $0.03)
+      // While bids are placed using Bidcoin, the auction price is displayed in the NFT's native currency
       const currentBid = Number(auction.currentBid || auction.startingBid);
-      const bidIncrement = 0.03; // $0.03 increment per bid
+      const bidIncrement = 0.03; // $0.03 increment per bid (in NFT's currency display)
       
       // Get the NFT's floor price to ensure we don't exceed it
       const nft = await this.getNFT(auction.nftId);
@@ -954,13 +959,15 @@ export class MemStorage implements IStorage {
       });
       
       // Step 10: Create activity record
+      // Note: The activity shows the bid in the NFT's currency for display purposes,
+      // but the actual bid was placed using Bidcoin (platform's internal currency)
       await this.createActivity({
         type: 'bid',
         nftId: auction.nftId,
         from: 'system',
         to: bidderId.toString(),
         price: newBidAmount,
-        currency: auction.currency || 'ETH'
+        currency: auction.currency || 'ETH'  // Display currency is NFT's native currency
       });
       
       return {

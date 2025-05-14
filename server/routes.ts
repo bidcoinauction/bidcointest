@@ -264,9 +264,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 2. Each bid only increases price by $0.03 (3 pennies per bid)
       // 3. Each bid extends auction time
       
+      // Important: Bidding is always done in Bidcoin (platform currency)
+      // The display/settlement amount is shown in the NFT's native currency for user convenience
+      
       // Calculate the new bid amount (current bid + $0.03)
       const currentBid = Number(auction.currentBid || auction.startingBid);
-      const bidIncrement = 0.03; // $0.03 increment per bid
+      const bidIncrement = 0.03; // $0.03 increment per bid (in USD equivalent)
       
       // Get the NFT to check its floor price
       const nft = await storage.getNFT(auction.nftId);
@@ -288,6 +291,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         newBidAmount = (currentBid + bidIncrement).toFixed(4);
       }
+      
+      // Note: The bid cost is fixed at $0.25 in Bidcoin tokens
+      // Users pay this amount regardless of the NFT's native currency
+      // Only when they win do they pay the final settlement price in the NFT's native crypto
       
       // Extend auction time (add 10-15 seconds per bid)
       let newEndTime = new Date(auction.endTime);
