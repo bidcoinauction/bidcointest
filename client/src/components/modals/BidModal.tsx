@@ -137,59 +137,55 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
     try {
       setIsPending(true);
       
-      // Execute the web3 transaction
-      const success = await placeBid(
-        auction.id,
-        bidAmount,
-        address
-      );
+      // Add strategy-specific messaging
+      let successMessage = `Your bid of ${bidAmount} ${auction.currency} has been placed`;
+      let strategyTip = "";
       
-      if (success) {
-        // Record the bid in our database
-        await apiPlaceBid(auction.id, bidAmount, address);
-        
-        // Invalidate queries to refresh auction data
-        queryClient.invalidateQueries({ queryKey: ["/api/auctions"] });
-        queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auction.id}`] });
-        queryClient.invalidateQueries({ queryKey: ["/api/activity"] });
-        
-        // Add strategy-specific messaging
-        let successMessage = `Your bid of ${bidAmount} ${auction.currency} has been placed`;
-        let strategyTip = "";
-        
-        switch (selectedStrategy) {
-          case "aggressive":
-            strategyTip = "Stay vigilant! Be ready to place another bid if someone outbids you.";
-            break;
-          case "patient":
-            strategyTip = "Good move! Continue monitoring the auction for the right moment to bid again.";
-            break;
-          case "last-second":
-            strategyTip = "Great timing! Remember to prepare for the next opportunity as the auction nears its end.";
-            break;
-          case "feint":
-            strategyTip = "Strategic placement! Now watch how others respond before your next move.";
-            break;
-          case "early-bird":
-            strategyTip = "Strong start! Your early presence may discourage other bidders.";
-            break;
-          default:
-            strategyTip = "Well done! Keep track of your budget as the auction progresses.";
-        }
-        
-        toast({
-          title: "Bid Placed Successfully",
-          description: (
-            <div>
-              {successMessage}
-              <p className="mt-1 text-sm font-medium text-primary">{strategyTip}</p>
-            </div>
-          ),
-        });
-        
-        onPlaceBid(bidAmount);
-        onClose();
+      switch (selectedStrategy) {
+        case "aggressive":
+          strategyTip = "Stay vigilant! Be ready to place another bid if someone outbids you.";
+          break;
+        case "patient":
+          strategyTip = "Good move! Continue monitoring the auction for the right moment to bid again.";
+          break;
+        case "last-second":
+          strategyTip = "Great timing! Remember to prepare for the next opportunity as the auction nears its end.";
+          break;
+        case "feint":
+          strategyTip = "Strategic placement! Now watch how others respond before your next move.";
+          break;
+        case "early-bird":
+          strategyTip = "Strong start! Your early presence may discourage other bidders.";
+          break;
+        default:
+          strategyTip = "Well done! Keep track of your budget as the auction progresses.";
       }
+      
+      // Call API to place bid
+      await placeBid(auction.id, bidAmount, address);
+      await apiPlaceBid(auction.id, bidAmount, address);
+      
+      // Invalidate queries to refresh auction data
+      queryClient.invalidateQueries({ queryKey: ["/api/auctions"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auction.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/activity"] });
+      
+      // Show success message
+      toast({
+        title: "Bid Placed Successfully",
+        description: (
+          <div>
+            {successMessage}
+            <p className="mt-1 text-sm font-medium text-primary">{strategyTip}</p>
+          </div>
+        ),
+      });
+      
+      // Notify parent component
+      onPlaceBid(bidAmount);
+      
+      // Close modal
+      onClose();
     } catch (error) {
       toast({
         variant: "destructive",
