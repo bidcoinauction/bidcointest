@@ -74,7 +74,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const tokenDisplay = auction.nft.tokenId ? `#${auction.nft.tokenId}` : `#${Math.floor(Math.random() * 100000)}`;
   
   // Format bid value display
-  const bidValueDisplay = "+$0.03 per bid";
+  const bidValueDisplay = "+$0.24 per bid";
   
   // Format time left for timestamp display (HH:MM:SS format)
   const formatTimeLeft = () => {
