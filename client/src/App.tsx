@@ -8,6 +8,7 @@ import OrdinalsPage from "@/pages/ordinals";
 import BidPacksPage from "@/pages/bid-packs";
 import ActivityPage from "@/pages/activity";
 import AboutPage from "@/pages/about";
+import DashboardPage from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 import useWebSocket from "@/hooks/useWebSocket";
 import { queryClient } from "@/lib/queryClient";
@@ -55,6 +56,7 @@ function App() {
           <Route path="/ordinals" component={OrdinalsPage}/>
           <Route path="/bid-packs" component={BidPacksPage}/>
           <Route path="/activity" component={ActivityPage}/>
+          <Route path="/dashboard" component={DashboardPage}/>
           <Route path="/about" component={AboutPage}/>
           <Route component={NotFound} />
         </Switch>
