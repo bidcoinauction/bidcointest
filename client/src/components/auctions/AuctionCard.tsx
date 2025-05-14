@@ -17,7 +17,11 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [showBidModal, setShowBidModal] = useState(false);
   const [isTracked, setIsTracked] = useState(false);
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
-  const [localCurrentBid, setLocalCurrentBid] = useState<number>(0.04);
+  
+  // Calculate proper current bid based on bid count (each bid = $0.03)
+  const initialBid = parseFloat(((auction.bidCount || 0) * 0.03).toFixed(2));
+  const [localCurrentBid, setLocalCurrentBid] = useState<number>(initialBid);
+  
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
   
   // Get real-time auction data via WebSocket
@@ -53,10 +57,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     setLocalBidCount(prev => prev + 1);
     
     // Add $0.03 to current bid
-    setLocalCurrentBid(prev => {
-      const newValue = prev + 0.03;
-      return Number(newValue.toFixed(2));
-    });
+    // Calculate based on bid count (always $0.03 per bid)
+    const newBidCount = localBidCount + 1;
+    setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
     
     // Update leader
     setLocalLeader(randomBidder);
@@ -86,8 +89,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     const handleBidUpdate = (data: any) => {
       if (data.auctionId === auction.id) {
         // Update local state with new bid information
-        setLocalBidCount(data.bidCount);
-        setLocalCurrentBid(Number(data.currentBid));
+        const bidCount = data.bidCount || 0;
+        setLocalBidCount(bidCount);
+        
+        // Calculate price based on bid count (always $0.03 per bid)
+        setLocalCurrentBid(parseFloat((bidCount * 0.03).toFixed(2)));
+        
         setLocalLeader(data.bidderAddress);
         
         // Reset timer (Bidcoin reset mechanism)
@@ -203,10 +210,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             if (!isComplete) {
               // Simulate a bid
               setLocalBidCount(prev => prev + 1);
-              setLocalCurrentBid(prev => {
-                const newValue = prev + 0.03;
-                return Number(newValue.toFixed(2));
-              });
+              // Calculate based on bid count (always $0.03 per bid)
+              const newBidCount = localBidCount + 1;
+              setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
               
               // Reset timer (Bidcoin reset mechanism)
               const resetTime = new Date();

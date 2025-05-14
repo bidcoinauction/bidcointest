@@ -37,8 +37,12 @@ export default function AuctionDetailsPage() {
   // Initialize local state from auction data when it loads
   useEffect(() => {
     if (auction) {
-      setLocalCurrentBid(Number(auction.currentBid) || 0.04);
-      setLocalBidCount(auction.bidCount || 3);
+      // Calculate proper current bid based on bid count (each bid = $0.03)
+      const bidCount = auction.bidCount || 0;
+      const calculatedBid = parseFloat((bidCount * 0.03).toFixed(2));
+      
+      setLocalCurrentBid(calculatedBid);
+      setLocalBidCount(bidCount);
       setLocalLeader(auction.bids?.[0]?.bidder?.walletAddress || auction.creator.walletAddress || "");
     }
   }, [auction]);

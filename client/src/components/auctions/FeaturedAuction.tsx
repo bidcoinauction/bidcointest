@@ -11,8 +11,10 @@ import { formatPriceUSD, formatCurrency, formatAddress } from "@/lib/utils";
 
 export default function FeaturedAuction() {
   const [showBidModal, setShowBidModal] = useState(false);
-  const [localPrice, setLocalPrice] = useState<number>(0.04);
   const [localBidCount, setLocalBidCount] = useState<number>(3);
+  // Calculate price based on bid count (always $0.03 per bid)
+  const initialPrice = parseFloat((3 * 0.03).toFixed(2)); // 3 bids = $0.09
+  const [localPrice, setLocalPrice] = useState<number>(initialPrice);
   const [localEndTime, setLocalEndTime] = useState<Date>(new Date(Date.now() + 60 * 1000));
   const [localLeader, setLocalLeader] = useState<string>("");
   
