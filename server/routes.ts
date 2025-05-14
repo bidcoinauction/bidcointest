@@ -423,6 +423,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // UnleashNFTs (BitCrunch) API Routes
+  app.get('/api/unleash/blockchains', async (req, res) => {
+    try {
+      const { page = '1', limit = '30', sort_by = 'blockchain_name' } = req.query;
+      const blockchains = await unleashNftsService.getSupportedBlockchains(
+        parseInt(page as string),
+        parseInt(limit as string),
+        sort_by as string
+      );
+      return res.json(blockchains);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch supported blockchains' });
+    }
+  });
+
   app.get('/api/unleash/collections', async (req, res) => {
     try {
       const { chain = 'ethereum', page = '1', limit = '10' } = req.query;
