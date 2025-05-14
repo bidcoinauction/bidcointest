@@ -8,7 +8,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import BidModal from "@/components/modals/BidModal";
 import PaymentMethodModal from "@/components/modals/PaymentMethodModal";
-import { Heart, Share2, ExternalLink } from "lucide-react";
+import { Heart, Share2, ExternalLink, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
 
@@ -353,6 +353,35 @@ export default function AuctionDetailsPage() {
                 </div>
               </li>
             </ul>
+            
+            <div className="mt-5 pt-5 border-t border-[#374151]">
+              <h4 className="text-md font-display font-bold text-white mb-3 flex items-center">
+                <span className="bg-primary/20 text-primary p-1 rounded-md mr-2">
+                  <Trophy className="h-4 w-4" />
+                </span>
+                Bidding Strategies
+              </h4>
+              <p className="text-gray-400 text-sm mb-3">
+                Enhance your chances of winning by using different bidding strategies tailored to this auction's dynamics.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-[#111827] rounded-lg p-3 hover:bg-[#1a2030] cursor-pointer transition-colors" onClick={handleOpenBidModal}>
+                  <p className="text-white text-sm font-medium mb-1">Last-Second Strike</p>
+                  <p className="text-gray-400 text-xs">Save your bids for the final moments when others may have depleted their resources.</p>
+                </div>
+                <div className="bg-[#111827] rounded-lg p-3 hover:bg-[#1a2030] cursor-pointer transition-colors" onClick={handleOpenBidModal}>
+                  <p className="text-white text-sm font-medium mb-1">Early Momentum</p>
+                  <p className="text-gray-400 text-xs">Build a commanding lead early to discourage competitors from entering the auction.</p>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                className="w-full mt-3 text-primary hover:text-primary-dark hover:bg-primary/10"
+                onClick={handleOpenBidModal}
+              >
+                Explore All Strategies
+              </Button>
+            </div>
           </div>
         </div>
       </div>
