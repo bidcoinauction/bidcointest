@@ -597,9 +597,9 @@ export class MemStorage implements IStorage {
       type: "starter",
       bidCount: 50,
       bonusBids: 10,
-      price: "12.00",  // 50 bids × $0.24 = $12.00
-      originalPrice: "15.00",
-      currency: "BTC",  // Currency used to purchase the Bidcoin pack
+      price: "14.40",  // (50+10) bids × $0.24 = $14.40
+      originalPrice: "15.84",
+      currency: "USD",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
@@ -608,9 +608,9 @@ export class MemStorage implements IStorage {
       type: "pro",
       bidCount: 125,
       bonusBids: 30,
-      price: "30.00",  // 125 bids × $0.24 = $30.00
-      originalPrice: "37.50",
-      currency: "BTC",  // Currency used to purchase the Bidcoin pack
+      price: "37.20",  // (125+30) bids × $0.24 = $37.20
+      originalPrice: "40.92",
+      currency: "USD",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
@@ -619,9 +619,9 @@ export class MemStorage implements IStorage {
       type: "premium",
       bidCount: 250,
       bonusBids: 75,
-      price: "60.00",  // 250 bids × $0.24 = $60.00
-      originalPrice: "75.00",
-      currency: "BTC",  // Currency used to purchase the Bidcoin pack
+      price: "78.00",  // (250+75) bids × $0.24 = $78.00
+      originalPrice: "85.80",
+      currency: "USD",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
@@ -630,9 +630,9 @@ export class MemStorage implements IStorage {
       type: "whale",
       bidCount: 500,
       bonusBids: 150,
-      price: "120.00",  // 500 bids × $0.24 = $120.00
-      originalPrice: "150.00",
-      currency: "BTC",  // Currency used to purchase the Bidcoin pack
+      price: "156.00",  // (500+150) bids × $0.24 = $156.00
+      originalPrice: "171.60",
+      currency: "USD",  // Currency used to purchase the Bidcoin pack
       available: true,
     });
 
