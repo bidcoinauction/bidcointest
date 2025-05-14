@@ -17,7 +17,8 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [showBidModal, setShowBidModal] = useState(false);
   const [isTracked, setIsTracked] = useState(false);
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
-  const [localCurrentBid, setLocalCurrentBid] = useState<number>(Number(auction.currentBid || auction.startingBid));
+  const [localCurrentBid, setLocalCurrentBid] = useState<number>(0.04);
+  const [bidSimulation, setBidSimulation] = useState<NodeJS.Timeout | null>(null);
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
   
   // Get real-time auction data via WebSocket
@@ -76,9 +77,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   // Format bid value display
   const bidValueDisplay = "+$0.03 per bid";
   
-  // Format time left for timestamp display (always show as 01:00 for demo)
+  // Format time left with actual countdown
   const formatTimeLeft = () => {
-    return "01:00";
+    const minutes = Math.floor(secondsRemaining / 60);
+    const seconds = Math.floor(secondsRemaining % 60);
+    
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
   
   const startingPrice = auction.startingBid || 0;
@@ -136,9 +140,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           </div>
           
           <div>
-            <div className="text-xs text-gray-400">Bid Value</div>
-            <div className="text-xs text-green-500">
-              {bidValueDisplay}
+            <div className="text-xs text-gray-400">Bids</div>
+            <div className="text-xs text-white">
+              {localBidCount || 3} bids
             </div>
           </div>
         </div>
@@ -151,7 +155,34 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            !isComplete && setShowBidModal(true);
+            if (!isComplete) {
+              // Simulate a bid
+              setLocalBidCount(prev => prev + 1);
+              setLocalCurrentBid(prev => {
+                const newValue = prev + 0.03;
+                return Number(newValue.toFixed(2));
+              });
+              
+              // Reset timer (Bidcoin reset mechanism)
+              const resetTime = new Date();
+              resetTime.setSeconds(resetTime.getSeconds() + 60);
+              setLocalEndTime(resetTime);
+              
+              // Auto-simulate additional bids
+              if (bidSimulation) {
+                clearTimeout(bidSimulation);
+              }
+              
+              const simulateBid = setTimeout(() => {
+                setLocalBidCount(prev => prev + 1);
+                setLocalCurrentBid(prev => {
+                  const newValue = prev + 0.03;
+                  return Number(newValue.toFixed(2));
+                });
+              }, 10000);
+              
+              setBidSimulation(simulateBid);
+            }
           }}
           disabled={isComplete}
         >
@@ -173,15 +204,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </Button>
       </div>
       
-      {/* Starting price and increment info */}
-      <div className="border-t border-gray-800 px-3 py-2 flex justify-between items-center text-xs">
-        <div className="text-gray-400">
-          Starting: $0.00
-        </div>
-        <div className="text-gray-400">
-          Bid Cost: $0.25 • Each bid adds: +$0.03
-        </div>
-      </div>
+
 
       {showBidModal && (
         <BidModal 

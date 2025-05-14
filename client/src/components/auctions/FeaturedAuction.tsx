@@ -11,6 +11,10 @@ import { formatPriceUSD, formatCurrency, formatAddress } from "@/lib/utils";
 
 export default function FeaturedAuction() {
   const [showBidModal, setShowBidModal] = useState(false);
+  const [localPrice, setLocalPrice] = useState<number>(0.04);
+  const [localBidCount, setLocalBidCount] = useState<number>(3);
+  const [localEndTime, setLocalEndTime] = useState<Date>(new Date(Date.now() + 60 * 1000));
+  const [bidSimulation, setBidSimulation] = useState<NodeJS.Timeout | null>(null);
   
   const { data: featuredAuctions, isLoading, error } = useQuery({
     queryKey: ["/api/auctions/featured"],
@@ -23,9 +27,9 @@ export default function FeaturedAuction() {
   const currentLeader = featuredAuction?.bids?.[0]?.bidder?.walletAddress || 
                         featuredAuction?.creator?.walletAddress || "";
   
-  // Always start with 1 minute remaining for demo purposes
+  // Use local end time for countdown
   const { formattedTime } = useCountdown({
-    endTime: new Date(Date.now() + 60 * 1000),
+    endTime: localEndTime,
   });
 
   if (isLoading) {
@@ -109,13 +113,13 @@ export default function FeaturedAuction() {
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Current Bid</p>
                   <p className="font-display text-xl font-bold text-white">
-                    <span className="text-accent-light">{formatPriceUSD(featuredAuction.currentBid?.toString() || "0")}</span>
+                    <span className="text-accent-light">{formatPriceUSD(localPrice)}</span>
                   </p>
                 </div>
                 <div className="bg-background/50 p-3 rounded-lg">
                   <p className="text-gray-400 text-xs mb-1">Ending In</p>
                   <p className="font-mono text-xl font-bold text-white auction-timer">
-                    01:00
+                    {formattedTime}
                   </p>
                 </div>
               </div>
@@ -128,9 +132,9 @@ export default function FeaturedAuction() {
                   </p>
                 </div>
                 <div className="bg-background/50 p-3 rounded-lg">
-                  <p className="text-gray-400 text-xs mb-1">Bid Value</p>
-                  <p className="text-xs text-green-500">
-                    +$0.03 per bid
+                  <p className="text-gray-400 text-xs mb-1">Bids</p>
+                  <p className="text-xs text-white">
+                    {featuredAuction.bidCount || 3} bids
                   </p>
                 </div>
               </div>

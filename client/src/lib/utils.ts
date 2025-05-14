@@ -123,14 +123,14 @@ export function formatPriceUSD(price: number | string): string {
   // Convert the input price to a number
   const numPrice = typeof price === "string" ? parseFloat(price) : price;
   
-  // For our penny auction, we want to show small amounts (less than $1)
-  // Each bid only increases the price by $0.03
-  // 
-  // The values in the database are relatively high (like 0.8 ETH),
-  // but we want to display them as small dollar amounts for penny auctions
+  // For our penny auction, we want to show small amounts with exact cents
+  // Each bid increases the price by exactly $0.03
+  // Format as a proper USD value with 2 decimal places
   
-  // Always display a fixed value for demos ($0.04) until we implement real conversion
-  // This ensures consistent display across featured and regular auction cards
-  
-  return "$0.04";
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(numPrice);
 }
