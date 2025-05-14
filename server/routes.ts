@@ -15,6 +15,7 @@ import {
 import { z } from "zod";
 import { magicEdenService } from "./magicEden";
 import { moralisService } from "./moralisService";
+import { unleashNftsService } from "./unleashNftsService";
 import { EvmChain } from "@moralisweb3/common-evm-utils";
 
 // WebSocket clients and utility functions
@@ -401,6 +402,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(stats);
     } catch (error) {
       return res.status(500).json({ message: 'Failed to fetch blockchain stats' });
+    }
+  });
+
+  // UnleashNFTs (BitCrunch) API Routes
+  app.get('/api/unleash/collections', async (req, res) => {
+    try {
+      const { chain = 'ethereum', page = '1', limit = '10' } = req.query;
+      const collections = await unleashNftsService.getCollectionsByChain(
+        chain as string, 
+        parseInt(page as string), 
+        parseInt(limit as string)
+      );
+      return res.json(collections);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch NFT collections' });
+    }
+  });
+
+  app.get('/api/unleash/collection/:address', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chain = 'ethereum' } = req.query;
+      const collection = await unleashNftsService.getCollectionMetadata(address, chain as string);
+      return res.json(collection);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch collection metadata' });
+    }
+  });
+
+  app.get('/api/unleash/collection/:address/metrics', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chain = 'ethereum' } = req.query;
+      const metrics = await unleashNftsService.getCollectionMetrics(address, chain as string);
+      return res.json(metrics);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch collection metrics' });
+    }
+  });
+
+  app.get('/api/unleash/collection/:address/trend', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chain = 'ethereum', period = '30d' } = req.query;
+      const trend = await unleashNftsService.getCollectionTrend(
+        address, 
+        chain as string, 
+        period as string
+      );
+      return res.json(trend);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch collection trend data' });
+    }
+  });
+
+  app.get('/api/unleash/collection/:address/traits', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chain = 'ethereum' } = req.query;
+      const traits = await unleashNftsService.getCollectionTraits(address, chain as string);
+      return res.json(traits);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch collection traits' });
+    }
+  });
+
+  app.get('/api/unleash/collection/:address/nfts', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chain = 'ethereum', page = '1', limit = '10' } = req.query;
+      const nfts = await unleashNftsService.getCollectionNFTs(
+        address, 
+        chain as string, 
+        parseInt(page as string), 
+        parseInt(limit as string)
+      );
+      return res.json(nfts);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch NFTs in collection' });
+    }
+  });
+
+  app.get('/api/unleash/collection/:address/transactions', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const { chain = 'ethereum', page = '1', limit = '10' } = req.query;
+      const transactions = await unleashNftsService.getCollectionTransactions(
+        address, 
+        chain as string, 
+        parseInt(page as string), 
+        parseInt(limit as string)
+      );
+      return res.json(transactions);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch collection transactions' });
+    }
+  });
+
+  app.get('/api/unleash/collections-with-valuation', async (req, res) => {
+    try {
+      const { chain = 'ethereum', page = '1', limit = '10' } = req.query;
+      const collections = await unleashNftsService.getCollectionsWithValuation(
+        chain as string, 
+        parseInt(page as string), 
+        parseInt(limit as string)
+      );
+      return res.json(collections);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch collections with valuation' });
+    }
+  });
+
+  app.get('/api/unleash/nfts-with-valuation', async (req, res) => {
+    try {
+      const { collection, chain = 'ethereum', page = '1', limit = '10' } = req.query;
+      if (!collection) {
+        return res.status(400).json({ message: 'Collection address is required' });
+      }
+      const nfts = await unleashNftsService.getNFTsWithValuation(
+        collection as string, 
+        chain as string, 
+        parseInt(page as string), 
+        parseInt(limit as string)
+      );
+      return res.json(nfts);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch NFTs with valuation' });
+    }
+  });
+
+  app.get('/api/unleash/nft-valuation', async (req, res) => {
+    try {
+      const { collection, token_id, chain = 'ethereum' } = req.query;
+      if (!collection || !token_id) {
+        return res.status(400).json({ message: 'Collection address and token ID are required' });
+      }
+      const valuation = await unleashNftsService.getNFTValuation(
+        collection as string, 
+        token_id as string, 
+        chain as string
+      );
+      return res.json(valuation);
+    } catch (error) {
+      return res.status(500).json({ message: 'Failed to fetch NFT valuation' });
     }
   });
 
