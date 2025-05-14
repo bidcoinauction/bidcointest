@@ -370,7 +370,22 @@ export class UnleashNftsService {
 
   private handleError(method: string, error: any): void {
     const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-    log(`UnleashNfts API error in ${method}: ${errorMessage}`, 'unleash-nfts');
+    const status = error.response?.status;
+    
+    // Special handling for authentication errors
+    if (status === 401 || errorMessage.includes('API key')) {
+      log(`UnleashNfts API AUTHENTICATION ERROR in ${method}: ${errorMessage}`, 'unleash-nfts');
+      log(`Please check that the VITE_BITCRUNCH_API_KEY environment variable contains a valid API key.`, 'unleash-nfts');
+      log(`Current API key prefix: ${API_KEY ? API_KEY.substring(0, 4) + '...' : 'Not set'}`, 'unleash-nfts');
+      
+      // Log the request details for debugging
+      const requestUrl = error.config?.url || 'unknown';
+      const requestMethod = error.config?.method || 'unknown';
+      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
+    } else {
+      log(`UnleashNfts API error in ${method}: ${errorMessage}`, 'unleash-nfts');
+    }
+    
     console.error(`UnleashNfts API error in ${method}:`, error);
   }
 }
