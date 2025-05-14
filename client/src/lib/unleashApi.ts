@@ -54,7 +54,62 @@ export interface NFTValuation {
 }
 
 /**
- * Get NFT collections by blockchain
+ * Helper function for API status tracking and error handling
+ */
+let apiStatus = {
+  isWorking: false,
+  lastError: null as Error | null,
+  lastSuccessfulCall: null as Date | null,
+  connectionTested: false
+};
+
+/**
+ * Check if the UnleashNFTs API is operational
+ */
+export const getApiStatus = () => apiStatus;
+
+/**
+ * Test the API connection by making a simple request
+ */
+export const testApiConnection = async (): Promise<{success: boolean, message: string}> => {
+  try {
+    // Try to get a single blockchain to test connection
+    const blockchains = await fetchFromAPI<any[]>('/unleash/blockchains?limit=1');
+    
+    if (blockchains && blockchains.length > 0) {
+      apiStatus.isWorking = true;
+      apiStatus.lastSuccessfulCall = new Date();
+      apiStatus.connectionTested = true;
+      apiStatus.lastError = null;
+      return {success: true, message: 'Connection successful'};
+    } else {
+      apiStatus.isWorking = false;
+      apiStatus.lastError = new Error('No data returned from API');
+      apiStatus.connectionTested = true;
+      return {success: false, message: 'Connection successful but no data returned'};
+    }
+  } catch (error) {
+    apiStatus.isWorking = false;
+    apiStatus.lastError = error instanceof Error ? error : new Error(String(error));
+    apiStatus.connectionTested = true;
+    
+    // Provide specific guidance based on error
+    let message = 'Connection failed';
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+      if (errorMsg.includes('api key') || errorMsg.includes('401')) {
+        message = 'Authentication error: Invalid API key. Please update your API key.';
+      } else if (errorMsg.includes('429')) {
+        message = 'Rate limit exceeded. Please try again later.';
+      }
+    }
+    
+    return {success: false, message};
+  }
+};
+
+/**
+ * Get NFT collections by blockchain with improved error handling and status tracking
  * @param chain The blockchain name (ethereum, polygon, etc.)
  * @param page Page number (defaults to 1)
  * @param limit Items per page (defaults to 10)
@@ -64,12 +119,27 @@ export const getCollectionsByChain = async (
   page: number = 1,
   limit: number = 10
 ): Promise<NFTCollection[]> => {
-  const response = await fetchFromAPI<NFTCollection[]>(`/unleash/collections?chain=${chain}&page=${page}&limit=${limit}`);
-  return response || [];
+  try {
+    const response = await fetchFromAPI<NFTCollection[]>(`/unleash/collections?chain=${chain}&page=${page}&limit=${limit}`);
+    
+    // Update API status on success
+    apiStatus.isWorking = true;
+    apiStatus.lastSuccessfulCall = new Date();
+    apiStatus.lastError = null;
+    
+    return response || [];
+  } catch (error) {
+    // Update API status on error
+    apiStatus.isWorking = false;
+    apiStatus.lastError = error instanceof Error ? error : new Error(String(error));
+    
+    console.error(`Error fetching collections for chain ${chain}:`, error);
+    throw error;
+  }
 };
 
 /**
- * Get collection metadata by contract address
+ * Get collection metadata by contract address with improved error handling
  * @param address The collection contract address
  * @param chain The blockchain name (defaults to ethereum)
  */
@@ -77,8 +147,23 @@ export const getCollectionMetadata = async (
   address: string,
   chain: string = 'ethereum'
 ): Promise<NFTCollection | null> => {
-  const response = await fetchFromAPI<NFTCollection>(`/unleash/collection/${address}?chain=${chain}`);
-  return response || null;
+  try {
+    const response = await fetchFromAPI<NFTCollection>(`/unleash/collection/${address}?chain=${chain}`);
+    
+    // Update API status on success
+    apiStatus.isWorking = true;
+    apiStatus.lastSuccessfulCall = new Date();
+    apiStatus.lastError = null;
+    
+    return response || null;
+  } catch (error) {
+    // Update API status on error
+    apiStatus.isWorking = false;
+    apiStatus.lastError = error instanceof Error ? error : new Error(String(error));
+    
+    console.error(`Error fetching collection metadata for ${address} on ${chain}:`, error);
+    throw error;
+  }
 };
 
 /**

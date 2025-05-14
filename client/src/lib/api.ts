@@ -3,16 +3,38 @@ import { Auction, NFT, BidPack, Activity, BlockchainStats } from "@shared/schema
 // Base API URL
 const API_BASE = "/api";
 
-// Generic fetch function
+// Generic fetch function with improved error handling
 export async function fetchFromAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`, options);
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API Error (${response.status}): ${errorText}`);
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, options);
+    
+    if (!response.ok) {
+      let errorMessage = "";
+      try {
+        // Try to parse JSON error response
+        const errorJson = await response.json();
+        errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+      } catch {
+        // If not JSON, get plain text
+        errorMessage = await response.text();
+      }
+      
+      const error = new Error(`API Error (${response.status}): ${errorMessage}`);
+      // Add response details to the error object for better debugging
+      (error as any).status = response.status;
+      (error as any).endpoint = endpoint;
+      throw error;
+    }
+    
+    return response.json();
+  } catch (err) {
+    // Handle network errors (like CORS, connection issues)
+    if (!(err instanceof Error) || !err.message.includes('API Error')) {
+      console.error(`Network error when fetching from ${endpoint}:`, err);
+      throw new Error(`Network error when connecting to server. Please check your connection and try again.`);
+    }
+    throw err;
   }
-  
-  return response.json();
 }
 
 // Auction API calls
