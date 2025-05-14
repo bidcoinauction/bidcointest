@@ -57,10 +57,13 @@ export default function NFTCollectionsPage() {
   const { 
     data: collections, 
     isLoading: isLoadingCollections,
-    refetch: refetchCollections
+    refetch: refetchCollections,
+    error: collectionsError,
+    isError: isCollectionsError
   } = useQuery({
     queryKey: ['/unleash/collections', selectedChain, page, limit],
-    queryFn: () => getCollectionsByChain(selectedChain, page, limit)
+    queryFn: () => getCollectionsByChain(selectedChain, page, limit),
+    retry: 1 // Only retry once before showing error state
   });
 
   // Fetch collection metrics when a collection is selected
@@ -234,15 +237,56 @@ export default function NFTCollectionsPage() {
                         </div>
                       </div>
                     ))
+                  ) : isCollectionsError ? (
+                    <div className="p-6 text-center">
+                      <div className="bg-[#1d2430] p-4 rounded-md border border-[#374151] mx-auto max-w-md">
+                        <div className="mb-3 bg-[#111827] rounded-full h-10 w-10 flex items-center justify-center mx-auto">
+                          <Search className="h-5 w-5 text-red-400" />
+                        </div>
+                        <h3 className="text-white text-lg font-medium mb-2">API Connection Issue</h3>
+                        <p className="text-gray-400 mb-3 text-sm">
+                          We're unable to connect to the UnleashNFTs API. This is likely due to an invalid or expired API key.
+                        </p>
+                        {collectionsError instanceof Error && (
+                          <div className="bg-red-900/20 border border-red-900/50 rounded p-2 mb-3">
+                            <p className="text-red-400 text-xs">
+                              {collectionsError.message.includes('API key') 
+                                ? 'Authentication error: Invalid API key' 
+                                : collectionsError.message}
+                            </p>
+                          </div>
+                        )}
+                        <p className="text-gray-400 text-xs mb-2">
+                          Please register at <a href="https://unleashnfts.com" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">unleashnfts.com</a> to 
+                          obtain a valid API key, then ask your administrator to update the environment variable.
+                        </p>
+                        <div className="flex space-x-2">
+                          <Button 
+                            onClick={() => refetchCollections()}
+                            size="sm"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs"
+                          >
+                            Try Again
+                          </Button>
+                          <Button
+                            onClick={() => window.open('https://unleashnfts.com', '_blank')}
+                            size="sm"
+                            className="bg-transparent border border-indigo-600 text-indigo-400 hover:bg-indigo-950 text-xs"
+                          >
+                            Get API Key
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="p-6 text-center">
                       <div className="bg-[#1d2430] p-4 rounded-md border border-[#374151] mx-auto max-w-md">
                         <div className="mb-3 bg-[#111827] rounded-full h-10 w-10 flex items-center justify-center mx-auto">
                           <Search className="h-5 w-5 text-indigo-400" />
                         </div>
-                        <h3 className="text-white text-lg font-medium mb-2">API Connection Issue</h3>
+                        <h3 className="text-white text-lg font-medium mb-2">No Collections Found</h3>
                         <p className="text-gray-400 mb-3 text-sm">
-                          We're currently unable to retrieve NFT collections. This might be due to an API authentication error.
+                          No NFT collections were found for this blockchain. Try selecting a different blockchain or try again later.
                         </p>
                         <Button 
                           onClick={() => refetchCollections()}
