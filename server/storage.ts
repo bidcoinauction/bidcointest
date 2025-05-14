@@ -1075,6 +1075,54 @@ export class MemStorage implements IStorage {
 
     return { ...updatedUserBidPack, bidPack: bidPack!, user: user! };
   }
+  
+  async consumeBid(userId: number): Promise<{
+    success: boolean;
+    userBidPack?: UserBidPack;
+    error?: string;
+  }> {
+    try {
+      // Get user bid packs with remaining bids
+      const userBidPacks = await this.getUserBidPacks(userId);
+      
+      // Find a pack with available bids (ordered by oldest first)
+      const userPacksWithBids = userBidPacks
+        .filter(pack => pack.bidsRemaining > 0)
+        .sort((a, b) => {
+          const dateA = new Date(a.purchaseDate).getTime();
+          const dateB = new Date(b.purchaseDate).getTime();
+          return dateA - dateB; // Sort oldest first
+        });
+      
+      if (userPacksWithBids.length === 0) {
+        return {
+          success: false,
+          error: 'No bids available. Purchase a bid pack to continue.'
+        };
+      }
+      
+      // Use the oldest pack with available bids
+      const packToUse = userPacksWithBids[0];
+      const updatedBidsRemaining = packToUse.bidsRemaining - 1;
+      
+      // Update the pack
+      const updatedPack = await this.updateUserBidPackCount(
+        packToUse.id, 
+        updatedBidsRemaining
+      );
+      
+      return {
+        success: true,
+        userBidPack: updatedPack
+      };
+    } catch (error) {
+      console.error('Error consuming bid:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
 
   /* Activity operations */
   async getActivities(): Promise<Activity[]> {
@@ -1139,6 +1187,125 @@ export class MemStorage implements IStorage {
       networks: Array.from(this.blockchainNetworks.values()),
       marketStats: Array.from(this.marketStats.values())
     };
+  }
+  
+  // Blockchain Integration
+  async recordBidOnBlockchain(bidId: number): Promise<{
+    success: boolean;
+    transactionId?: string;
+    error?: string;
+  }> {
+    try {
+      // In a real implementation, this would interact with a blockchain
+      // For now, we'll mock the successful recording
+      const bid = await this.getBid(bidId);
+      if (!bid) {
+        return { success: false, error: `Bid with id ${bidId} not found` };
+      }
+      
+      // Simulate blockchain tx
+      const transactionId = `tx_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+      
+      console.log(`[Blockchain] Recorded bid ${bidId} with transaction ${transactionId}`);
+      
+      return {
+        success: true,
+        transactionId
+      };
+    } catch (error) {
+      console.error('Error recording bid on blockchain:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown blockchain error'
+      };
+    }
+  }
+  
+  async verifyBidTransaction(transactionId: string): Promise<boolean> {
+    // In a real implementation, this would verify the transaction on the blockchain
+    // For now, we'll assume all transactions with our format are valid
+    return transactionId.startsWith('tx_');
+  }
+  
+  // Settlement Process
+  async finalizeAuction(auctionId: number): Promise<{
+    success: boolean;
+    winner?: User;
+    finalPrice?: string;
+    error?: string;
+  }> {
+    try {
+      const auction = await this.getAuction(auctionId);
+      if (!auction) {
+        return { success: false, error: `Auction with id ${auctionId} not found` };
+      }
+      
+      // Check if auction is ended
+      const now = new Date();
+      if (new Date(auction.endTime) > now) {
+        return { success: false, error: 'Auction has not ended yet' };
+      }
+      
+      // Get all bids for this auction
+      const bids = await this.getBidsByAuction(auctionId);
+      if (bids.length === 0) {
+        return { success: false, error: 'No bids found for this auction' };
+      }
+      
+      // Sort bids by timestamp (most recent first)
+      const sortedBids = [...bids].sort((a, b) => {
+        const dateA = new Date(a.timestamp || 0).getTime();
+        const dateB = new Date(b.timestamp || 0).getTime();
+        return dateB - dateA;
+      });
+      
+      // Get the winner (most recent bidder)
+      const winningBid = sortedBids[0];
+      const winner = await this.getUser(winningBid.bidderId);
+      
+      if (!winner) {
+        return { success: false, error: 'Winner not found' };
+      }
+      
+      // Create auction history record
+      await this.createAuctionHistory({
+        auctionId,
+        description: `Auction finalized. Winner: ${winner.username} at ${auction.currentBid}`,
+        icon: 'trophy'
+      });
+      
+      // Create activity record
+      await this.createActivity({
+        type: 'purchase',
+        nftId: auction.nftId,
+        from: auction.creatorId?.toString() || 'system',
+        to: winner.id.toString(),
+        price: auction.currentBid || auction.startingBid,
+        currency: auction.currency || 'ETH'
+      });
+      
+      return {
+        success: true,
+        winner,
+        finalPrice: auction.currentBid || auction.startingBid
+      };
+    } catch (error) {
+      console.error('Error finalizing auction:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+  
+  private async getBid(bidId: number): Promise<Bid | undefined> {
+    const bid = this.bids.get(bidId);
+    if (!bid) return undefined;
+    
+    const bidder = await this.getUser(bid.bidderId);
+    if (!bidder) return undefined;
+    
+    return { ...bid, bidder };
   }
 }
 
