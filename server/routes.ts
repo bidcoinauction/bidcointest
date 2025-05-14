@@ -17,6 +17,19 @@ import { magicEdenService } from "./magicEden";
 import { moralisService } from "./moralisService";
 import { EvmChain } from "@moralisweb3/common-evm-utils";
 
+// WebSocket clients and utility functions
+let wsClients: WebSocket[] = [];
+
+// Broadcast updates to all connected WebSocket clients
+function broadcastUpdate(type: string, data: any) {
+  const message = JSON.stringify({ type, data });
+  wsClients.forEach(client => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
@@ -26,24 +39,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on('connection', (ws) => {
     console.log('WebSocket client connected');
     
+    // Add client to our list
+    wsClients.push(ws);
+    
     ws.on('message', (message) => {
       console.log('received: %s', message);
+      
+      // You can handle incoming messages here if needed
+      try {
+        const data = JSON.parse(message.toString());
+        // Process message based on type
+        if (data.type === 'ping') {
+          ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+      }
     });
     
     ws.on('close', () => {
       console.log('WebSocket client disconnected');
+      // Remove client from our list when they disconnect
+      wsClients = wsClients.filter(client => client !== ws);
     });
+    
+    // Send initial connection confirmation
+    ws.send(JSON.stringify({ 
+      type: 'connected', 
+      message: 'Connected to Bidcoin auction server',
+      timestamp: new Date().toISOString()
+    }));
   });
   
   
-  // Function to broadcast updates to all connected WebSocket clients
-  const broadcastUpdate = (type: string, data: any) => {
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ type, data }));
-      }
-    });
-  };
+  // We use the broadcastUpdate function we defined at the top
 
   // User routes
   app.get('/api/users/:id', async (req, res) => {
