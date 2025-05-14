@@ -271,7 +271,7 @@ export default function BidPacksPage() {
                     </li>
                     <li className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-secondary mt-0.5 mr-2 flex-shrink-0" />
-                      <span className="text-gray-300">Pay using cryptocurrency (BTC, ETH, etc.)</span>
+                      <span className="text-gray-300">Pay in USD (convertible to crypto at checkout)</span>
                     </li>
                     <li className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-secondary mt-0.5 mr-2 flex-shrink-0" />
@@ -352,7 +352,7 @@ export default function BidPacksPage() {
                   </li>
                 </ul>
                 <div className="flex items-baseline mb-4">
-                  <span className="text-white font-display text-2xl font-bold">0.06 BTC</span>
+                  <span className="text-white font-display text-2xl font-bold">$60.00</span>
                   <span className="text-gray-400 text-sm ml-2">/month</span>
                 </div>
                 <Button className="w-full bg-secondary hover:bg-secondary-dark text-white">

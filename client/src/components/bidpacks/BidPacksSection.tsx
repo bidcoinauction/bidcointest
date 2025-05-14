@@ -135,10 +135,10 @@ function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: B
       
       <div className="flex items-baseline justify-between mb-4">
         <div className="flex flex-col">
-          <span className="text-white font-display text-2xl font-bold">{totalPrice} {pack.currency}</span>
+          <span className="text-white font-display text-2xl font-bold">${totalPrice}</span>
           <span className="text-gray-400 text-xs">Total {totalBids} bids</span>
         </div>
-        <span className="text-gray-400 text-sm line-through">{totalOriginalPrice} {pack.currency}</span>
+        <span className="text-gray-400 text-sm line-through">${totalOriginalPrice}</span>
       </div>
       
       <Button 
