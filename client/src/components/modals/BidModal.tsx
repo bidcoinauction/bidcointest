@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
-import { placeBid } from "@/lib/web3";
-import { placeBid as apiPlaceBid } from "@/lib/api";
+import { placeBid } from "@/lib/api";
 import { Auction } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -161,8 +160,8 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
           strategyTip = "Well done! Keep track of your budget as the auction progresses.";
       }
       
-      // Call API to place bid - use only the API version
-      await apiPlaceBid(auction.id, bidAmount, address);
+      // Call API to place bid
+      await placeBid(auction.id, bidAmount, address);
       
       // Invalidate queries to refresh auction data
       queryClient.invalidateQueries({ queryKey: ["/api/auctions"] });
