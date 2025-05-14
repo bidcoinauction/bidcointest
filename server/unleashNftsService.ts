@@ -278,12 +278,12 @@ export class UnleashNftsService {
    */
   async getNFTValuation(contractAddress: string, tokenId: string, chain: string): Promise<any> {
     try {
-      const response = await axios.get(`${BASE_URL}/nft-valuation`, {
+      const response = await axios.get(`${BASE_URL}/nft/valuation`, {
         headers: this.headers,
         params: {
-          collection: contractAddress,
+          collection_address: contractAddress,
           token_id: tokenId,
-          chain
+          blockchain: chain
         }
       });
       return response.data.data || null;
@@ -301,11 +301,11 @@ export class UnleashNftsService {
    */
   async getNFTDetailedMetadata(contractAddress: string, tokenId: string, chain: string = 'ethereum'): Promise<any> {
     try {
-      const response = await axios.get(`${BASE_URL}/api/v2/nft/metadata`, {
+      const response = await axios.get(`${BASE_URL}/nft/metadata`, {
         headers: this.headers,
         params: {
           blockchain: chain,
-          contract_address: contractAddress,
+          collection_address: contractAddress,
           token_id: tokenId
         }
       });
@@ -342,14 +342,14 @@ export class UnleashNftsService {
       };
       
       if (contractAddress) {
-        params.contract_address = contractAddress;
+        params.collection_address = contractAddress;
       }
       
       if (slugName) {
-        params.slug_name = slugName;
+        params.slug = slugName;
       }
       
-      const response = await axios.get(`${BASE_URL}/api/v2/nft/metadata`, {
+      const response = await axios.get(`${BASE_URL}/nft/metadata`, {
         headers: this.headers,
         params
       });
