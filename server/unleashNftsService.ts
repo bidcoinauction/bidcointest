@@ -142,11 +142,12 @@ export class UnleashNftsService {
    */
   async getCollectionTrend(contractAddress: string, chain: string, period: string = '30d'): Promise<any> {
     try {
-      const response = await axios.get(`${BASE_URL}/collection/${contractAddress}/trend`, {
+      const response = await axios.get(`${BASE_URL}/nft/collection/trend`, {
         headers: this.headers,
         params: { 
-          chain,
-          period
+          collection_address: contractAddress,
+          blockchain: chain,
+          time_range: period
         }
       });
       return response.data.data || null;
@@ -163,9 +164,12 @@ export class UnleashNftsService {
    */
   async getCollectionTraits(contractAddress: string, chain: string): Promise<any> {
     try {
-      const response = await axios.get(`${BASE_URL}/collection/${contractAddress}/traits`, {
+      const response = await axios.get(`${BASE_URL}/nft/collection/traits`, {
         headers: this.headers,
-        params: { chain }
+        params: { 
+          collection_address: contractAddress,
+          blockchain: chain 
+        }
       });
       return response.data.data || null;
     } catch (error) {
@@ -183,11 +187,12 @@ export class UnleashNftsService {
    */
   async getCollectionNFTs(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<NFTMetadata[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/collection/${contractAddress}/nfts`, {
+      const response = await axios.get(`${BASE_URL}/nft/tokens`, {
         headers: this.headers,
         params: {
-          chain,
-          page,
+          collection_address: contractAddress,
+          blockchain: chain,
+          offset: (page - 1) * limit,
           limit
         }
       });
@@ -207,11 +212,12 @@ export class UnleashNftsService {
    */
   async getCollectionTransactions(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<any[]> {
     try {
-      const response = await axios.get(`${BASE_URL}/collection/${contractAddress}/transactions`, {
+      const response = await axios.get(`${BASE_URL}/nft/collection/transactions`, {
         headers: this.headers,
         params: {
-          chain,
-          page,
+          collection_address: contractAddress,
+          blockchain: chain,
+          offset: (page - 1) * limit,
           limit
         }
       });
