@@ -50,7 +50,7 @@ export default function NFTExplorerPage() {
     refetch: refetchWalletNFTs
   } = useQuery({
     queryKey: ["wallet-nfts", walletAddress, selectedChain],
-    queryFn: () => walletAddress ? getWalletNFTs(walletAddress, selectedChain) : Promise.resolve([]),
+    queryFn: () => walletAddress ? getWalletNFTs(walletAddress) : Promise.resolve([]),
     enabled: false,
   });
 
@@ -61,7 +61,7 @@ export default function NFTExplorerPage() {
     refetch: refetchCollectionNFTs
   } = useQuery({
     queryKey: ["collection-nfts", collectionAddress, selectedChain],
-    queryFn: () => collectionAddress ? getNFTsByCollection(collectionAddress, selectedChain) : Promise.resolve([]),
+    queryFn: () => collectionAddress ? getNFTsByCollection(collectionAddress) : Promise.resolve([]),
     enabled: false,
   });
 
@@ -95,9 +95,7 @@ export default function NFTExplorerPage() {
       
       await importNFTFromMoralis(
         nft.token_address,
-        nft.token_id,
-        1, // creator ID
-        selectedChain
+        nft.token_id
       );
       
       toast({

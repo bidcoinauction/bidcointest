@@ -97,13 +97,12 @@ export function disconnectWallet(): WalletConnection {
 export async function placeBid(
   auctionId: number, 
   amount: string, 
-  provider: ethers.BrowserProvider
+  walletAddress: string
 ): Promise<boolean> {
   try {
     // This is a simplified implementation
     // In a real app, this would interact with a smart contract
-    const signer = await provider.getSigner();
-    console.log(`Placing bid of ${amount} ETH on auction #${auctionId} from ${await signer.getAddress()}`);
+    console.log(`Placing bid of ${amount} ETH on auction #${auctionId} from ${walletAddress}`);
     
     // Simulate transaction
     // In a real implementation, we would call a contract method
@@ -111,6 +110,7 @@ export async function placeBid(
     // const tx = await contract.placeBid(auctionId, { value: ethers.parseEther(amount) });
     // await tx.wait();
     
+    // For development, we'll always return success
     return true;
   } catch (error) {
     console.error("Error placing bid:", error);
@@ -122,13 +122,12 @@ export async function placeBid(
 export async function purchaseBidPack(
   packId: string,
   amount: string,
-  provider: ethers.BrowserProvider
+  walletAddress: string
 ): Promise<boolean> {
   try {
     // This is a simplified implementation
     // In a real app, this would interact with a smart contract
-    const signer = await provider.getSigner();
-    console.log(`Purchasing bid pack ${packId} for ${amount} from ${await signer.getAddress()}`);
+    console.log(`Purchasing bid pack ${packId} for ${amount} from ${walletAddress}`);
     
     // Simulate transaction
     // In a real implementation, we would call a contract method
@@ -136,6 +135,7 @@ export async function purchaseBidPack(
     // const tx = await contract.purchaseBidPack(packId, { value: ethers.parseEther(amount) });
     // await tx.wait();
     
+    // For development, we'll always return success
     return true;
   } catch (error) {
     console.error("Error purchasing bid pack:", error);
