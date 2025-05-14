@@ -12,6 +12,7 @@ import BidActivity from "@/components/auctions/BidActivity";
 import { Heart, Share2, ExternalLink, Trophy, TrendingUp, Award } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 export default function AuctionDetailsPage() {
   const [, params] = useRoute("/auctions/:id");
@@ -21,11 +22,27 @@ export default function AuctionDetailsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { address } = useWallet();
+  const { subscribe } = useWebSocket();
   
   const { data: auction, isLoading, error } = useQuery({
     queryKey: [`/api/auctions/${auctionId}`],
     queryFn: () => getAuction(auctionId),
   });
+  
+  // Subscribe to WebSocket events for real-time updates
+  useEffect(() => {
+    // Subscribe to bid updates
+    const unsubscribeBids = subscribe("new-bid", (data) => {
+      if (data.auctionId === auctionId) {
+        console.log("Real-time bid update received for this auction:", data);
+        queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auctionId}`] });
+      }
+    });
+    
+    return () => {
+      unsubscribeBids();
+    };
+  }, [auctionId, queryClient, subscribe]);
   
   const timeRemaining = auction?.endTime ? new Date(auction.endTime).getTime() - Date.now() : 0;
   
