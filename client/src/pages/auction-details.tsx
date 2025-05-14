@@ -63,11 +63,9 @@ export default function AuctionDetailsPage() {
     // Increment bid count
     setLocalBidCount(prev => prev + 1);
     
-    // Add $0.03 to current price
-    setLocalCurrentBid(prev => {
-      const newValue = prev + 0.03;
-      return Number(newValue.toFixed(2));
-    });
+    // Calculate price based on bid count (always $0.03 per bid)
+    const newBidCount = localBidCount + 1;
+    setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
     
     // Update leader
     setLocalLeader(randomBidder);
@@ -76,7 +74,7 @@ export default function AuctionDetailsPage() {
     const resetTime = new Date();
     resetTime.setSeconds(resetTime.getSeconds() + 60);
     setLocalEndTime(resetTime);
-  }, []);
+  }, [localBidCount]);
   
   // Set up automatic bid simulation
   useEffect(() => {
@@ -198,13 +196,25 @@ export default function AuctionDetailsPage() {
     try {
       console.log("Placing bid:", amount, "on auction:", auctionId, "with address:", address);
       
-      // Simulate a successful bid
-      simulateRandomBid();
-      setLocalLeader(address); // Set current user as leader
+      // Increment bid count
+      const newBidCount = localBidCount + 1;
+      setLocalBidCount(newBidCount);
+      
+      // Calculate price based on bid count (always $0.03 per bid)
+      const newPrice = parseFloat((newBidCount * 0.03).toFixed(2));
+      setLocalCurrentBid(newPrice);
+      
+      // Set current user as leader
+      setLocalLeader(address);
+      
+      // Reset timer (Bidcoin reset mechanism to 1 minute)
+      const resetTime = new Date();
+      resetTime.setSeconds(resetTime.getSeconds() + 60);
+      setLocalEndTime(resetTime);
       
       toast({
         title: "Bid Placed Successfully!",
-        description: `Your bid of $${amount} has been placed.`,
+        description: `Your bid of $0.24 has been placed. New auction price: $${newPrice.toFixed(2)}`,
         variant: "default",
       });
       

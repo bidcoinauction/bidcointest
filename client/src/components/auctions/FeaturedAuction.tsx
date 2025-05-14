@@ -41,10 +41,10 @@ export default function FeaturedAuction() {
     // Increment bid count
     setLocalBidCount(prev => prev + 1);
     
-    // Add $0.03 to current price
+    // Calculate price based on bid count (always $0.03 per bid)
     setLocalPrice(prev => {
-      const newValue = prev + 0.03;
-      return Number(newValue.toFixed(2));
+      const newBidCount = localBidCount + 1;
+      return parseFloat((newBidCount * 0.03).toFixed(2));
     });
     
     // Update leader
@@ -197,10 +197,10 @@ export default function FeaturedAuction() {
                 onClick={() => {
                   // Simulate a bid
                   setLocalBidCount(prev => prev + 1);
-                  setLocalPrice(prev => {
-                    const newValue = prev + 0.03;
-                    return Number(newValue.toFixed(2));
-                  });
+                  
+                  // Calculate price based on bid count (always $0.03 per bid)
+                  const newBidCount = localBidCount + 1;
+                  setLocalPrice(parseFloat((newBidCount * 0.03).toFixed(2)));
                   
                   // Update random leader
                   const randomBidders = [
