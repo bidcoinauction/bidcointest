@@ -115,28 +115,35 @@ export default function AuctionDetailsPage() {
   
   // Use local countdown instead of server time
   const { formattedTime, isComplete } = useCountdown({
-    endTime: localEndTime
+    endTime: localEndTime,
+    onComplete: () => {
+      console.log("Auction complete!");
+      
+      // If user is highest bidder, show payment method selection
+      if (isHighestBidder) {
+        setShowPaymentModal(true);
+        toast({
+          title: "Congratulations! 🎉",
+          description: `You've won the auction for ${auction?.nft.name}. Please select your payment method.`,
+        });
+      }
+    }
   });
   
   // Check if the current user is the highest bidder
   const isHighestBidder = address && localLeader === address;
-    
-  const handleAuctionComplete = () => {
-    console.log("Auction complete!");
-    
-    // If user is highest bidder, show payment method selection
-    if (isHighestBidder) {
-      setShowPaymentModal(true);
-      toast({
-        title: "Congratulations! 🎉",
-        description: `You've won the auction for ${auction?.nft.name}. Please select your payment method.`,
-      });
-    }
-  };
   const isActive = !isComplete;
   
+  // Parse the formatted time string into components
+  const timeComponents = formattedTime ? formattedTime.split(':') : ['00', '00', '00'];
+  const hours = parseInt(timeComponents[0]);
+  const minutes = parseInt(timeComponents[1]);
+  const seconds = parseInt(timeComponents[2]);
+  const days = Math.floor(hours / 24);
+  const hoursLeft = hours % 24;
+  
   const bidIncrement = 0.03; // Fixed bid increment of $0.03 (3 pennies, converted to crypto equivalent)
-  const minimumBid = auction?.currentBid ? parseFloat(auction.currentBid) + bidIncrement : parseFloat(auction?.startingBid || "0");
+  const minimumBid = localCurrentBid + bidIncrement;
   
   const handleOpenBidModal = () => {
     setShowBidModal(true);
@@ -151,12 +158,12 @@ export default function AuctionDetailsPage() {
     setShowPaymentModal(false);
     
     // Get the total amount to pay based on current bid
-    const paymentAmount = auction?.currentBid || "0";
+    const paymentAmount = localCurrentBid.toFixed(2);
     const nftName = auction?.nft.name || "NFT";
     
     toast({
       title: "Payment Method Selected",
-      description: `You've chosen to pay with ${method}. An invoice for ${paymentAmount} ${method} will be sent to your connected wallet.`,
+      description: `You've chosen to pay with ${method}. An invoice for $${paymentAmount} in ${method} will be sent to your connected wallet.`,
     });
     
     // In a real implementation, this would initiate a crypto payment transaction
@@ -187,28 +194,13 @@ export default function AuctionDetailsPage() {
     try {
       console.log("Placing bid:", amount, "on auction:", auctionId, "with address:", address);
       
-      const response = await fetch(`/api/bids`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount,
-          bidderAddress: address,
-          auctionId
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to place bid");
-      }
-      
-      const updatedAuction = await response.json();
+      // Simulate a successful bid
+      simulateRandomBid();
+      setLocalLeader(address); // Set current user as leader
       
       toast({
         title: "Bid Placed Successfully!",
-        description: `Your bid of ${amount} ${auction?.currency} has been placed.`,
+        description: `Your bid of $${amount} has been placed.`,
         variant: "default",
       });
       
@@ -350,8 +342,8 @@ export default function AuctionDetailsPage() {
             <div className="mb-8">
               <p className="text-gray-400 mb-2">Current Bid</p>
               <div className="flex items-baseline">
-                <span className="text-3xl font-display font-bold text-white mr-2">{auction.currentBid || 0} {auction.currency}</span>
-                <span className="text-gray-400">(~${(Number(auction.currentBid || 0) * 1800).toFixed(2)} USD)</span>
+                <span className="text-3xl font-display font-bold text-white mr-2">${localCurrentBid.toFixed(2)}</span>
+                <span className="text-gray-400">USD</span>
               </div>
             </div>
             
@@ -363,7 +355,7 @@ export default function AuctionDetailsPage() {
                   <p className="text-xs text-gray-400 mt-1">Days</p>
                 </div>
                 <div className="bg-[#111827] p-3 rounded-lg text-center">
-                  <span className="text-2xl font-display font-bold text-white">{hours}</span>
+                  <span className="text-2xl font-display font-bold text-white">{hoursLeft}</span>
                   <p className="text-xs text-gray-400 mt-1">Hours</p>
                 </div>
                 <div className="bg-[#111827] p-3 rounded-lg text-center">
@@ -380,180 +372,138 @@ export default function AuctionDetailsPage() {
             <div className="mb-4">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-400">Total Bids</span>
-                <span className="text-white">{auction.bidCount || 0}</span>
+                <span className="text-white">{localBidCount}</span>
               </div>
               <div className="h-2 bg-[#111827] rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, ((auction.bidCount || 0) / 100) * 100)}%` }}></div>
+                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, (localBidCount / 100) * 100)}%` }}></div>
               </div>
             </div>
             
-            <Button 
-              className="w-full bg-primary hover:bg-primary-dark text-white py-3 text-lg" 
-              onClick={handleOpenBidModal}
-              disabled={!isActive}
-            >
-              {isActive ? `Place Bid (${minimumBid} ${auction.currency})` : "Auction Ended"}
-            </Button>
+            <div className="mb-6">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-400">Highest Bidder</span>
+                <span className="text-white">{formatAddress(localLeader)}</span>
+              </div>
+              <div className="h-2 bg-[#111827] rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: isHighestBidder ? "100%" : "0%" }}></div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button 
+                className="flex-1 text-white bg-primary hover:bg-primary/90 font-medium text-base" 
+                onClick={handleOpenBidModal}
+                disabled={!isActive}
+              >
+                {isActive ? (
+                  <>Place Bid</>
+                ) : (
+                  <>Auction Ended</>
+                )}
+              </Button>
+              
+              {isActive && (
+                <Button variant="outline" className="bg-transparent border-[#374151] text-white hover:bg-[#374151]">
+                  Add to Watchlist
+                </Button>
+              )}
+            </div>
           </div>
           
-          <div className="bg-[#1f2937] rounded-xl border border-[#374151] mb-6">
-            <Tabs defaultValue="description">
-              <TabsList className="bg-[#374151]/50 rounded-tl-xl rounded-tr-xl p-1">
-                <TabsTrigger value="description" className="rounded-md data-[state=active]:bg-[#1f2937] data-[state=active]:text-white">
-                  Description
-                </TabsTrigger>
-                <TabsTrigger value="bids" className="rounded-md data-[state=active]:bg-[#1f2937] data-[state=active]:text-white">
-                  Bid History
-                </TabsTrigger>
+          <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6 mb-6">
+            <Tabs defaultValue="about" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-[#111827]">
+                <TabsTrigger value="about">About</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="history">Price History</TabsTrigger>
               </TabsList>
-              
-              <TabsContent value="description" className="p-5">
-                <p className="text-gray-300 whitespace-pre-line">{auction.nft.description}</p>
+              <TabsContent value="about" className="mt-6">
+                <div className="text-gray-300 prose prose-invert max-w-none">
+                  <p>{auction.nft.description}</p>
+                </div>
               </TabsContent>
-              
-              <TabsContent value="bids" className="p-5">
-                {auction.bids && auction.bids.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead>
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Bidder</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Time</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#374151]">
-                        {auction.bids.map((bid) => (
-                          <tr key={bid.id} className="hover:bg-[#374151]/50">
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="h-8 w-8 flex-shrink-0 rounded-full overflow-hidden mr-3">
-                                  <img src={bid.bidder.avatar || '/placeholder-avatar.jpg'} alt={`${bid.bidder.username} avatar`} className="h-full w-full object-cover" />
-                                </div>
-                                <span className="text-white">{bid.bidder.username}</span>
-                              </div>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-white">
-                              {bid.amount} {auction.currency}
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-gray-400">
-                              {bid.timestamp ? formatRelativeTime(new Date(bid.timestamp)) : 'Unknown time'}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="text-gray-400">No bids have been placed yet</p>
-                    <Button className="mt-4 bg-primary hover:bg-primary-dark text-white" onClick={handleOpenBidModal}>
-                      Be the first to bid
-                    </Button>
-                  </div>
-                )}
+              <TabsContent value="activity" className="mt-6">
+                <BidActivity auctionId={auctionId} />
+              </TabsContent>
+              <TabsContent value="history" className="mt-6">
+                <div className="text-center py-6">
+                  <TrendingUp className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-white mb-2">Price History</h3>
+                  <p className="text-gray-400">Price history will be available after more bids are placed.</p>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
           
-          <div className="bg-[#1f2937] p-5 rounded-xl border border-[#374151]">
-            <h3 className="text-lg font-display font-bold text-white mb-4">Auction Rules</h3>
-            <ul className="space-y-3">
-              <li className="flex items-start">
-                <span className="bg-primary/20 rounded-full text-primary text-xs w-5 h-5 flex items-center justify-center mr-3 mt-0.5">1</span>
+          <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6">
+            <div className="flex items-center mb-4">
+              <Trophy className="h-5 w-5 text-primary mr-2" />
+              <h3 className="text-lg font-display font-bold text-white">Bidcoin Auction Rules</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">1</span>
+                </div>
                 <div>
-                  <p className="text-white text-sm font-medium">Fixed Bid Increment</p>
-                  <p className="text-gray-400 text-sm">Each bid will increase the price by exactly {bidIncrement} {auction.currency}.</p>
-                </div>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-primary/20 rounded-full text-primary text-xs w-5 h-5 flex items-center justify-center mr-3 mt-0.5">2</span>
-                <div>
-                  <p className="text-white text-sm font-medium">Time Extension</p>
-                  <p className="text-gray-400 text-sm">Each bid in the last 5 minutes adds 5 minutes to the auction time.</p>
-                </div>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-primary/20 rounded-full text-primary text-xs w-5 h-5 flex items-center justify-center mr-3 mt-0.5">3</span>
-                <div>
-                  <p className="text-white text-sm font-medium">Bid Cost</p>
-                  <p className="text-gray-400 text-sm">Each bid costs 1 bid credit from your BidPack.</p>
-                </div>
-              </li>
-            </ul>
-            
-            <div className="mt-5 pt-5 border-t border-[#374151]">
-              <h4 className="text-md font-display font-bold text-white mb-3 flex items-center">
-                <span className="bg-primary/20 text-primary p-1 rounded-md mr-2">
-                  <Trophy className="h-4 w-4" />
-                </span>
-                Bidding Strategies
-              </h4>
-              <p className="text-gray-400 text-sm mb-3">
-                Enhance your chances of winning by using different bidding strategies tailored to this auction's dynamics.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="bg-[#111827] rounded-lg p-3 hover:bg-[#1a2030] cursor-pointer transition-colors" onClick={handleOpenBidModal}>
-                  <p className="text-white text-sm font-medium mb-1">Last-Second Strike</p>
-                  <p className="text-gray-400 text-xs">Save your bids for the final moments when others may have depleted their resources.</p>
-                </div>
-                <div className="bg-[#111827] rounded-lg p-3 hover:bg-[#1a2030] cursor-pointer transition-colors" onClick={handleOpenBidModal}>
-                  <p className="text-white text-sm font-medium mb-1">Early Momentum</p>
-                  <p className="text-gray-400 text-xs">Build a commanding lead early to discourage competitors from entering the auction.</p>
+                  <p className="text-white font-medium mb-1">Penny Auction Format</p>
+                  <p className="text-gray-400 text-sm">Each bid costs only $0.24 and increases the auction price by $0.03.</p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                className="w-full mt-3 text-primary hover:text-primary-dark hover:bg-primary/10"
-                onClick={handleOpenBidModal}
-              >
-                Explore All Strategies
-              </Button>
+              
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">2</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Time Extension</p>
+                  <p className="text-gray-400 text-sm">Each bid in the last minute resets the timer to 1 minute.</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">3</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Winner Takes All</p>
+                  <p className="text-gray-400 text-sm">The highest bidder when the timer reaches zero wins the NFT.</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">4</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Transparent Bidding</p>
+                  <p className="text-gray-400 text-sm">All bids are recorded on blockchain for full transparency and fairness.</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-      
-      <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6 mb-12">
-        <h2 className="text-xl font-display font-bold text-white mb-6">More from this Collection</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-[#111827] rounded-xl overflow-hidden border border-[#374151] transition-transform hover:scale-105">
-              <div className="relative">
-                <img 
-                  src={`/assets/nft_images/${i < 3 ? '300' : 'tnb'}.${i < 3 ? 'png' : 'jpg'}`} 
-                  alt="Collection item" 
-                  className="w-full aspect-square object-cover"
-                />
-                <div className="absolute bottom-2 left-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full">
-                  {(1.5 - i * 0.2).toFixed(2)} ETH
-                </div>
-              </div>
-              <div className="p-3">
-                <h3 className="text-white font-medium truncate">Cosmic Dream #{i+1}</h3>
-                <p className="text-gray-400 text-xs">{auction.nft.collection}</p>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
       
       {showBidModal && (
         <BidModal 
-          auction={auction}
-          minimumBid={Number(minimumBid)}
-          isOpen={showBidModal}
+          isOpen={showBidModal} 
           onClose={handleCloseBidModal}
-          onPlaceBid={handlePlaceBid}
+          onBid={handlePlaceBid}
+          minimumBid={minimumBid}
+          currentBid={localCurrentBid}
+          bidIncrement={bidIncrement}
+          auction={auction}
         />
       )}
       
-      {showPaymentModal && auction && (
+      {showPaymentModal && (
         <PaymentMethodModal
           isOpen={showPaymentModal}
           onClose={handleClosePaymentModal}
+          onSelectMethod={handleSelectPaymentMethod}
           auction={auction}
-          onSelectPaymentMethod={handleSelectPaymentMethod}
+          finalPrice={localCurrentBid.toFixed(2)}
         />
       )}
     </div>
