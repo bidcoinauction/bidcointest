@@ -19,6 +19,11 @@ export default function AuctionDetailsPage() {
   const auctionId = params ? parseInt(params.id) : 0;
   const [showBidModal, setShowBidModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [localCurrentBid, setLocalCurrentBid] = useState<number>(0.04);
+  const [localBidCount, setLocalBidCount] = useState<number>(3);
+  const [localEndTime, setLocalEndTime] = useState<Date>(new Date(Date.now() + 60 * 1000));
+  const [localLeader, setLocalLeader] = useState<string>("");
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { address } = useWallet();
@@ -29,6 +34,60 @@ export default function AuctionDetailsPage() {
     queryFn: () => getAuction(auctionId),
   });
   
+  // Initialize local state from auction data when it loads
+  useEffect(() => {
+    if (auction) {
+      setLocalCurrentBid(Number(auction.currentBid) || 0.04);
+      setLocalBidCount(auction.bidCount || 3);
+      setLocalLeader(auction.bids?.[0]?.bidder?.walletAddress || auction.creator.walletAddress || "");
+    }
+  }, [auction]);
+  
+  // Automatic bid simulation function
+  const simulateRandomBid = useCallback(() => {
+    // Generate a new random bidder
+    const randomBidders = [
+      "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
+      "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+      "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8",
+      "0x1A90f32fDb08E7A17D25A4D27AaAaD67D3Dc3303",
+      "0x9a8E43C44e37A52e219371c45Db11a057c6c7FFe",
+      "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+    ];
+    const randomBidder = randomBidders[Math.floor(Math.random() * randomBidders.length)];
+    
+    // Increment bid count
+    setLocalBidCount(prev => prev + 1);
+    
+    // Add $0.03 to current price
+    setLocalCurrentBid(prev => {
+      const newValue = prev + 0.03;
+      return Number(newValue.toFixed(2));
+    });
+    
+    // Update leader
+    setLocalLeader(randomBidder);
+    
+    // Reset timer (Bidcoin reset mechanism to 1 minute)
+    const resetTime = new Date();
+    resetTime.setSeconds(resetTime.getSeconds() + 60);
+    setLocalEndTime(resetTime);
+  }, []);
+  
+  // Set up automatic bid simulation
+  useEffect(() => {
+    if (!auction) return;
+    
+    // Start automatic bid simulation on a random interval
+    const simulationInterval = setInterval(() => {
+      simulateRandomBid();
+    }, Math.random() * 15000 + 10000); // Random interval between 10-25 seconds
+    
+    return () => {
+      clearInterval(simulationInterval);
+    };
+  }, [auction, simulateRandomBid]);
+  
   // Subscribe to WebSocket events for real-time updates
   useEffect(() => {
     // Subscribe to bid updates
@@ -36,6 +95,16 @@ export default function AuctionDetailsPage() {
       if (data.auctionId === auctionId) {
         console.log("Real-time bid update received for this auction:", data);
         queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auctionId}`] });
+        
+        // Update local state with new bid information
+        setLocalBidCount(data.bidCount);
+        setLocalCurrentBid(Number(data.currentBid));
+        setLocalLeader(data.bidderAddress);
+        
+        // Reset timer (Bidcoin reset mechanism)
+        const resetTime = new Date();
+        resetTime.setSeconds(resetTime.getSeconds() + 60);
+        setLocalEndTime(resetTime);
       }
     });
     
@@ -44,13 +113,13 @@ export default function AuctionDetailsPage() {
     };
   }, [auctionId, queryClient, subscribe]);
   
-  const timeRemaining = auction?.endTime ? new Date(auction.endTime).getTime() - Date.now() : 0;
+  // Use local countdown instead of server time
+  const { formattedTime, isComplete } = useCountdown({
+    endTime: localEndTime
+  });
   
   // Check if the current user is the highest bidder
-  // Bids are already sorted newest first from the server
-  const highestBid = auction?.bids && auction.bids.length > 0 ? auction.bids[0] : null;
-  const isHighestBidder = highestBid && address && 
-    highestBid.bidder.walletAddress === address;
+  const isHighestBidder = address && localLeader === address;
     
   const handleAuctionComplete = () => {
     console.log("Auction complete!");
@@ -64,17 +133,6 @@ export default function AuctionDetailsPage() {
       });
     }
   };
-  
-  const { timeRemaining: countdownTime, isComplete } = useCountdown({ 
-    endTime: auction?.endTime ? new Date(auction.endTime) : new Date(Date.now() + 3600000),
-    onComplete: handleAuctionComplete
-  });
-  
-  // Calculate time units for display
-  const days = Math.floor(countdownTime / 86400);
-  const hours = Math.floor((countdownTime % 86400) / 3600);
-  const minutes = Math.floor((countdownTime % 3600) / 60);
-  const seconds = countdownTime % 60;
   const isActive = !isComplete;
   
   const bidIncrement = 0.03; // Fixed bid increment of $0.03 (3 pennies, converted to crypto equivalent)
