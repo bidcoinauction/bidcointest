@@ -492,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import NFT from Moralis to our system
-  app.post('/api/moralis/import', async (req, res) => {
+  app.post('/api/nfts/import', async (req, res) => {
     try {
       const { tokenAddress, tokenId, creatorId = 1, chain = 'ethereum' } = req.body;
       
