@@ -29,12 +29,13 @@ export async function getFeaturedAuctions(): Promise<Auction[]> {
 }
 
 export async function placeBid(auctionId: number, amount: string, bidderAddress: string): Promise<Auction> {
-  return fetchFromAPI<Auction>(`/auctions/${auctionId}/bid`, {
+  return fetchFromAPI<Auction>(`/bids`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
+      auctionId,
       amount,
       bidderAddress,
     }),

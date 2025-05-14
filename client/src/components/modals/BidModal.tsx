@@ -161,8 +161,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
           strategyTip = "Well done! Keep track of your budget as the auction progresses.";
       }
       
-      // Call API to place bid
-      await placeBid(auction.id, bidAmount, address);
+      // Call API to place bid - use only the API version
       await apiPlaceBid(auction.id, bidAmount, address);
       
       // Invalidate queries to refresh auction data
