@@ -2,6 +2,8 @@ import axios from 'axios';
 import { log } from './vite';
 
 const BASE_URL = 'https://api.unleashnfts.com';
+// Access the API key directly from the environment variable
+// In server-side code, we need to access process.env directly, not import.meta.env
 const API_KEY = process.env.VITE_BITCRUNCH_API_KEY;
 
 // Type definitions based on the UnleashNFTs API
@@ -52,6 +54,9 @@ export class UnleashNftsService {
   private headers: Record<string, string>;
 
   constructor() {
+    // Provide more information for debugging
+    log(`Initializing UnleashNftsService with API key: ${API_KEY ? 'Present' : 'Not found'}`, 'unleash-nfts');
+
     this.headers = {
       'accept': 'application/json',
       'x-api-key': API_KEY || ''
@@ -59,6 +64,8 @@ export class UnleashNftsService {
 
     if (!API_KEY) {
       log('WARNING: VITE_BITCRUNCH_API_KEY is not set. UnleashNfts API will not work.', 'unleash-nfts');
+    } else {
+      log('UnleashNfts API key configured successfully', 'unleash-nfts');
     }
   }
 
