@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getTokenURI } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
+import { sanitizeNFTImageUrl } from '@/lib/utils';
 
 /**
  * Custom hook to fetch and manage tokenURI data for NFTs
@@ -14,17 +15,31 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
   // Skip query if we don't have both contractAddress and tokenId
   const shouldFetch = Boolean(contractAddress && tokenId);
 
+  // Use local state to track error count for enhanced retry behavior
+  const [errorCount, setErrorCount] = useState(0);
+
   const {
     data: tokenData,
     isLoading,
     isError,
-    error
+    error,
+    isSuccess
   } = useQuery({
     queryKey: ['tokenURI', contractAddress, tokenId, chain],
-    queryFn: () => getTokenURI(contractAddress as string, tokenId as string, chain),
+    queryFn: async () => {
+      try {
+        const data = await getTokenURI(contractAddress as string, tokenId as string, chain);
+        setErrorCount(0); // Reset error count on success
+        return data;
+      } catch (err) {
+        setErrorCount(prev => prev + 1);
+        throw err;
+      }
+    },
     enabled: shouldFetch,
     staleTime: 1000 * 60 * 60, // Cache for 1 hour since NFT metadata rarely changes
-    retry: 1 // Only retry once as most 404s will remain 404s
+    retry: 2, // Retry twice for network issues
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000) // Exponential backoff with 30s max
   });
 
   // Extract the most likely image URL from the token data
@@ -39,14 +54,25 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
           try {
             metadata = JSON.parse(tokenData.metadata);
           } catch (e) {
-            console.error('Failed to parse token metadata', e);
+            console.warn('Failed to parse token metadata, treating as object', e);
+            metadata = tokenData.metadata; // Some APIs return escaped JSON, try as is
           }
         } else {
           metadata = tokenData.metadata;
         }
       }
 
-      // Check multiple sources for the image URL
+      // UnleashNFTs data structure
+      if (tokenData.nft_data) {
+        if (tokenData.nft_data.content && tokenData.nft_data.content.image) {
+          return tokenData.nft_data.content.image.url;
+        }
+        if (tokenData.nft_data.token_uri) {
+          return tokenData.nft_data.token_uri;
+        }
+      }
+
+      // Moralis structure: check multiple sources for the image URL
       if (metadata?.image) {
         return metadata.image;
       } else if (metadata?.image_url) {
@@ -59,7 +85,18 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
         return tokenData.normalized_metadata.image;
       } else if (tokenData.image) {
         return tokenData.image;
+      } else if (tokenData.media && tokenData.media[0]?.gateway) {
+        return tokenData.media[0].gateway;
       }
+      
+      // Look in animation_url as some NFTs only provide this
+      if (metadata?.animation_url) {
+        return metadata.animation_url;
+      } else if (tokenData.animation_url) {
+        return tokenData.animation_url;
+      }
+      
+      console.warn('Could not find image URL in tokenURI data', tokenData);
     } catch (e) {
       console.error('Error extracting image from token data', e);
     }
@@ -67,15 +104,21 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
     return null;
   };
 
-  // The image URL extracted from token data
-  const imageUrl = getImageFromTokenData();
+  // Get and sanitize the image URL
+  const rawImageUrl = getImageFromTokenData();
+  const imageUrl = rawImageUrl ? sanitizeNFTImageUrl(rawImageUrl) : null;
+
+  // Determine if we should use fallbacks
+  const useFallback = isError || (isSuccess && !imageUrl) || errorCount > 2;
 
   return {
     tokenData,
+    metadata: tokenData?.metadata || null,
     imageUrl,
     isLoading,
     isError,
-    error
+    error,
+    useFallback
   };
 }
 

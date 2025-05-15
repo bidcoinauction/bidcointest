@@ -26,7 +26,11 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
   
   // Get tokenURI data - only if we have contract address and token ID
-  const { imageUrl: tokenImageUrl, isLoading: tokenURILoading } = useTokenURI(
+  const { 
+    imageUrl: tokenImageUrl, 
+    isLoading: tokenURILoading,
+    useFallback: tokenURIUnavailable 
+  } = useTokenURI(
     auction.nft.contractAddress,
     auction.nft.tokenId
   );
@@ -158,7 +162,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </Badge>
         
         <img 
-          src={tokenImageUrl || getOptimalNFTImageSource(auction.nft)}
+          src={tokenURIUnavailable ? getOptimalNFTImageSource(auction.nft) : (tokenImageUrl || getOptimalNFTImageSource(auction.nft))}
           alt={auction.nft.name}
           className="w-full h-44 object-cover cursor-pointer"
           onError={(e) => {
@@ -166,42 +170,46 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             const target = e.target as HTMLImageElement;
             const auctionId = auction.id;
             
-            // First try to use tokenURI if available but failed to load
-            if (tokenImageUrl && target.src === tokenImageUrl) {
-              console.log(`TokenURI image failed to load, trying optimized sources for auction #${auctionId}`);
-              // Move to the next fallback
-              target.src = getOptimalNFTImageSource(auction.nft);
-              return;
-            }
-
-            // Map NFT collections based on screenshots as fallback
-            const collectionMapping: Record<number, {collection: string, id: string}> = {
-              1: {collection: 'azuki', id: '9605'},
-              2: {collection: 'degods', id: '8748'},
-              3: {collection: 'claynosaurz', id: '7221'},
-              4: {collection: 'milady', id: '8697'},
-              5: {collection: 'degentoonz', id: '4269'},
-              6: {collection: 'milady', id: '7218'},
-              7: {collection: 'madlads', id: '8993'}
-            };
-            
-            const mapping = collectionMapping[auctionId];
-            
-            // Second fallback: Use collection-specific sources
-            if (mapping) {
-              console.log(`Using collection-specific source for ${mapping.collection} #${mapping.id}`);
+            // First try collection-specific assets if we know tokenURI failed 
+            // or if tokenURI image failed to load specifically
+            if (tokenURIUnavailable || (tokenImageUrl && target.src === tokenImageUrl)) {
+              console.log(`TokenURI unavailable for auction #${auctionId}, using premium sources`);
               
-              if (mapping.collection === 'degentoonz') {
-                target.src = `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
-              } else if (mapping.collection === 'madlads') {
-                target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
-              } else if (mapping.collection === 'degods') {
-                target.src = `https://animation-url.degods.com/?tokenId=${mapping.id}`;
-              } else if (target.src !== `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`) {
-                // For all other collections, try our attached assets
-                target.src = `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`;
+              // Map NFT collections based on auction ID to premium sources
+              const collectionMapping: Record<number, {collection: string, id: string}> = {
+                1: {collection: 'azuki', id: '9605'},
+                2: {collection: 'degods', id: '8748'},
+                3: {collection: 'claynosaurz', id: '7221'},
+                4: {collection: 'milady', id: '8697'},
+                5: {collection: 'degentoonz', id: '4269'},
+                6: {collection: 'milady', id: '7218'},
+                7: {collection: 'madlads', id: '8993'}
+              };
+              
+              const mapping = collectionMapping[auctionId];
+              
+              // Premium sources for high-value collections
+              if (mapping) {
+                console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
+                
+                if (mapping.collection === 'degentoonz') {
+                  target.src = `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
+                } else if (mapping.collection === 'madlads') {
+                  target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
+                } else if (mapping.collection === 'degods') {
+                  target.src = `https://animation-url.degods.com/?tokenId=${mapping.id}`;
+                } else if (mapping.collection === 'azuki') {
+                  target.src = `/attached_assets/8993.avif`;
+                } else if (mapping.collection === 'milady') {
+                  target.src = `/attached_assets/7218.avif`;
+                } else if (mapping.collection === 'claynosaurz') {
+                  target.src = `/attached_assets/7218.avif`;
+                } else if (target.src !== `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`) {
+                  // For all other collections, try attached asset
+                  target.src = `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`;
+                }
+                return;
               }
-              return;
             }
             
             // Final fallback: use placeholder

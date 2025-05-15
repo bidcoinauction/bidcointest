@@ -79,7 +79,21 @@ export async function getNFT(id: number): Promise<NFT> {
 }
 
 export async function getTokenURI(tokenAddress: string, tokenId: string, chain: string = 'ethereum'): Promise<any> {
-  return fetchFromAPI<any>(`/moralis/nft/${tokenAddress}/${tokenId}?chain=${chain}`);
+  try {
+    // Try to get from Moralis first
+    return await fetchFromAPI<any>(`/moralis/nft/${tokenAddress}/${tokenId}?chain=${chain}`);
+  } catch (error) {
+    console.warn(`Failed to fetch tokenURI for ${tokenAddress}/${tokenId} from Moralis:`, error);
+    
+    // If Moralis fails, try to get from UnleashNFTs as fallback
+    try {
+      return await fetchFromAPI<any>(`/unleash/nft/metadata?contract_address=${tokenAddress}&token_id=${tokenId}&chain_id=1`);
+    } catch (unleashError) {
+      console.warn(`Also failed to fetch from UnleashNFTs:`, unleashError);
+      // Re-throw the original error if both sources fail
+      throw error;
+    }
+  }
 }
 
 export async function getPopularCollections(): Promise<any[]> {
