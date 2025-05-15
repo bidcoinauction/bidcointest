@@ -142,19 +142,16 @@ export default function FeaturedAuction() {
         <div className="md:flex">
           <div className="md:w-1/2 relative overflow-hidden">
             <img 
-              src="https://animation-url.degods.com/?tokenId=8747"
+              src="/attached_assets/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png"
               alt={featuredAuction.nft.name} 
               className="w-full h-64 md:h-full object-cover"
               onError={(e) => {
                 // Use specific premium collection image for featured auction
                 const target = e.target as HTMLImageElement;
                 
-                if (target.src !== `/attached_assets/Screenshot 2025-05-15 at 13.28.23.png`) {
-                  console.log(`Featured auction: Loading DeGod NFT image`);
-                  target.src = `/attached_assets/Screenshot 2025-05-15 at 13.28.23.png`;
-                } else if (target.src !== `/placeholder-nft.png`) {
-                  console.log(`Featured auction: Falling back to placeholder`);
-                  target.src = `/placeholder-nft.png`;
+                if (!target.src.includes(`Screenshot 2025-05-15 at 17.04.25.png`)) {
+                  console.log(`Featured auction: Loading DEGEN TOONZ NFT image`);
+                  target.src = `/attached_assets/Screenshot 2025-05-15 at 17.04.25.png`;
                 }
               }}
             />
@@ -165,12 +162,12 @@ export default function FeaturedAuction() {
           <div className="p-6 md:p-8 md:w-1/2 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start">
-                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">{featuredAuction.nft.name}</h2>
+                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">DEGEN TOONZ #4269</h2>
                 <span className="bg-[#111827] px-3 py-1 rounded-lg text-xs font-mono text-primary">
-                  {featuredAuction.nft.blockchain}
+                  ETH
                 </span>
               </div>
-              <p className="text-gray-300 mb-4">{featuredAuction.nft.description}</p>
+              <p className="text-gray-300 mb-4">DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.</p>
               
               <div className="grid grid-cols-2 gap-4 mb-2">
                 <div className="bg-background/50 p-3 rounded-lg">
