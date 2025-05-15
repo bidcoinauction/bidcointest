@@ -58,10 +58,10 @@ export class UnleashNftsService {
   private headersV2: Record<string, string>;
 
   constructor() {
-    // V1 uses Authorization: Bearer <API_KEY>
+    // All endpoints use x-api-key, despite documentation suggesting otherwise
     this.headersV1 = {
       'accept': 'application/json',
-      'Authorization': `Bearer ${API_KEY}`
+      'x-api-key': API_KEY
     };
     
     // V2 uses x-api-key: <API_KEY>
