@@ -437,6 +437,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: 'Failed to fetch supported blockchains' });
     }
   });
+  
+  // Get collections by blockchain with native currency
+  app.get('/api/unleash/collections-by-chain', async (req, res) => {
+    try {
+      const { 
+        blockchain, 
+        currency = 'native', // Use 'native' for blockchain native currency or 'usd' for USD
+        limit = '12',
+        offset = '0',
+        time_range = '24h',
+        sort_by = 'volume',
+        metrics = 'floor_price,volume,holders,sales'
+      } = req.query;
+      
+      // Convert metrics string to array if needed
+      const metricsArray = typeof metrics === 'string' ? metrics.split(',') : (metrics as string[] || ['floor_price', 'volume', 'holders', 'sales']);
+      
+      // Get collections with the appropriate currency
+      const result = await unleashNftsService.getCollectionsByBlockchain({
+        blockchain: blockchain as string,
+        currency: currency as string,
+        metrics: metricsArray,
+        sort_by: sort_by as string,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string),
+        time_range: time_range as string
+      });
+      
+      return res.json(result);
+    } catch (error) {
+      console.error('Error fetching collections by blockchain:', error);
+      return res.status(500).json({ message: 'Failed to fetch collections' });
+    }
+  });
 
   app.get('/api/unleash/collections', async (req, res) => {
     try {
