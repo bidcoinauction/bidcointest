@@ -626,7 +626,18 @@ export default function AuctionDetailsPage() {
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Floor Price</p>
                     <p className="text-white font-medium">
-                      {auction.nft.floorPrice 
+                      {detailedMetadata?.floor_price 
+                        ? (
+                          <span className="flex flex-col items-center">
+                            <span className="font-bold text-primary">
+                              {detailedMetadata.floor_price} ETH
+                            </span>
+                            <span className="text-gray-400 text-xs">
+                              (${detailedMetadata.floor_price_usd ? formatPriceUSD(detailedMetadata.floor_price_usd) : '0.00'})
+                            </span>
+                          </span>
+                        )
+                        : auction.nft.floorPrice 
                         ? `$${formatPriceUSD(auction.nft.floorPrice)}`
                         : "N/A"}
                     </p>
