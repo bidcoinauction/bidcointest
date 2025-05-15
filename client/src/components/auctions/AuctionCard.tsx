@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import useTokenURI from "@/hooks/useTokenURI";
 import { getNFTDetailedMetadata, type NFTDetailedMetadata } from "@/lib/unleashApi";
+import { alchemyApi } from "@/lib/alchemyApi";
 import { useCurrencyPreference } from "@/contexts/CurrencyContext";
 
 interface AuctionCardProps {
@@ -65,17 +66,57 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           blockchain: blockchain || 'ethereum'
         });
         
-        const metadata = await getNFTDetailedMetadata(
-          contractAddress, 
-          tokenId, 
-          blockchain || 'ethereum'
-        );
+        try {
+          // First try UnleashNFTs API
+          const metadata = await getNFTDetailedMetadata(
+            contractAddress, 
+            tokenId, 
+            blockchain || 'ethereum'
+          );
+          
+          if (metadata) {
+            console.log('✅ Detailed metadata loaded from UnleashNFTs:', metadata);
+            setDetailedMetadata(metadata);
+            return; // Exit early if successful
+          } else {
+            console.log('❌ No detailed metadata available from UnleashNFTs API');
+          }
+        } catch (unleashError) {
+          console.error('Error with UnleashNFTs API:', unleashError);
+        }
         
-        if (metadata) {
-          console.log('✅ Detailed metadata loaded:', metadata);
-          setDetailedMetadata(metadata);
-        } else {
-          console.log('❌ No detailed metadata available from UnleashNFTs API');
+        // Try Alchemy API as fallback
+        try {
+          console.log('⚠️ Trying Alchemy API as fallback...');
+          const alchemyData = await alchemyApi.getNFTMetadata(contractAddress, tokenId);
+          
+          if (alchemyData) {
+            console.log('✅ Successfully retrieved data from Alchemy API:', alchemyData);
+            
+            // Format Alchemy data to match expected format for UI rendering
+            const formattedData: NFTDetailedMetadata = {
+              collection_name: alchemyData.collection?.name || auction.nft.collectionName || '',
+              contract_address: contractAddress,
+              token_id: tokenId,
+              name: alchemyData.title || auction.nft.name || `NFT #${tokenId}`,
+              description: alchemyData.description || auction.nft.description || '',
+              image_url: alchemyData.image?.url || auction.nft.imageUrl || '',
+              floor_price: alchemyData.collection?.floorPrice?.toString() || '',
+              floor_price_usd: '',
+              traits: (alchemyData.attributes || []).map((attr: any) => ({
+                trait_type: attr.trait_type,
+                value: attr.value,
+                rarity: attr.rarity
+              }))
+            };
+            
+            setDetailedMetadata(formattedData);
+            return;
+          } else {
+            console.log('❌ No data available from Alchemy API either');
+          }
+        } catch (alchemyError) {
+          console.error('❌ Alchemy API fallback also failed:', alchemyError);
         }
       } catch (error) {
         console.error('Error fetching detailed metadata:', error);
