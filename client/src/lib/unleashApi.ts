@@ -170,6 +170,12 @@ export interface NFTDetailedMetadata {
  * @param tokenId The NFT token ID
  * @param chain The blockchain name (defaults to ethereum)
  */
+// Import the Alchemy API client
+import { alchemyApi } from './alchemyApi';
+
+// Flag to determine if we should try to use Alchemy as fallback
+const useAlchemyAsFallback = true;
+
 export const getNFTDetailedMetadata = async (
   contractAddress: string,
   tokenId: string,
