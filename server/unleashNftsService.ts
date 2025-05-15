@@ -18,6 +18,9 @@ export interface NFTCollection {
   chain: string;
   description?: string;
   floor_price?: number;
+  floor_price_usd?: number;
+  floor_price_native?: number;
+  currency_symbol?: string;
   volume_24h?: number;
   market_cap?: number;
   holders_count?: number;
@@ -834,12 +837,48 @@ export class UnleashNftsService {
       
       log(`Successfully fetched collections for blockchain: ${blockchainId || 'all blockchains'}`, 'unleash-nfts');
       
-      // Clean image URLs in collections
+      // Map blockchain IDs to their currency symbols
+      const currencySymbols: Record<string, string> = {
+        '1': 'ETH',    // Ethereum
+        '137': 'MATIC', // Polygon
+        '42161': 'ETH', // Arbitrum
+        '10': 'ETH',    // Optimism
+        '56': 'BNB',    // Binance Smart Chain
+        '43114': 'AVAX', // Avalanche
+        '8453': 'ETH',   // Base
+        // Add more chains as needed
+      };
+      
+      // Get the currency symbol for this blockchain
+      const currencySymbol = blockchainId ? (currencySymbols[blockchainId] || 'ETH') : 'ETH';
+      
+      // Clean image URLs and add currency information
       if (response.data?.collections) {
         response.data.collections = response.data.collections.map((collection: any) => {
+          // Clean image URL
           if (collection.image_url) {
             collection.image_url = this.cleanImageUrl(collection.image_url);
           }
+          
+          // Add currency symbol
+          collection.currency_symbol = currencySymbol;
+          
+          // Store floor price in both native and USD formats
+          if (collection.floor_price !== undefined) {
+            // Make sure floor_price is treated as a number
+            const floorPrice = typeof collection.floor_price === 'string' 
+              ? parseFloat(collection.floor_price) 
+              : collection.floor_price;
+            
+            collection.floor_price_native = floorPrice;
+            
+            // If we have price info for the currency, calculate USD value
+            if (response.data.price_info && response.data.price_info[currencySymbol.toLowerCase()]) {
+              const exchangeRate = response.data.price_info[currencySymbol.toLowerCase()].usd;
+              collection.floor_price_usd = floorPrice * exchangeRate;
+            }
+          }
+          
           return collection;
         });
       }
