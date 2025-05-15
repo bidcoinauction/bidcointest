@@ -1104,6 +1104,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: 'Failed to fetch NFTs from collection' });
     }
   });
+  
+  // Alchemy NFT API endpoints
+  app.get('/api/alchemy/nft/:contract/:tokenId', async (req, res) => {
+    try {
+      const { contract, tokenId } = req.params;
+      const nftData = await alchemyNftService.getNFTMetadata(contract, tokenId);
+      
+      if (!nftData) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      const formattedData = alchemyNftService.formatNFTMetadata(nftData);
+      return res.json(formattedData);
+    } catch (error) {
+      console.error('Error fetching NFT metadata from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFT metadata' });
+    }
+  });
+  
+  app.get('/api/alchemy/collections/trending', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 10;
+      const collections = await alchemyNftService.getTrendingCollections(limit);
+      return res.json(collections);
+    } catch (error) {
+      console.error('Error fetching trending collections from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch trending collections' });
+    }
+  });
+  
+  app.get('/api/alchemy/contract/:address', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const contractData = await alchemyNftService.getContractMetadata(address);
+      
+      if (!contractData) {
+        return res.status(404).json({ message: 'Contract not found' });
+      }
+      
+      return res.json(contractData);
+    } catch (error) {
+      console.error('Error fetching contract metadata from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch contract metadata' });
+    }
+  });
+  
+  app.get('/api/alchemy/contract/:address/nfts', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const pageKey = req.query.pageKey as string;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 50;
+      
+      const nftsData = await alchemyNftService.getNFTsForContract(address, pageKey, pageSize);
+      
+      if (!nftsData) {
+        return res.status(404).json({ message: 'NFTs not found' });
+      }
+      
+      return res.json(nftsData);
+    } catch (error) {
+      console.error('Error fetching NFTs for contract from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFTs for contract' });
+    }
+  });
+  
+  app.get('/api/alchemy/owner/:address/nfts', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const pageKey = req.query.pageKey as string;
+      const pageSize = req.query.pageSize ? parseInt(req.query.pageSize as string) : 50;
+      
+      const nftsData = await alchemyNftService.getNFTsForOwner(address, pageKey, pageSize);
+      
+      if (!nftsData) {
+        return res.status(404).json({ message: 'NFTs not found' });
+      }
+      
+      return res.json(nftsData);
+    } catch (error) {
+      console.error('Error fetching NFTs for owner from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFTs for owner' });
+    }
+  });
+  
+  app.get('/api/alchemy/contract/:address/floor-price', async (req, res) => {
+    try {
+      const { address } = req.params;
+      const marketplace = req.query.marketplace as string || 'all';
+      
+      const floorPrice = await alchemyNftService.getCollectionFloorPrice(address, marketplace);
+      
+      if (!floorPrice) {
+        return res.status(404).json({ message: 'Floor price not found' });
+      }
+      
+      return res.json(floorPrice);
+    } catch (error) {
+      console.error('Error fetching floor price from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch floor price' });
+    }
+  });
 
   app.get('/api/moralis/nft/:tokenAddress/:tokenId', async (req, res) => {
     try {

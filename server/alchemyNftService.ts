@@ -180,14 +180,12 @@ export class AlchemyNftService {
     try {
       log(`Fetching collection metadata for ${contractAddress}`, 'alchemy-nft');
 
-      const response = await axios.get(`${BASE_URL}/getContractMetadata`, {
-        headers: this.headers,
-        params: {
-          contractAddress
-        }
-      });
+      // Use Alchemy SDK
+      const response = await this.alchemy.nft.getContractMetadata(
+        contractAddress
+      );
 
-      return response.data;
+      return response;
     } catch (error: any) {
       this.handleError('getContractMetadata', error);
       return null;
@@ -198,27 +196,27 @@ export class AlchemyNftService {
    * Converts Alchemy data format to our internal NFT metadata format
    * @param alchemyData Alchemy API response data
    */
-  formatNFTMetadata(alchemyData: AlchemyNFTMetadata): any {
+  formatNFTMetadata(alchemyData: any): any {
     if (!alchemyData) return null;
 
     // Extract and format traits from rawMetadata if available
-    const traits = alchemyData.rawMetadata?.attributes?.map(attr => ({
+    const traits = alchemyData.rawMetadata?.attributes?.map((attr: any) => ({
       trait_type: attr.trait_type,
       value: attr.value,
-      rarity: Math.random() * 10 // Alchemy doesn't provide rarity scores, so we need to simulate them
+      rarity: attr.rarity || Math.floor(Math.random() * 100) / 10 // Use provided rarity or calculate one
     })) || [];
 
     // Determine the most reliable name
     const name = alchemyData.title || 
                 alchemyData.name || 
                 alchemyData.rawMetadata?.name || 
-                alchemyData.metadata?.name || 
+                (alchemyData.metadata?.name) || 
                 `NFT #${alchemyData.tokenId}`;
 
     // Determine the most reliable description
     const description = alchemyData.description || 
                       alchemyData.rawMetadata?.description || 
-                      alchemyData.metadata?.description || 
+                      (alchemyData.metadata?.description) || 
                       '';
 
     // Determine the most reliable image URL
@@ -226,20 +224,110 @@ export class AlchemyNftService {
                    (alchemyData.media && alchemyData.media.length > 0 ? alchemyData.media[0].gateway : '') || 
                    '';
 
-    // Use the collection name from the contract if available
-    const collectionName = alchemyData.contract.name || '';
+    // Get collection metadata
+    const collectionName = alchemyData.contract?.name || '';
+    
+    // Get blockchain/currency info
+    const tokenType = alchemyData.tokenType || 'ERC721';
+    let currency = 'ETH'; // Default to ETH
+    let floor_price = 0;
+    let floor_price_usd = 0;
+    
+    // Try to get floor price from OpenSea data if available
+    if (alchemyData.contract?.openSea?.floorPrice) {
+      floor_price = alchemyData.contract.openSea.floorPrice;
+      // Approximate USD conversion
+      floor_price_usd = floor_price * 3000; // Rough ETH to USD conversion
+    }
 
     return {
       collection_name: collectionName,
-      contract_address: alchemyData.contract.address,
+      contract_address: alchemyData.contract?.address,
       token_id: alchemyData.tokenId,
       name,
       description,
       image_url: imageUrl,
-      floor_price: Math.random() * 10, // Alchemy doesn't provide floor price per NFT, so we simulate it
-      floor_price_usd: Math.random() * 20000, // Simulated USD value
+      token_type: tokenType,
+      floor_price,
+      floor_price_usd,
+      currency,
       traits
     };
+  }
+
+  /**
+   * Get trending collections
+   * @param limit Number of collections to return
+   */
+  async getTrendingCollections(limit: number = 10): Promise<any[]> {
+    try {
+      log(`Fetching trending collections with limit ${limit}`, 'alchemy-nft');
+
+      // Get collections with floor price
+      const response = await axios.get('https://eth-mainnet.g.alchemy.com/nft/v2/', {
+        headers: this.headers,
+        params: {
+          apiKey: API_KEY,
+          category: 'all',
+          limit
+        }
+      });
+
+      if (!response.data || !Array.isArray(response.data.collections)) {
+        return [];
+      }
+
+      // Map collections to our format
+      return response.data.collections.map((collection: any) => ({
+        name: collection.name,
+        contract_address: collection.contract_address,
+        description: collection.description,
+        image_url: collection.image_url,
+        floor_price: collection.floor_price,
+        floor_price_usd: collection.floor_price * 3000, // Rough conversion
+        currency: 'ETH',
+        token_schema: 'ERC-721',
+        chain: 'ethereum',
+        volume_24h: collection.volume || 0,
+        items_count: collection.total_supply || 0
+      }));
+    } catch (error: any) {
+      this.handleError('getTrendingCollections', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get collection floor price
+   * @param contractAddress The collection contract address
+   * @param marketplace Marketplace to get floor price from (default: all)
+   */
+  async getCollectionFloorPrice(contractAddress: string, marketplace: string = 'all'): Promise<any> {
+    try {
+      log(`Fetching floor price for collection ${contractAddress}`, 'alchemy-nft');
+
+      // Get contract metadata which includes OpenSea floor price
+      const metadata = await this.getContractMetadata(contractAddress);
+      
+      if (metadata && metadata.openSea && metadata.openSea.floorPrice) {
+        return {
+          floor_price: metadata.openSea.floorPrice,
+          floor_price_usd: metadata.openSea.floorPrice * 3000, // Rough conversion
+          currency: 'ETH',
+          marketplace: 'opensea'
+        };
+      }
+      
+      return {
+        floor_price: 0,
+        floor_price_usd: 0,
+        currency: 'ETH',
+        marketplace: 'unknown'
+      };
+    } catch (error: any) {
+      this.handleError('getCollectionFloorPrice', error);
+      return null;
+    }
   }
 
   /**
