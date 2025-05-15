@@ -37,7 +37,11 @@ export function formatCurrency(amount: number | string | null, currency: string 
 }
 
 // Format date to relative time (e.g., "2 mins ago")
-export function formatRelativeTime(date: Date | string | number): string {
+export function formatRelativeTime(date: Date | string | number | null): string {
+  if (date === null) {
+    return "recently";
+  }
+  
   const now = new Date();
   const then = new Date(date);
   const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
@@ -115,24 +119,31 @@ export function getCurrencySymbol(chainId: number | null): string {
   }
 }
 
-// Format price to USD for penny auctions
-export function formatPriceUSD(price: number | string): string {
-  // For penny auctions, we're converting crypto price to USD
-  // Each crypto unit is worth a different amount in USD
+// Format price to USD for penny auctions - accepts any type safely
+export function formatPriceUSD(price: unknown): string {
+  // Handle different input types safely
+  let numPrice = 0;
   
-  // Convert the input price to a number
-  const numPrice = typeof price === "string" ? parseFloat(price) : price;
-  
-  // For our penny auction, we want to show small amounts with exact cents
-  // Each bid increases the price by exactly $0.03
-  // Format as a proper USD value with 2 decimal places
-  
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(numPrice);
+  try {
+    if (price === null || price === undefined) {
+      numPrice = 0;
+    } else if (typeof price === "number") {
+      numPrice = isNaN(price) ? 0 : price; 
+    } else if (typeof price === "string") {
+      numPrice = parseFloat(price) || 0;
+    } else if (typeof price === "object") {
+      // In case it's a wrapped number object
+      numPrice = Number(price) || 0;
+    } else {
+      numPrice = 0;
+    }
+    
+    // Format as a proper USD value with 2 decimal places
+    return numPrice.toFixed(2);
+  } catch (e) {
+    console.error("Error formatting price:", e);
+    return "0.00";
+  }
 }
 
 // Format number with appropriate suffixes for readability
