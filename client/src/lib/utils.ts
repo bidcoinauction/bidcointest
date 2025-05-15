@@ -204,8 +204,14 @@ export function getRarityLabel(rarity: number | null | undefined): string {
 export function formatRarity(rarity: number | null | undefined): string {
   if (rarity === null || rarity === undefined) return 'Unknown';
   
+  // Ensure the rarity is a number
+  const rarityNum = typeof rarity === 'string' ? parseFloat(rarity) : rarity;
+  
+  // Handle NaN
+  if (isNaN(rarityNum)) return 'Unknown';
+  
   // Convert percentage to a 0-100 scale if it's provided as decimal
-  const percentage = rarity <= 1 ? rarity * 100 : rarity;
+  const percentage = rarityNum <= 1 ? rarityNum * 100 : rarityNum;
   
   return `${percentage.toFixed(2)}%`;
 }

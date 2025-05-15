@@ -311,7 +311,7 @@ export const getCollectionsByChain = async (
 ): Promise<NFTCollection[]> => {
   try {
     // Updated endpoint with required parameters
-    const endpoint = `collections?chain=${chain}&page=${page}&limit=${limit}&metrics=true&sort_by=volume_24h`;
+    const endpoint = `collections?chain=${chain}&page=${page}&limit=${limit}&metrics=volume&sort_by=volume`;
     const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
     
     const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);

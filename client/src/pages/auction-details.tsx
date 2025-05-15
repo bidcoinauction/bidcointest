@@ -535,7 +535,7 @@ export default function AuctionDetailsPage() {
             <div className="mb-8">
               <p className="text-gray-400 mb-2">Current Bid</p>
               <div className="flex items-baseline">
-                <span className="text-3xl font-display font-bold text-white mr-2">${localCurrentBid.toFixed(2)}</span>
+                <span className="text-3xl font-display font-bold text-white mr-2">${typeof localCurrentBid === 'number' ? localCurrentBid.toFixed(2) : '0.00'}</span>
                 <span className="text-gray-400">USD</span>
               </div>
             </div>
@@ -746,7 +746,7 @@ export default function AuctionDetailsPage() {
           onClose={handleClosePaymentModal}
           onSelectMethod={handleSelectPaymentMethod}
           auction={auction}
-          finalPrice={localCurrentBid.toFixed(2)}
+          finalPrice={typeof localCurrentBid === 'number' ? localCurrentBid.toFixed(2) : '0.00'}
         />
       )}
     </div>
