@@ -458,8 +458,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             bidCount: localBidCount
           }}
           minimumBid={localCurrentBid + 0.03}
-          onPlaceBid={(amount) => {
-            console.log(`Placed bid: ${amount}`);
+          onPlaceBid={(amount: string) => {
             setShowBidModal(false);
           }}
         />

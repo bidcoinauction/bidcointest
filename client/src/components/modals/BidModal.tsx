@@ -199,7 +199,10 @@ export default function BidModal({ isOpen, onClose, auction, minimumBid, onPlace
         ),
       });
       
-      // We used to notify parent component, now handling it locally
+      // Notify parent component if callback provided
+      if (onPlaceBid) {
+        onPlaceBid(bidAmount);
+      }
       
       // Close modal
       onClose();
