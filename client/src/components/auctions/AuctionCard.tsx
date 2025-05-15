@@ -191,15 +191,21 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   // Listen for bid events via WebSocket
   useEffect(() => {
     const handleBidUpdate = (data: any) => {
-      if (data.auctionId === auction.id) {
+      console.log("Received bid update:", data);
+      
+      // Check if this update is for our auction
+      if (data.auction && data.auction.id === auction.id) {
         // Update local state with new bid information
-        const bidCount = data.bidCount || 0;
+        const bidCount = data.auction.bidCount || 0;
         setLocalBidCount(bidCount);
         
         // Calculate price based on bid count (always $0.03 per bid)
         setLocalCurrentBid(parseFloat((bidCount * 0.03).toFixed(2)));
         
-        setLocalLeader(data.bidderAddress);
+        // Set leader to the bidder address if available
+        if (data.bid && data.bid.bidderAddress) {
+          setLocalLeader(data.bid.bidderAddress);
+        }
         
         // Reset timer (Bidcoin reset mechanism)
         const resetTime = new Date();
@@ -211,11 +217,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         }
         
         setLocalEndTime(resetTime);
+        console.log(`Updated auction #${auction.id} with new bid data`);
       }
     };
     
     // Subscribe to auction bid updates
-    const unsubscribe = subscribe("bid", handleBidUpdate);
+    const unsubscribe = subscribe("new-bid", handleBidUpdate);
     
     return () => {
       // Cleanup subscription

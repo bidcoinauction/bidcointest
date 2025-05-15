@@ -233,14 +233,20 @@ export default function AuctionDetailsPage() {
   useEffect(() => {
     // Subscribe to bid updates
     const unsubscribeBids = subscribe("new-bid", (data) => {
-      if (data.auctionId === auctionId) {
+      console.log("Received bid update on auction-details:", data);
+      
+      if (data.auction && data.auction.id === auctionId) {
         console.log("Real-time bid update received for this auction:", data);
         queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auctionId}`] });
         
-        // Update local state with new bid information
-        setLocalBidCount(data.bidCount);
-        setLocalCurrentBid(Number(data.currentBid));
-        setLocalLeader(data.bidderAddress);
+        // Update local state with new bid information from the auction object
+        setLocalBidCount(data.auction.bidCount);
+        setLocalCurrentBid(Number(data.auction.currentBid));
+        
+        // Set leader from bid data if available
+        if (data.bid && data.bid.bidderAddress) {
+          setLocalLeader(data.bid.bidderAddress);
+        }
         
         // Reset timer (Bidcoin reset mechanism)
         const resetTime = new Date();
