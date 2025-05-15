@@ -1,9 +1,16 @@
 import axios from 'axios';
+import { Network, Alchemy } from "alchemy-sdk";
 import { log } from './vite';
 
 // Alchemy API configuration
 const API_KEY = process.env.ALCHEMY_API_KEY || 'p-kWjyqsAvVDoVAFV7Kqhie5XlEFGA4v';
 const BASE_URL = `https://eth-mainnet.g.alchemy.com/nft/v3/${API_KEY}`;
+
+// Configure Alchemy SDK
+const settings = {
+  apiKey: API_KEY,
+  network: Network.ETH_MAINNET,
+};
 
 // Define types based on Alchemy's API response format
 export interface AlchemyNFTMetadata {
@@ -65,11 +72,15 @@ export interface AlchemyNFTCollection {
 
 export class AlchemyNftService {
   private headers: Record<string, string>;
+  private alchemy: Alchemy;
 
   constructor() {
     this.headers = {
       'accept': 'application/json'
     };
+    
+    // Initialize Alchemy SDK
+    this.alchemy = new Alchemy(settings);
     
     log(`Alchemy NFT Service initialized with API key: ${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}`, 'alchemy-nft');
   }
@@ -83,16 +94,14 @@ export class AlchemyNftService {
     try {
       log(`Fetching NFT metadata for ${contractAddress}:${tokenId}`, 'alchemy-nft');
 
-      const response = await axios.get(`${BASE_URL}/getNFTMetadata`, {
-        headers: this.headers,
-        params: {
-          contractAddress,
-          tokenId,
-          refreshCache: false
-        }
-      });
-
-      return response.data;
+      // Use Alchemy SDK instead of axios
+      const response = await this.alchemy.nft.getNftMetadata(
+        contractAddress,
+        tokenId,
+        { refreshCache: false }
+      );
+      
+      return response as unknown as AlchemyNFTMetadata;
     } catch (error: any) {
       this.handleError('getNFTMetadata', error);
       return null;
@@ -109,22 +118,22 @@ export class AlchemyNftService {
     try {
       log(`Fetching NFTs for owner ${ownerAddress}`, 'alchemy-nft');
 
-      const params: any = {
-        owner: ownerAddress,
-        pageSize,
-        withMetadata: true
+      // Use Alchemy SDK
+      const options: any = {
+        pageSize: pageSize,
+        omitMetadata: false,
       };
 
       if (pageKey) {
-        params.pageKey = pageKey;
+        options.pageKey = pageKey;
       }
 
-      const response = await axios.get(`${BASE_URL}/getNFTsForOwner`, {
-        headers: this.headers,
-        params
-      });
+      const response = await this.alchemy.nft.getNftsForOwner(
+        ownerAddress,
+        options
+      );
 
-      return response.data;
+      return response;
     } catch (error: any) {
       this.handleError('getNFTsForOwner', error);
       return null;
@@ -141,22 +150,22 @@ export class AlchemyNftService {
     try {
       log(`Fetching NFTs for contract ${contractAddress}`, 'alchemy-nft');
 
-      const params: any = {
-        contractAddress,
-        pageSize,
-        withMetadata: true
+      // Use Alchemy SDK
+      const options: any = {
+        pageSize: pageSize,
+        omitMetadata: false,
       };
 
       if (pageKey) {
-        params.pageKey = pageKey;
+        options.pageKey = pageKey;
       }
 
-      const response = await axios.get(`${BASE_URL}/getNFTsForContract`, {
-        headers: this.headers,
-        params
-      });
+      const response = await this.alchemy.nft.getNftsForContract(
+        contractAddress,
+        options
+      );
 
-      return response.data;
+      return response;
     } catch (error: any) {
       this.handleError('getNFTsForContract', error);
       return null;
