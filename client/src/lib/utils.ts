@@ -420,7 +420,14 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
       const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
       if (ipfsMatch && ipfsMatch[1]) {
         const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
-        console.log(`Converted OpenSea URL to IPFS gateway: ${newUrl}`);
+        
+        // Only log once per session for OpenSea URL conversions
+        if (!sessionStorage.getItem('opensea_ipfs_log')) {
+          console.log(`Converted OpenSea URL to IPFS gateway`);
+          sessionStorage.setItem('opensea_ipfs_log', 'true');
+        }
+        
+        sessionStorage.setItem(cacheKey, newUrl);
         return newUrl;
       } else {
         // Try to extract the direct image URL from OpenSea links
@@ -428,7 +435,14 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
         if (directMatch) {
           // Use a direct CDN URL if possible
           const newUrl = `https://i.seadn.io/gae/${directMatch[1]}`;
-          console.log(`Extracted direct image from OpenSea URL: ${newUrl}`);
+          
+          // Only log once per session for OpenSea direct extractions
+          if (!sessionStorage.getItem('opensea_direct_log')) {
+            console.log(`Extracted direct image from OpenSea URL`);
+            sessionStorage.setItem('opensea_direct_log', 'true');
+          }
+          
+          sessionStorage.setItem(cacheKey, newUrl);
           return newUrl;
         }
       }
@@ -439,15 +453,29 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
       const idMatch = url.match(/([a-zA-Z0-9_-]{43,})/);
       if (idMatch && idMatch[1]) {
         const newUrl = `https://arweave.net/${idMatch[1]}`;
-        console.log(`Converted Magic Eden URL to Arweave: ${newUrl}`);
+        
+        // Only log once per session for Magic Eden URL conversions
+        if (!sessionStorage.getItem('magiceden_arweave_log')) {
+          console.log(`Converted Magic Eden URL to Arweave`);
+          sessionStorage.setItem('magiceden_arweave_log', 'true');
+        }
+        
+        sessionStorage.setItem(cacheKey, newUrl);
         return newUrl;
       } else {
         // Try to extract the filename and use a direct URL
         const filenameMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
         if (filenameMatch) {
           // Use a public storage URL if we have the filename
-          console.log(`Extracted filename from Magic Eden URL: ${filenameMatch[1]}`);
           const newUrl = `https://user-content.magiceden.io/${filenameMatch[1]}`;
+          
+          // Only log once per session
+          if (!sessionStorage.getItem('magiceden_filename_log')) {
+            console.log(`Extracted filename from Magic Eden URL`);
+            sessionStorage.setItem('magiceden_filename_log', 'true');
+          }
+          
+          sessionStorage.setItem(cacheKey, newUrl);
           return newUrl;
         }
       }
@@ -457,7 +485,14 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
     if (url.startsWith('ipfs://')) {
       const ipfsId = url.substring(7); // Remove ipfs:// prefix
       const newUrl = `https://ipfs.io/ipfs/${ipfsId}`;
-      console.log(`Converted IPFS protocol URL to gateway: ${newUrl}`);
+      
+      // Only log once per session
+      if (!sessionStorage.getItem('ipfs_protocol_log')) {
+        console.log(`Converted IPFS protocol URL to gateway`);
+        sessionStorage.setItem('ipfs_protocol_log', 'true');
+      }
+      
+      sessionStorage.setItem(cacheKey, newUrl);
       return newUrl;
     }
     
@@ -467,7 +502,14 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
       const ipfsMatch = url.match(/ipfs[:/ ]+([a-zA-Z0-9]{46}|[a-zA-Z0-9]{59}|Qm[a-zA-Z0-9]{44})/i);
       if (ipfsMatch && ipfsMatch[1]) {
         const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
-        console.log(`Converted to IPFS gateway URL: ${newUrl}`);
+        
+        // Only log once per session
+        if (!sessionStorage.getItem('ipfs_gateway_log')) {
+          console.log(`Converted to IPFS gateway URL`);
+          sessionStorage.setItem('ipfs_gateway_log', 'true');
+        }
+        
+        sessionStorage.setItem(cacheKey, newUrl);
         return newUrl;
       }
     }
@@ -477,7 +519,14 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
       const arweaveMatch = url.match(/([a-zA-Z0-9_-]{43})/);
       if (arweaveMatch && arweaveMatch[1]) {
         const newUrl = `https://arweave.net/${arweaveMatch[1]}`;
-        console.log(`Converted to Arweave gateway URL: ${newUrl}`);
+        
+        // Only log once per session
+        if (!sessionStorage.getItem('arweave_gateway_log')) {
+          console.log(`Converted to Arweave gateway URL`);
+          sessionStorage.setItem('arweave_gateway_log', 'true');
+        }
+        
+        sessionStorage.setItem(cacheKey, newUrl);
         return newUrl;
       }
     }
