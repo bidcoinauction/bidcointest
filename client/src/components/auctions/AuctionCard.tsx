@@ -240,11 +240,11 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
                 
                 if (mapping.collection === 'degentoonz') {
-                  target.src = `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
+                  target.src = `/attached_assets/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png`;
                 } else if (mapping.collection === 'madlads') {
                   target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
                 } else if (mapping.collection === 'degods') {
-                  target.src = `https://animation-url.degods.com/?tokenId=${mapping.id}`;
+                  target.src = `/attached_assets/8748.avif`;
                 } else if (mapping.collection === 'azuki') {
                   target.src = `/attached_assets/8993.avif`;
                 } else if (mapping.collection === 'milady') {
@@ -280,27 +280,17 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           <p className="text-gray-400">{tokenDisplay}</p>
           <p className="text-gray-400 font-medium">
             Floor<br/>
-            {detailedMetadata?.floor_price ? (
-              <span className="flex flex-col items-start">
-                <span className="text-primary font-bold">{detailedMetadata.floor_price} ETH</span>
-                {detailedMetadata.floor_price_usd && (
-                  <span className="text-gray-400 text-xs">
-                    (${formatPriceUSD(detailedMetadata.floor_price_usd)})
-                  </span>
-                )}
+            {detailedMetadata?.floor_price_usd ? (
+              <span className="text-primary font-bold">
+                ${formatPriceUSD(detailedMetadata.floor_price_usd)}
+              </span>
+            ) : auction.nft.floorPriceUsd ? (
+              <span className="text-primary font-bold">
+                ${formatPriceUSD(auction.nft.floorPriceUsd)}
               </span>
             ) : auction.nft.floorPrice ? (
-              <span className="flex flex-col items-start">
-                <span className="text-primary font-bold">{parseFloat(auction.nft.floorPrice.toString()).toFixed(2)} ETH</span>
-                {auction.nft.floorPriceUsd ? (
-                  <span className="text-gray-400 text-xs">
-                    (${formatPriceUSD(auction.nft.floorPriceUsd)})
-                  </span>
-                ) : (
-                  <span className="text-gray-400 text-xs">
-                    (${formatPriceUSD(auction.nft.floorPrice)})
-                  </span>
-                )}
+              <span className="text-primary font-bold">
+                ${formatPriceUSD(auction.nft.floorPrice)}
               </span>
             ) : (
               "N/A"

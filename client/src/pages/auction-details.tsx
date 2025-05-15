@@ -643,28 +643,32 @@ export default function AuctionDetailsPage() {
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Floor Price</p>
                     <p className="text-white font-medium">
-                      {detailedMetadata?.floor_price 
+                      {detailedMetadata?.floor_price_usd 
                         ? (
                           <span className="flex flex-col items-center">
                             <span className="font-bold text-primary">
-                              {detailedMetadata.floor_price} ETH
+                              ${formatPriceUSD(detailedMetadata.floor_price_usd)}
                             </span>
-                            <span className="text-gray-400 text-xs">
-                              (${detailedMetadata.floor_price_usd ? formatPriceUSD(detailedMetadata.floor_price_usd) : '0.00'})
+                          </span>
+                        ) : detailedMetadata?.floor_price 
+                        ? (
+                          <span className="flex flex-col items-center">
+                            <span className="font-bold text-primary">
+                              ${formatPriceUSD(detailedMetadata.floor_price)}
                             </span>
                           </span>
                         )
-                        : auction.nft.floorPrice 
+                        : auction.nft.floorPriceUsd 
                         ? (
                           <span className="flex flex-col items-center">
                             <span className="font-bold text-primary">
-                              {parseFloat(auction.nft.floorPrice.toString()).toFixed(2)} ETH
+                              ${parseFloat(auction.nft.floorPriceUsd.toString()).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                             </span>
-                            <span className="text-gray-400 text-xs">
-                              {auction.nft.floorPriceUsd 
-                                ? `($${parseFloat(auction.nft.floorPriceUsd.toString()).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})})`
-                                : `($${formatPriceUSD(auction.nft.floorPrice)})`
-                              }
+                          </span>
+                        ) : auction.nft.floorPrice ? (
+                          <span className="flex flex-col items-center">
+                            <span className="font-bold text-primary">
+                              ${formatPriceUSD(auction.nft.floorPrice)}
                             </span>
                           </span>
                         )
