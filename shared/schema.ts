@@ -215,6 +215,13 @@ export const insertBidSchema = createInsertSchema(bids).pick({
   bidNumber: true,
   isAutoBid: true,
   status: true,
+}).extend({
+  // Make bidFee, newPriceAfterBid, and bidNumber optional in the schema
+  // The implementation will provide default values
+  bidFee: z.string().optional(),
+  newPriceAfterBid: z.string().optional(),
+  bidNumber: z.number().optional(),
+  status: z.string().optional(),
 });
 
 // BidPack (Ordinals) schema

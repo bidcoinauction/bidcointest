@@ -888,15 +888,22 @@ export class MemStorage implements IStorage {
         return { success: false, error: `Auction with id ${auctionId} not found` };
       }
       
-      // Step 2: Check if the auction is still active
+      // Step 2: Check auction status
+      if (auction.status !== 'active') {
+        return { success: false, error: `Auction is not active (status: ${auction.status})` };
+      }
+      
+      // Step 3: Check if the auction is still active
       const now = new Date();
       if (new Date(auction.endTime) < now) {
+        // Auto-update auction status if it's ended
+        const auctionCopy = { ...auction, status: 'ended' };
+        this.auctions.set(auctionId, auctionCopy);
         return { success: false, error: 'Auction has ended' };
       }
       
-      // Step 3: Check if the user has Bidcoin bids available
+      // Step 4: Check if the user has Bidcoin bids available
       // All bids are made using Bidcoin (platform's internal currency)
-      // Each bid costs $0.24 in Bidcoin regardless of the NFT's native cryptocurrency
       const userBidPackResult = await this.consumeBid(bidderId);
       if (!userBidPackResult.success) {
         return { 
@@ -905,88 +912,130 @@ export class MemStorage implements IStorage {
         };
       }
       
-      // Step 4: Calculate the new display price (current price + $0.03)
-      // While bids are placed using Bidcoin, the auction price is displayed in the NFT's native currency
+      // Step 5: Calculate the new bid price using the auction's bidIncrementAmount
       const currentBid = Number(auction.currentBid || auction.startingBid);
-      const bidIncrement = 0.03; // $0.03 increment per bid (in NFT's currency display)
+      const bidIncrement = Number(auction.bidIncrementAmount || 0.03); // Default: $0.03 increment per bid
+      const bidFee = Number(auction.bidFee || 0.24); // Default: $0.24 per bid
       
-      // Get the NFT's floor price to ensure we don't exceed it
+      // Get the NFT data for maximum price calculations
       const nft = await this.getNFT(auction.nftId);
       if (!nft) {
         return { success: false, error: 'NFT not found' };
       }
       
-      // Get the floor price (with fallback to a reasonable default)
-      const floorPrice = nft.floorPrice ? Number(nft.floorPrice) : 100.0;
+      // Calculate maximum auction price (70-90% discount from floor price)
+      // Use floor price if available, otherwise fallback to retail price or a default
+      const floorPrice = nft.floorPriceUsd 
+        ? Number(nft.floorPriceUsd) 
+        : (nft.floorPrice 
+            ? Number(nft.floorPrice) 
+            : (nft.retailPrice 
+                ? Number(nft.retailPrice) 
+                : 100.0));
       
-      // Calculate target maximum price (70-90% discount from floor price)
-      // We'll use 30% of floor price as the absolute maximum auction can reach
-      const maxPriceRatio = 0.3; // 70% discount
+      // 30% of floor price = 70% discount
+      const maxPriceRatio = 0.3;
       const maxPrice = floorPrice * maxPriceRatio;
       
-      // Check if new bid would exceed our maximum price threshold
+      // Reserve price check
+      const reservePrice = auction.reservePrice ? Number(auction.reservePrice) : 0;
+      
+      // Calculate new bid amount, respecting max price and reserve price
       let newBidAmount: string;
       if (currentBid + bidIncrement >= maxPrice) {
-        // If we would exceed max price, cap it at the maximum
+        // If we would exceed max price threshold, cap it
         console.log(`Bid would exceed max price threshold. Capping at ${maxPrice}`);
-        newBidAmount = maxPrice.toFixed(4);
+        newBidAmount = maxPrice.toFixed(6);
       } else {
-        // Normal case - increment by the standard $0.03
-        newBidAmount = (currentBid + bidIncrement).toFixed(4);
+        // Normal case - increment by the standard amount (default $0.03)
+        newBidAmount = (currentBid + bidIncrement).toFixed(6);
       }
       
-      // Step 5: Extend the auction time
-      const extensionSeconds = Math.floor(Math.random() * 6) + 10; // 10-15 seconds
+      // Step 6: Calculate time extension based on auction settings
+      // Use the timeExtension field from the auction (default: 60 seconds)
+      const extensionSeconds = auction.timeExtension || 60;
+      
+      // Check if we're in the auto-extension threshold period
+      const timeLeft = new Date(auction.endTime).getTime() - now.getTime();
+      const thresholdMs = (auction.autoExtensionThreshold || 30) * 1000; // Default: 30 seconds threshold
+      
       let newEndTime = new Date(auction.endTime);
-      newEndTime.setSeconds(newEndTime.getSeconds() + extensionSeconds);
+      if (timeLeft <= thresholdMs) {
+        // We're in the final countdown - extend by the full extension time
+        newEndTime.setSeconds(newEndTime.getSeconds() + extensionSeconds);
+      } else {
+        // Not in the final countdown - just add a small extension
+        const smallExtension = Math.floor(extensionSeconds / 4);
+        newEndTime.setSeconds(newEndTime.getSeconds() + smallExtension);
+      }
       
-      // Step 6: Update the auction with new bid amount, end time, and increment bid count
+      // Step 7: Update the auction with new bid amount, end time, and increment bid count
       const updatedBidCount = (auction.bidCount || 0) + 1;
-      const updatedAuction = await this.updateAuctionBid(
-        auctionId, 
-        newBidAmount, 
-        updatedBidCount, 
-        newEndTime
-      );
       
-      // Step 7: Create bid record
+      // Update auction in one step
+      const updatedAuctionData = { 
+        ...auction, 
+        currentBid: newBidAmount, 
+        bidCount: updatedBidCount, 
+        endTime: newEndTime,
+        lastBidderId: bidderId
+      };
+      this.auctions.set(auctionId, updatedAuctionData);
+      
+      // Step 8: Create comprehensive bid record with all the new fields
+      const bidNumber = updatedBidCount;
+      const userBidPack = userBidPackResult.userBidPack;
+      
       const bid = await this.createBid({
         auctionId,
         bidderId,
-        amount: newBidAmount
+        amount: newBidAmount,
+        bidFee: bidFee.toString(),
+        newPriceAfterBid: newBidAmount,
+        newEndTimeAfterBid: newEndTime,
+        userBidPackId: userBidPack?.id,
+        bidPackRemainingAfter: userBidPack?.bidsRemaining,
+        bidNumber,
+        isAutoBid: false,
+        status: 'valid'
       });
       
-      // Step 8: Record bid on blockchain (in a real implementation)
+      // Step 9: Record bid on blockchain (in a real implementation)
       const blockchainRecord = await this.recordBidOnBlockchain(bid.id);
       if (!blockchainRecord.success) {
         console.warn(`Failed to record bid on blockchain: ${blockchainRecord.error}`);
         // Continue anyway, we'll retry later
+      } else if (blockchainRecord.transactionId) {
+        // Update the bid with the transaction ID
+        const updatedBid = { ...bid, transactionId: blockchainRecord.transactionId, processed: true };
+        this.bids.set(bid.id, updatedBid);
       }
       
-      // Step 9: Create auction history record
+      // Step 10: Create auction history record
+      const bidderName = (await this.getUser(bidderId))?.username || `User #${bidderId}`;
       await this.createAuctionHistory({
         auctionId,
-        description: `New bid of ${newBidAmount} placed`,
+        description: `${bidderName} placed bid #${bidNumber} of ${newBidAmount} ${auction.currency}`,
         icon: 'hammer'
       });
       
-      // Step 10: Create activity record
+      // Step 11: Create activity record
       // Note: The activity shows the bid in the NFT's currency for display purposes,
       // but the actual bid was placed using Bidcoin (platform's internal currency)
       await this.createActivity({
         type: 'bid',
         nftId: auction.nftId,
-        from: 'system',
-        to: bidderId.toString(),
+        from: bidderName,
+        to: 'Auction',
         price: newBidAmount,
         currency: auction.currency || 'ETH'  // Display currency is NFT's native currency
       });
       
       return {
         success: true,
-        auction: updatedAuction,
+        auction: updatedAuctionData,
         bid,
-        userBidPack: userBidPackResult.userBidPack
+        userBidPack
       };
     } catch (error) {
       console.error('Error processing auction bid:', error);
@@ -1048,17 +1097,35 @@ export class MemStorage implements IStorage {
   async createBid(insertBid: InsertBid): Promise<Bid> {
     const id = this.bidId++;
     const now = new Date();
-    const bid = { ...insertBid, id, timestamp: now };
-    this.bids.set(id, bid);
+    
+    // Set default values for required fields if not provided
+    const bidWithDefaults = {
+      ...insertBid,
+      
+      // If bidFee is not provided, use default $0.24
+      bidFee: insertBid.bidFee || "0.24",
+      
+      // If newPriceAfterBid not provided, use amount
+      newPriceAfterBid: insertBid.newPriceAfterBid || insertBid.amount,
+      
+      // If bidNumber not provided, calculate based on auction
+      bidNumber: insertBid.bidNumber || 1,
+      
+      // Set status to valid by default
+      status: insertBid.status || "valid",
+      
+      // Add ID and timestamp
+      id, 
+      timestamp: now
+    };
+    
+    // Store bid in memory
+    this.bids.set(id, bidWithDefaults);
 
-    // Update auction bid count
-    const auction = await this.auctions.get(insertBid.auctionId);
-    if (auction) {
-      await this.updateAuctionBid(insertBid.auctionId, insertBid.amount, auction.bidCount + 1);
-    }
-
+    // Get bidder for return value
     const bidder = await this.getUser(insertBid.bidderId);
-    return { ...bid, bidder: bidder! };
+    
+    return { ...bidWithDefaults, bidder: bidder! };
   }
 
   /* BidPack operations */
@@ -1128,35 +1195,78 @@ export class MemStorage implements IStorage {
       // Get user bid packs with remaining bids
       const userBidPacks = await this.getUserBidPacks(userId);
       
-      // Find a pack with available bids (ordered by oldest first)
-      const userPacksWithBids = userBidPacks
-        .filter(pack => pack.bidsRemaining > 0)
+      // First check active packs not expired and with remaining bids
+      const now = new Date();
+      const activePacks = userBidPacks
+        .filter(pack => {
+          // Check status is active
+          if (pack.status !== 'active') return false;
+          
+          // Check not expired if expiry date exists
+          if (pack.expiryDate && new Date(pack.expiryDate) < now) return false;
+          
+          // Check has bids remaining
+          return pack.bidsRemaining > 0;
+        })
         .sort((a, b) => {
-          const dateA = new Date(a.purchaseDate).getTime();
-          const dateB = new Date(b.purchaseDate).getTime();
-          return dateA - dateB; // Sort oldest first
+          // Sort by:
+          // 1. Expiring soonest first (if has expiry date)
+          // 2. Oldest purchase date first (for packs without expiry)
+          
+          const aHasExpiry = !!a.expiryDate;
+          const bHasExpiry = !!b.expiryDate;
+          
+          // If only one has expiry, prioritize it
+          if (aHasExpiry && !bHasExpiry) return -1;
+          if (!aHasExpiry && bHasExpiry) return 1;
+          
+          // If both have expiry, sort by soonest expiry
+          if (aHasExpiry && bHasExpiry) {
+            return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
+          }
+          
+          // Otherwise sort by purchase date
+          return new Date(a.purchaseDate).getTime() - new Date(b.purchaseDate).getTime();
         });
       
-      if (userPacksWithBids.length === 0) {
+      if (activePacks.length === 0) {
         return {
           success: false,
-          error: 'No bids available. Purchase a bid pack to continue.'
+          error: 'No active bids available. Purchase a bid pack to continue.'
         };
       }
       
-      // Use the oldest pack with available bids
-      const packToUse = userPacksWithBids[0];
+      // Use the highest priority pack
+      const packToUse = activePacks[0];
       const updatedBidsRemaining = packToUse.bidsRemaining - 1;
+      const updatedBidsUsed = (packToUse.bidsUsed || 0) + 1;
       
-      // Update the pack
-      const updatedPack = await this.updateUserBidPackCount(
-        packToUse.id, 
-        updatedBidsRemaining
-      );
+      // Check if this will deplete the pack
+      let status = packToUse.status;
+      if (updatedBidsRemaining === 0) {
+        status = 'depleted';
+        
+        // Check if auto-renew is enabled
+        if (packToUse.autoRenew) {
+          // In a real implementation, this would trigger a purchase
+          console.log(`Auto-renew enabled for pack ${packToUse.id}. Processing renewal...`);
+        }
+      }
+      
+      // Update the user bid pack with new counts and last used date
+      const updatedPackData = { 
+        ...packToUse, 
+        bidsRemaining: updatedBidsRemaining,
+        bidsUsed: updatedBidsUsed,
+        lastUsedDate: now,
+        status
+      };
+      
+      this.userBidPacks.set(packToUse.id, updatedPackData);
       
       return {
         success: true,
-        userBidPack: updatedPack
+        userBidPack: updatedPackData
       };
     } catch (error) {
       console.error('Error consuming bid:', error);

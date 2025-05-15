@@ -1,0 +1,104 @@
+UnleashNFTs API Reference
+Version 1 (v1)
+Base URL: https://api.unleashnfts.com/v1
+
+Authentication
+All endpoints require an API key in the Authorization header:
+
+http
+Authorization: Bearer <API_KEY>
+Version 2 (v2)
+Base URL: https://api.unleashnfts.com/api/v2
+
+Authentication
+All endpoints require an API key in the x-api-key header:
+
+http
+x-api-key: <API_KEY>
+Endpoints
+Version 1 (v1) Endpoints
+(Refer to the original answer for Projects, NFTs, Metadata, Users, Webhooks, etc.)
+
+Version 2 (v2) Endpoints
+Collections
+Retrieve metadata for NFT collections.
+
+Get Collection Metadata
+GET /nft/collection/metadata
+Query Parameters:
+
+blockchain (required, string): Blockchain identifier (e.g., ethereum, polygon). Default: ethereum.
+
+contract_address (optional, array of strings): Filter by contract address(es). Pass multiple as comma-separated values.
+
+slug_name (optional, array of strings): Filter by collection slug name(s). Pass multiple as comma-separated values.
+
+time_range (optional, string): Filter by time range (all, 24h, 7d, 30d). Default: all.
+
+sort_order (optional, string): Sort results (asc or desc). Default: desc.
+
+offset (optional, integer): Pagination offset. Default: 0.
+
+limit (optional, integer): Items per page (1-100). Default: 30.
+
+Example Request:
+
+bash
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v2/nft/collection/metadata?blockchain=ethereum&contract_address=0xabc123&slug_name=my-collection&limit=1' \
+     --header 'x-api-key: YOUR_API_KEY' \
+     --header 'accept: application/json'
+Example Response:
+
+json
+{
+  "data": [
+    {
+      "collection_name": "Pioneer Punks",
+      "description": "A groundbreaking NFT collection on Ethereum.",
+      "key_properties": {
+        "total_supply": 10000,
+        "floor_price": 0.75,
+        "owners": 4200,
+        "blockchain": "ethereum"
+      },
+      "contract_address": "0xabc123",
+      "slug": "pioneer-punks",
+      "created_at": "2022-03-15T00:00:00Z"
+    }
+  ],
+  "total": 1
+}
+Error Handling
+Common HTTP Codes (applies to both versions):
+
+400 Bad Request: Invalid parameters.
+
+401 Unauthorized: Missing/invalid API key.
+
+404 Not Found: Collection not found.
+
+Example Error Response:
+
+json
+{
+  "error": "InvalidInput",
+  "message": "Either contract_address or slug_name must be provided."
+}
+Rate Limits
+v1: 100 requests/minute (Free Tier), 1,000 (Pro Tier).
+
+v2: 200 requests/minute (Free Tier), 2,000 (Pro Tier).
+
+Check headers: X-RateLimit-Limit, X-RateLimit-Remaining.
+
+SDKs
+JavaScript (v2):
+
+bash
+npm install @unleashnfts/v2-sdk
+Usage:
+
+javascript
+import UnleashV2 from '@unleashnfts/v2-sdk';
+const client = new UnleashV2({ apiKey: '<API_KEY>' });

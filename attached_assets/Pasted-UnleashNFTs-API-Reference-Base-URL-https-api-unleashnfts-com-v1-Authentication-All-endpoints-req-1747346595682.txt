@@ -1,0 +1,177 @@
+UnleashNFTs API Reference
+Base URL: https://api.unleashnfts.com/v1
+
+Authentication
+All endpoints require an API key sent in the Authorization header.
+
+Header:
+
+http
+Authorization: Bearer <API_KEY>
+Endpoints
+Projects
+Manage NFT projects.
+
+List Projects
+GET /projects
+Query Parameters:
+
+limit (optional, number): Items per page. Default: 10.
+
+offset (optional, number): Pagination offset. Default: 0.
+
+sort (optional, string): Sort field (e.g., created_at:desc).
+
+Example Response:
+
+json
+{
+  "data": [
+    {
+      "id": "proj_123",
+      "name": "My Collection",
+      "description": "A sample collection",
+      "image": "https://image.url",
+      "created_at": "2023-01-01T00:00:00Z"
+    }
+  ],
+  "total": 1
+}
+Create Project
+POST /projects
+Body Parameters (required):
+
+name (string)
+
+description (string)
+
+image (string, URL)
+
+Example Request:
+
+json
+{
+  "name": "New Project",
+  "description": "New collection",
+  "image": "https://new.image.url"
+}
+NFTs
+Manage individual NFTs.
+
+List NFTs
+GET /nfts
+Query Parameters:
+
+project_id (optional, string): Filter by project.
+
+status (optional, string): minted, pending, etc.
+
+limit, offset, sort: Pagination/sorting.
+
+Example Response:
+
+json
+{
+  "data": [
+    {
+      "id": "nft_123",
+      "project_id": "proj_123",
+      "metadata": { "name": "NFT #1" },
+      "status": "minted",
+      "created_at": "2023-01-01T00:00:00Z"
+    }
+  ],
+  "total": 1
+}
+Update NFT
+PUT /nfts/{nft_id}
+Body Parameters (optional):
+
+metadata (object): Custom attributes.
+
+status (string): New status (e.g., transferred).
+
+Metadata
+Fetch or update NFT metadata.
+
+Get Metadata
+GET /metadata/{nft_id}
+Response Fields:
+
+id, name, description, image, attributes, external_url.
+
+Users
+Manage user accounts.
+
+Get User
+GET /users/{user_id}
+Response Fields:
+
+id, name, email, wallet_address, created_at.
+
+Webhooks
+Configure event notifications.
+
+Create Webhook
+POST /webhooks
+Body Parameters:
+
+url (string): Endpoint URL.
+
+events (array): e.g., ["nft.minted", "nft.transferred"].
+
+Supported Events:
+
+nft.minted, nft.updated, project.created, user.registered.
+
+Webhook Payload Example:
+
+json
+{
+  "event": "nft.minted",
+  "data": { "nft_id": "nft_123", "timestamp": "2023-01-01T00:00:00Z" }
+}
+Error Handling
+Common HTTP Codes:
+
+400 Bad Request: Invalid input.
+
+401 Unauthorized: Missing/invalid API key.
+
+404 Not Found: Resource not found.
+
+429 Too Many Requests: Rate limit exceeded.
+
+Example Error Response:
+
+json
+{
+  "error": "Unauthorized",
+  "message": "Valid API key required."
+}
+Rate Limits
+Free Tier: 100 requests/minute.
+
+Pro Tier: 1,000 requests/minute.
+
+Headers: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset.
+
+SDKs
+JavaScript:
+
+bash
+npm install @unleashnfts/sdk
+Usage:
+
+javascript
+import UnleashNFTs from '@unleashnfts/sdk';
+const client = new UnleashNFTs({ apiKey: '<API_KEY>' });
+Python:
+
+bash
+pip install unleash-nfts
+Usage:
+
+python
+from unleash_nfts import UnleashNFTs
+client = UnleashNFTs(api_key="<API_KEY>")
