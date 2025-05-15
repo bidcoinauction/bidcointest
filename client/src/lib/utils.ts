@@ -280,3 +280,63 @@ export function getBlockchainExplorerUrl(
       return `https://etherscan.io/token/${contractAddress}?a=${tokenId}`;
   }
 }
+
+/**
+ * Sanitize NFT image URLs to use direct IPFS gateways or authenticated sources instead of
+ * third-party marketplaces which may block access
+ * 
+ * @param imageUrl Original image URL
+ * @returns Sanitized image URL using direct sources
+ */
+export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string {
+  if (!imageUrl) return '/placeholder-nft.png';
+  
+  try {
+    const url = imageUrl.trim();
+    
+    // Check for and replace unsupported providers
+    
+    // 1. Replace OpenSea URLs with direct IPFS gateway
+    if (url.includes('opensea.io') || url.includes('openseauserdata.com')) {
+      // Extract IPFS hash if present
+      const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
+      if (ipfsMatch && ipfsMatch[1]) {
+        return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+      }
+    }
+    
+    // 2. Replace Magic Eden URLs with direct sources
+    if (url.includes('magiceden.io') || url.includes('magiceden.com')) {
+      // For Magic Eden, we often need to extract the arweave or solana ID
+      const idMatch = url.match(/([a-zA-Z0-9]{43,})/);
+      if (idMatch && idMatch[1]) {
+        // Try to use arweave gateway
+        return `https://arweave.net/${idMatch[1]}`;
+      }
+    }
+    
+    // 3. Already IPFS URL but using wrong gateway
+    if (url.includes('ipfs') && !url.includes('ipfs.io')) {
+      // Extract IPFS hash
+      const ipfsMatch = url.match(/ipfs[:/]([a-zA-Z0-9]+)/);
+      if (ipfsMatch && ipfsMatch[1]) {
+        return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+      }
+    }
+    
+    // 4. Already Arweave but using wrong gateway
+    if (url.includes('arweave') && !url.includes('arweave.net')) {
+      // Extract Arweave hash
+      const arweaveMatch = url.match(/([a-zA-Z0-9]{43})/);
+      if (arweaveMatch && arweaveMatch[1]) {
+        return `https://arweave.net/${arweaveMatch[1]}`;
+      }
+    }
+    
+    // Return the original URL if no replacement needed
+    return url;
+  } catch (error) {
+    console.error('Error sanitizing NFT image URL:', error);
+    return imageUrl || '/placeholder-nft.png';
+  }
+}

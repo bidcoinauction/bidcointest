@@ -82,11 +82,25 @@ export class UnleashNftsService {
     try {
       log(`Testing connection to UnleashNFTs API...`, 'unleash-nfts');
       
-      // First, try to test with Ethereum collections
+      // Try to fetch collections with our refined approach
       try {
-        // Try to fetch popular Ethereum collections as a more reliable test
-        // Use chain_id=1 (Ethereum) instead of 'ETH' to match API requirements
-        const collections = await this.getCollectionsByChain('1', 1, 5, 'volume', 'volume');
+        // Make a direct API call instead of using getCollectionsByChain to isolate test
+        log(`Testing collections API with correct parameters...`, 'unleash-nfts');
+        
+        const response = await axios.get(`${BASE_URL_V1}/collections`, {
+          headers: this.headers,
+          params: {
+            currency: 'usd',
+            metrics: 'volume',   // Required parameter
+            sort_by: 'volume',
+            sort_order: 'desc',
+            offset: 0,
+            limit: 5,
+            time_range: '24h'
+          }
+        });
+        
+        const collections = response.data?.data || [];
         
         if (collections && collections.length > 0) {
           log(`✅ UnleashNFTs API collections test SUCCESSFUL. Found ${collections.length} collections.`, 'unleash-nfts');
@@ -97,20 +111,26 @@ export class UnleashNftsService {
           log(`Falling back to blockchain test...`, 'unleash-nfts');
         }
       } catch (collectionError: any) {
-        log(`⚠️ UnleashNFTs API collections test failed: ${collectionError.message || 'Unknown error'}`, 'unleash-nfts');
+        const errorMsg = collectionError.response?.data?.message || collectionError.message || 'Unknown error';
+        log(`⚠️ UnleashNFTs API collections test failed: ${errorMsg}`, 'unleash-nfts');
         log(`Falling back to blockchain test...`, 'unleash-nfts');
       }
       
       // If collections test fails, fall back to blockchains test
-      const blockchains = await this.getSupportedBlockchains(1, 1);
-      
-      if (blockchains && blockchains.length > 0) {
-        log(`✅ UnleashNFTs API blockchain test SUCCESSFUL. Found ${blockchains.length} blockchains.`, 'unleash-nfts');
-        log(`Blockchain available: ${blockchains[0]?.metadata?.name || 'Unknown'}`, 'unleash-nfts');
-      } else {
-        log(`⚠️ UnleashNFTs API connection test completed, but no blockchains were returned.`, 'unleash-nfts');
-        log(`This might indicate an issue with the API or insufficient permissions.`, 'unleash-nfts');
-        log(`Using chain_id=1 instead of 'ETH' for all API calls to match API requirements`, 'unleash-nfts');
+      try {
+        const blockchains = await this.getSupportedBlockchains(1, 1);
+        log(`Got ${blockchains.length} blockchains from UnleashNFTs v2 API`, 'unleash-nfts');
+        
+        if (blockchains && blockchains.length > 0) {
+          log(`✅ UnleashNFTs API blockchain test SUCCESSFUL. Found ${blockchains.length} blockchains.`, 'unleash-nfts');
+          log(`Blockchain available: ${blockchains[0]?.metadata?.name || 'Unknown'}`, 'unleash-nfts');
+        } else {
+          log(`⚠️ UnleashNFTs API connection test completed, but no blockchains were returned.`, 'unleash-nfts');
+          log(`This might indicate an issue with the API or insufficient permissions.`, 'unleash-nfts');
+        }
+      } catch (blockchainError: any) {
+        const errorMsg = blockchainError.response?.data?.message || blockchainError.message || 'Unknown error';
+        log(`❌ UnleashNFTs API blockchain test FAILED: ${errorMsg}`, 'unleash-nfts');
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
@@ -190,57 +210,77 @@ export class UnleashNftsService {
    * @param metrics Type of metrics to include (volume, floor_price, etc.)
    * @param sortBy Field to sort by (volume, market_cap, etc.)
    */
-  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metrics: string = 'volume', sortBy: string = 'volume'): Promise<NFTCollection[]> {
+  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume', sortBy: string = 'volume'): Promise<NFTCollection[]> {
     try {
-      // Try v2 endpoint first
+      // Get error feedback informing us that metrics is required
+      const chainId = this.normalizeChainId(chain);
+      log(`Attempting to fetch collections with all required parameters`, 'unleash-nfts');
+      
+      // Let's try with all parameters including the required metrics
       try {
-        // Make sure chain is properly formatted (use chain_id value)
-        const chainId = this.normalizeChainId(chain);
-        log(`Attempting to fetch collections for chain ID: ${chainId} with v2 API`, 'unleash-nfts');
-        
-        const response = await axios.get(`${BASE_URL_V2}/collections`, {
-          headers: this.headers,
-          params: {
-            blockchain: parseInt(chainId),  // API expects blockchain as integer
-            offset: (page - 1) * limit,
-            limit,
-            metrics: metrics,
-            sort_by: sortBy,
-            sort_order: 'desc',
-            time_range: '24h'
-          }
-        });
-        
-        log(`Successfully retrieved ${response.data?.data?.length || 0} collections from v2 API`, 'unleash-nfts');
-        return response.data.data || [];
-      } catch (error: any) {
-        // If v2 fails, try v1 endpoint
-        const errorMsg = error?.message || 'Unknown error';
-        log(`V2 collections endpoint failed: ${errorMsg}, trying v1 endpoint...`, 'unleash-nfts');
-        
-        // Make sure chain is properly formatted (use chain_id value)
-        const chainId = this.normalizeChainId(chain);
-        
-        // Try the correct v1 endpoint based on documentation
         const response = await axios.get(`${BASE_URL_V1}/collections`, {
           headers: this.headers,
           params: {
-            blockchain: parseInt(chainId),  // API expects blockchain as integer
+            currency: 'usd',
+            metrics: ['volume', 'floor_price', 'market_cap'],  // API requires metrics array
+            sort_by: 'holders',
+            sort_order: 'desc',
             offset: (page - 1) * limit,
             limit,
-            metrics: metrics,
-            sort_by: sortBy,
-            sort_order: 'desc',
-            time_range: '24h'
+            time_range: '24h',
+            include_washtrade: true
           }
         });
         
-        log(`Successfully retrieved ${response.data?.data?.length || 0} collections from v1 API`, 'unleash-nfts');
+        log(`Successfully retrieved ${response.data?.data?.length || 0} collections`, 'unleash-nfts');
         return response.data.data || [];
+      } catch (error: any) {
+        // If that fails, try the alternate form with metrics as a string
+        const errorMsg = error?.message || 'Unknown error';
+        log(`Collections endpoint failed: ${errorMsg}, trying alternate metrics format...`, 'unleash-nfts');
+        
+        try {
+          const response = await axios.get(`${BASE_URL_V1}/collections`, {
+            headers: this.headers,
+            params: {
+              currency: 'usd',
+              metrics: 'volume',  // Try as string instead of array
+              sort_by: 'volume',  // Match sort_by with metrics
+              sort_order: 'desc',
+              offset: (page - 1) * limit,
+              limit,
+              time_range: '24h'
+            }
+          });
+          
+          log(`Successfully retrieved ${response.data?.data?.length || 0} collections using string metrics`, 'unleash-nfts');
+          return response.data.data || [];
+        } catch (metricsError: any) {
+          // Final attempt - try with blockchain parameter and all required fields
+          log(`Metrics string endpoint failed: ${metricsError.message}, trying with blockchain parameter...`, 'unleash-nfts');
+          
+          const response = await axios.get(`${BASE_URL_V1}/collections`, {
+            headers: this.headers,
+            params: {
+              blockchain: parseInt(chainId),  // Add blockchain filter
+              currency: 'usd',
+              metrics: 'volume',  // Required parameter
+              sort_by: 'volume',
+              sort_order: 'desc',
+              offset: (page - 1) * limit,
+              limit,
+              time_range: '24h'
+            }
+          });
+          
+          log(`Successfully retrieved ${response.data?.data?.length || 0} collections with blockchain filter`, 'unleash-nfts');
+          return response.data.data || [];
+        }
       }
     } catch (error) {
       this.handleError('getCollectionsByChain', error);
-      // Return empty array to avoid cascading failures
+      // Even if all API calls fail, return an empty array rather than null
+      // to avoid cascading failures
       return [];
     }
   }
