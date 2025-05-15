@@ -136,23 +136,43 @@ export const auctions = pgTable("auctions", {
   nftId: integer("nft_id").notNull().references(() => nfts.id),
   startingBid: decimal("starting_bid", { precision: 10, scale: 6 }).notNull(),
   currentBid: decimal("current_bid", { precision: 10, scale: 6 }),
+  reservePrice: decimal("reserve_price", { precision: 10, scale: 6 }), // Optional minimum final price
   currency: text("currency").notNull().default("ETH"),
+  
+  // Penny auction mechanics
+  bidIncrementAmount: decimal("bid_increment_amount", { precision: 10, scale: 6 }).default("0.03"), // Default: $0.03 per bid
+  bidFee: decimal("bid_fee", { precision: 10, scale: 6 }).default("0.24"), // Default: $0.24 per bid
+  timeExtension: integer("time_extension").default(60), // Default: 60 seconds (1 minute) extension per bid
+  autoExtensionThreshold: integer("auto_extension_threshold").default(30), // Default: 30 seconds threshold
+  
+  // Auction state
   endTime: timestamp("end_time").notNull(),
   featured: boolean("featured").default(false),
   creatorId: integer("creator_id").references(() => users.id),
   bidCount: integer("bid_count").default(0),
+  lastBidderId: integer("last_bidder_id").references(() => users.id), // Track last bidder
+  status: text("status").default("active"), // active, ended, canceled, settled
+  
+  // Timestamps
   createdAt: timestamp("created_at").defaultNow(),
+  settledAt: timestamp("settled_at"), // When auction was settled
 });
 
 export const insertAuctionSchema = createInsertSchema(auctions).pick({
   nftId: true,
   startingBid: true,
   currentBid: true,
+  reservePrice: true,
   currency: true,
+  bidIncrementAmount: true,
+  bidFee: true,
+  timeExtension: true,
+  autoExtensionThreshold: true,
   endTime: true,
   featured: true,
   creatorId: true,
   bidCount: true,
+  status: true,
 });
 
 // Bid schema
@@ -160,7 +180,26 @@ export const bids = pgTable("bids", {
   id: serial("id").primaryKey(),
   auctionId: integer("auction_id").notNull().references(() => auctions.id),
   bidderId: integer("bidder_id").notNull().references(() => users.id),
-  amount: decimal("amount", { precision: 10, scale: 6 }).notNull(),
+  
+  // Bid details
+  amount: decimal("amount", { precision: 10, scale: 6 }).notNull(), // Actual bid amount (current price + increment)
+  bidFee: decimal("bid_fee", { precision: 10, scale: 6 }).notNull(), // Fee paid for this bid (usually $0.24)
+  newPriceAfterBid: decimal("new_price_after_bid", { precision: 10, scale: 6 }).notNull(), // New auction price after this bid
+  newEndTimeAfterBid: timestamp("new_end_time_after_bid"), // New auction end time after this bid (if extended)
+  
+  // Bid source
+  userBidPackId: integer("user_bid_pack_id").references(() => userBidPacks.id), // Which bid pack was used
+  bidPackRemainingAfter: integer("bid_pack_remaining_after"), // Bids remaining in pack after this bid
+  
+  // Tracking
+  bidNumber: integer("bid_number").notNull(), // Which number bid this is in the auction (1st, 2nd, etc.)
+  isAutoBid: boolean("is_auto_bid").default(false), // Whether this was placed by auto-bidder
+  
+  // Status
+  status: text("status").default("valid"), // valid, invalid, refunded
+  processed: boolean("processed").default(false), // Whether this bid was processed for blockchain recording
+  transactionId: text("transaction_id"), // Blockchain transaction ID if recorded on-chain
+  
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
@@ -168,6 +207,14 @@ export const insertBidSchema = createInsertSchema(bids).pick({
   auctionId: true,
   bidderId: true,
   amount: true,
+  bidFee: true,
+  newPriceAfterBid: true,
+  newEndTimeAfterBid: true,
+  userBidPackId: true,
+  bidPackRemainingAfter: true,
+  bidNumber: true,
+  isAutoBid: true,
+  status: true,
 });
 
 // BidPack (Ordinals) schema
@@ -175,23 +222,61 @@ export const bidPacks = pgTable("bid_packs", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull(), // starter, pro, premium, whale
+  description: text("description"), // Optional description of bid pack
+  
+  // Bid counts
   bidCount: integer("bid_count").notNull(),
   bonusBids: integer("bonus_bids").notNull(),
+  totalBids: integer("total_bids").notNull(), // Convenience field: bidCount + bonusBids
+  
+  // Pricing
   price: decimal("price", { precision: 10, scale: 6 }).notNull(),
   originalPrice: decimal("original_price", { precision: 10, scale: 6 }).notNull(),
+  discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }), // % discount if on sale
+  pricePerBid: decimal("price_per_bid", { precision: 10, scale: 6 }).notNull(), // Price per bid (price / totalBids)
+  savings: decimal("savings", { precision: 10, scale: 6 }), // $ savings vs buying individual bids
+  
+  // Payment options
   currency: text("currency").notNull().default("BTC"),
+  acceptedPaymentMethods: jsonb("accepted_payment_methods").default(['ETH', 'BTC', 'SOL', 'USDC']),
+  
+  // Display
+  imageUrl: text("image_url"), // Optional image for the bid pack
+  color: text("color").default("#3498db"), // Color for styling
+  featured: boolean("featured").default(false), // Whether to highlight this pack
+  sortOrder: integer("sort_order").default(0), // Order to display packs (lower first)
+  
+  // Availability
   available: boolean("available").default(true),
+  startDate: timestamp("start_date"), // When this pack becomes available (for limited time offers)
+  endDate: timestamp("end_date"), // When this pack expires
+  
+  // Tracking
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
 });
 
 export const insertBidPackSchema = createInsertSchema(bidPacks).pick({
   name: true,
   type: true,
+  description: true,
   bidCount: true,
   bonusBids: true,
+  totalBids: true,
   price: true,
   originalPrice: true,
+  discountPercentage: true,
+  pricePerBid: true,
+  savings: true,
   currency: true,
+  acceptedPaymentMethods: true,
+  imageUrl: true,
+  color: true,
+  featured: true,
+  sortOrder: true,
   available: true,
+  startDate: true,
+  endDate: true,
 });
 
 // User bid pack purchases
@@ -199,14 +284,40 @@ export const userBidPacks = pgTable("user_bid_packs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   bidPackId: integer("bid_pack_id").notNull().references(() => bidPacks.id),
-  bidsRemaining: integer("bids_remaining").notNull(),
+  
+  // Bid counts
+  bidsTotal: integer("bids_total").notNull(), // Total bids purchased
+  bidsRemaining: integer("bids_remaining").notNull(), // Bids still available to use
+  bidsUsed: integer("bids_used").default(0), // Bids already used
+  
+  // Purchase details
+  purchasePrice: decimal("purchase_price", { precision: 10, scale: 6 }).notNull(), // Actual price paid
+  currency: text("currency").notNull().default("BTC"), // Currency used for payment
+  paymentMethod: text("payment_method").notNull(), // ETH, BTC, SOL, USDC, etc.
+  paymentTxId: text("payment_tx_id"), // Blockchain transaction ID for the payment
+  
+  // Purchase status
+  status: text("status").default("active"), // active, expired, depleted
+  autoRenew: boolean("auto_renew").default(false), // Whether to auto-renew when depleted
+  
+  // Dates
   purchaseDate: timestamp("purchase_date").defaultNow(),
+  expiryDate: timestamp("expiry_date"), // Optional expiration date
+  lastUsedDate: timestamp("last_used_date"), // Last time a bid was used
 });
 
 export const insertUserBidPackSchema = createInsertSchema(userBidPacks).pick({
   userId: true,
   bidPackId: true,
+  bidsTotal: true,
   bidsRemaining: true,
+  purchasePrice: true,
+  currency: true,
+  paymentMethod: true,
+  paymentTxId: true,
+  status: true,
+  autoRenew: true,
+  expiryDate: true,
 });
 
 // Activity types
