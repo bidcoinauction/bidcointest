@@ -765,20 +765,32 @@ export default function NFTCollectionsPage() {
                             <div className="space-y-4">
                               <div>
                                 <p className="text-gray-400 text-sm">Estimated Value</p>
-                                <p className="text-2xl font-bold text-white">{formatPriceUSD(nftValuation.estimated_value)}</p>
+                                <p className="text-2xl font-bold text-white">
+                                  {formatPriceUSD(nftValuation.estimated_value || nftValuation.estimated_price)}
+                                </p>
                               </div>
                               
                               <div className="flex space-x-4">
                                 <div>
                                   <p className="text-gray-400 text-sm">Floor Price</p>
-                                  <p className="text-md font-medium text-white">{formatPriceUSD(nftValuation.floor_price)}</p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Premium</p>
-                                  <p className={`text-md font-medium ${nftValuation.premium_percentage > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                    {nftValuation.premium_percentage > 0 ? '+' : ''}{nftValuation.premium_percentage.toFixed(2)}%
+                                  <p className="text-md font-medium text-white">
+                                    {currencyDisplay === 'native' && selectedCollection?.currency_symbol
+                                      ? formatPriceNative(
+                                          nftValuation.floor_price || collectionMetrics?.floor_price, 
+                                          selectedCollection.currency_symbol
+                                        )
+                                      : formatPriceUSD(nftValuation.floor_price || collectionMetrics?.floor_price)
+                                    }
                                   </p>
                                 </div>
+                                {(nftValuation.premium_percentage !== undefined) && (
+                                  <div>
+                                    <p className="text-gray-400 text-sm">Premium</p>
+                                    <p className={`text-md font-medium ${(nftValuation.premium_percentage || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                      {(nftValuation.premium_percentage || 0) > 0 ? '+' : ''}{(nftValuation.premium_percentage || 0).toFixed(2)}%
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                               
                               <div>

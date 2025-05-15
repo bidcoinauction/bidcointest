@@ -623,6 +623,11 @@ export interface NFTValuation {
   confidence_score: number;
   last_sale_price?: number;
   last_sale_date?: string;
+  
+  // Added fields for front-end display
+  estimated_value?: number;
+  floor_price?: number;
+  premium_percentage?: number;
 }
 
 /**

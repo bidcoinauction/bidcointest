@@ -1,0 +1,342 @@
+BidCoin
+Search auctions, NFTs...
+
+Connect Wallet
+Auctions
+BidPacks
+Dashboard
+Activity
+NFT Collections
+About
+DEGEN TOONZ #4269Featured Auction
+DEGEN TOONZ #4269
+ETH
+DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.
+
+Current Bid
+
+0.09
+
+Ending In
+
+00:00:50
+
+Leader
+
+0x2345...6789
+
+Bids
+
+3 bids
+
+Place Bid
+
+
+Search by name or trait
+●
+Newbies
+●
+BAM Pros
+
+All Currencies
+
+Recently Added
+Filters
+3 bidsDEGEN TOONZ #4269
+DEGEN TOONZ #4269
+#4269
+
+Floor
+$12435.67
+
+Leader
+
+0x1234...5678
+
+Time Left
+
+00:00:50
+Price
+
+0.09
+
+Track
+Bid Now
+1 bidsMilady #7218
+Milady #7218
+#7218
+
+Floor
+$5129.75
+
+Leader
+
+0x9a8E...7FFe
+
+Time Left
+
+00:00:57
+Price
+
+0.03
+
+Track
+Bid Now
+3 bidsMadLads #8993
+MadLads #8993
+#8993
+
+Floor
+$12890.56
+
+Leader
+
+0x3456...7890
+
+Time Left
+
+00:00:50
+Price
+
+0.09
+
+Track
+Bid Now
+1 bidsAzuki #9605
+Azuki #9605
+#9605
+
+Floor
+$25560.94
+
+Leader
+
+0x2B96...01E8
+
+Time Left
+
+00:00:56
+Price
+
+0.03
+
+Track
+Bid Now
+3 bidsDeGods #8748
+DeGods #8748
+#8748
+
+Floor
+$9945.10
+
+Leader
+
+0x5678...9012
+
+Time Left
+
+00:00:51
+Price
+
+0.09
+
+Track
+Bid Now
+3 bidsClaynosaurz #7221
+Claynosaurz #7221
+#7221
+
+Floor
+$8398.75
+
+Leader
+
+0x6789...0123
+
+Time Left
+
+00:00:51
+Price
+
+0.09
+
+Track
+Bid Now
+3 bidsMilady #8697
+Milady #8697
+#8697
+
+Floor
+$3.80
+
+Leader
+
+0x7890...1234
+
+Time Left
+
+00:00:51
+Price
+
+0.09
+
+Track
+Bid Now
+BidPacks
+View All
+Pack
+Single Bid
+1 bids
+
+Quantity:
+-
+1
++
+$0.24
+Total 1 bids
+$0.24
+Buy Now
+Most Popular
+Starter Pack
+60 bids
+
+Quantity:
+-
+1
++
+$12.00
+Total 60 bids
+$14.40
+Buy Now
+Best Value
+Pro Pack
+155 bids
+
+Quantity:
+-
+1
++
+$30.00
+Total 155 bids
+$37.20
+Buy Now
+Exclusive
+Premium Pack
+325 bids
+
+Quantity:
+-
+1
++
+$60.00
+Total 325 bids
+$78.00
+Buy Now
+Ultimate
+Whale Pack
+650 bids
+
+Quantity:
+-
+1
++
+$120.00
+Total 650 bids
+$156.00
+Buy Now
+Blockchain Analytics
+Powered by BitCrunch API
+Top Blockchain Networks
+Bitcoin
+43256.78
++2.34%
+Ethereum
+3127.45
+-1.87%
+Solana
+102.89
++5.67%
+Polygon
+1.15
++3.21%
+NFT Market Stats
+24h Volume
+
+$24.3M
+
++12.5% from yesterday
+
+Floor Price (avg)
+
+0.87 ETH
+
+-2.3% from yesterday
+
+New Collections
+
+134
+
++23 from yesterday
+
+Active Wallets
+
+45.2K
+
++5.7% from yesterday
+
+Recent Activity
+View All
+Item	Event	Price	From	To	Time
+Claynosaurz #7221 thumbnail
+Claynosaurz #7221
+Ordinal #7221
+Bid Placed	34.0 SOL	
+0x3aF1...c5D8
+@digitalsea
+5 minutes ago
+Milady #7218 thumbnail
+Milady #7218
+Ordinal #7218
+Purchase	0.34 ETH	
+@geometrymaster
+0x8cD5...a82B
+5 minutes ago
+DEGEN TOONZ #4269 thumbnail
+DEGEN TOONZ #4269
+Ordinal #4269
+Listing	0.875 ETH	
+@CryptoMaestro
+Auction House
+5 minutes ago
+MadLads #8993 thumbnail
+MadLads #8993
+Ordinal #8993
+Bid Increase	0.027 BTC	
+0x3aF1...c5D8
+@pixelqueen
+5 minutes ago
+BidCoin
+The premier Web3 auction platform for NFTs, Ordinals, and digital collectibles.
+
+Resources
+Help Center
+Platform Status
+Partners
+API Documentation
+Blog
+Company
+About Us
+Careers
+Legal
+Privacy Policy
+Terms of Service
+Stay Updated
+Subscribe to our newsletter for the latest updates on auctions and drops.
+
+Enter your email
+Subscribe
+© 2023 BidCoin. All rights reserved.
+
+Privacy
+Terms
+Cookies
