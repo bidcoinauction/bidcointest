@@ -964,14 +964,12 @@ export class UnleashNftsService {
       log(`Fetching detailed NFT metadata for ${contractAddress}/${tokenId} on chain ${chainId}`, 'unleash-nfts');
       
       try {
-        // Use v2 endpoint with correct parameters
-        const response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
-          headers: this.headers,
-          params: {
-            blockchain: chainId,
-            collection_address: contractAddress,
-            token_id: tokenId
-          }
+        // Use v2 endpoint with direct path format
+        // Direct format: /nft/{blockchain}/{contract_address}/{token_id}
+        log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+        
+        const response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
+          headers: this.headers
         });
         
         const nftData = response.data;
@@ -987,6 +985,7 @@ export class UnleashNftsService {
           nftData.collection.image_url = this.cleanImageUrl(nftData.collection.image_url);
         }
         
+        log(`✅ Success with direct NFT path format: ${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
         return nftData;
       } catch (v2Error: any) {
         const errorMsg = v2Error.response?.data?.message || v2Error.message;
