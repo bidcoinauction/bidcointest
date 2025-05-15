@@ -317,7 +317,7 @@ export class MemStorage implements IStorage {
     const nft6 = await this.createNFT({
       name: "Claynosaurz #7221",
       description: "Claynosaurz is a collection of 10,000 unique 3D characters, made of clay, living on the Solana blockchain. Claynosaurz is a PFP project that is building a 3D world.",
-      imageUrl: "/assets/nft_images/tpb.jpg",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://cdn.claynosaurz.com/images/pfp/clayno/7221.png",
       tokenId: "7221",
       contractAddress: "0x4aEb52dB83DaA33a31673599E892d9247b0449cA",
       blockchain: "SOL",
@@ -340,7 +340,7 @@ export class MemStorage implements IStorage {
     const nft7 = await this.createNFT({
       name: "Milady #8697",
       description: "Milady Maker is a collection of 10,000 generative PFPs based on a variation of the y2k Millennial Ms Paint aesthetic.",
-      imageUrl: "/assets/nft_images/milady.png",
+      imageUrl: "https://i.seadn.io/gcs/files/d5c85e6dc290f4cf63e122ef12ef9781.png?auto=format&dpr=1&w=1000",
       tokenId: "8697",
       contractAddress: "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
       blockchain: "ETH",
