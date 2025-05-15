@@ -472,35 +472,146 @@ export class UnleashNftsService {
    */
   async getCollectionNFTs(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<NFTMetadata[]> {
     try {
-      // Try v2 endpoint first
+      // Format endpoint according to documentation:
+      // https://api.unleashnfts.com/api/v1/collection/{blockchain}/{address}/nfts
+      const chainId = this.normalizeChainId(chain);
+      
+      log(`Fetching NFTs for collection ${contractAddress} on chain ${chainId} using correct URL format`, 'unleash-nfts');
+      
       try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/tokens`, {
+        // Direct format from API documentation
+        const url = `${BASE_URL_V1}/collection/${chainId}/${contractAddress}/nfts`;
+        
+        const response = await axios.get(url, {
           headers: this.headers,
           params: {
-            collection_address: contractAddress,
-            blockchain: chain,
+            // Required parameters according to documentation
+            metrics: ['volume', 'floor_price'], // API requires metrics array
+            sort_by: 'holders',
+            sort_order: 'desc',
             offset: (page - 1) * limit,
-            limit
+            limit: limit,
+            time_range: '24h'
           }
         });
-        return response.data.data || [];
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 tokens endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/tokens`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
+        
+        const nfts = response.data?.data || [];
+        log(`Successfully fetched ${nfts.length} NFTs using collection endpoint`, 'unleash-nfts');
+        
+        // Process and clean image URLs
+        return nfts.map((nft: any) => {
+          if (nft.image_url) {
+            nft.image_url = this.cleanImageUrl(nft.image_url);
           }
+          return nft;
         });
-        return response.data.data || [];
+      } catch (formatError: any) {
+        const errorMsg = formatError.response?.data?.message || formatError.message;
+        log(`Collection NFTs endpoint failed: ${errorMsg}. Trying alternative...`, 'unleash-nfts');
+        
+        // Try the original endpoint format as fallback
+        try {
+          const response = await axios.get(`${BASE_URL_V1}/nft/tokens`, {
+            headers: this.headers,
+            params: {
+              collection_address: contractAddress,
+              blockchain: chainId,
+              metrics: 'volume', // Add required parameter
+              offset: (page - 1) * limit,
+              limit: limit
+            }
+          });
+          
+          const nfts = response.data?.data || [];
+          log(`Successfully fetched ${nfts.length} NFTs using tokens endpoint`, 'unleash-nfts');
+          
+          // Process and clean image URLs
+          return nfts.map((nft: any) => {
+            if (nft.image_url) {
+              nft.image_url = this.cleanImageUrl(nft.image_url);
+            }
+            return nft;
+          });
+        } catch (fallbackError: any) {
+          // If both attempts fail, try v2 endpoint
+          log(`V1 NFT tokens endpoint failed, trying v2 endpoint...`, 'unleash-nfts');
+          
+          const response = await axios.get(`${BASE_URL_V2}/nft/tokens`, {
+            headers: this.headers,
+            params: {
+              collection_address: contractAddress,
+              blockchain: chainId,
+              offset: (page - 1) * limit,
+              limit: limit
+            }
+          });
+          
+          const nfts = response.data?.data || [];
+          log(`Successfully fetched ${nfts.length} NFTs using v2 tokens endpoint`, 'unleash-nfts');
+          
+          // Process and clean image URLs
+          return nfts.map((nft: any) => {
+            if (nft.image_url) {
+              nft.image_url = this.cleanImageUrl(nft.image_url);
+            }
+            return nft;
+          });
+        }
       }
     } catch (error) {
       this.handleError('getCollectionNFTs', error);
       return [];
+    }
+  }
+  
+  /**
+   * Sanitize NFT image URLs to avoid third-party marketplace routing
+   * @param url The original image URL
+   * @returns Sanitized image URL that uses direct sources
+   */
+  private cleanImageUrl(url: string): string {
+    if (!url) return '/placeholder-nft.png';
+    
+    try {
+      // Check for and replace problematic sources
+      
+      // OpenSea URLs
+      if (url.includes('opensea.io') || url.includes('openseauserdata.com')) {
+        const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
+        if (ipfsMatch && ipfsMatch[1]) {
+          return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+        }
+      }
+      
+      // Magic Eden URLs
+      if (url.includes('magiceden.io') || url.includes('magiceden.com')) {
+        const idMatch = url.match(/([a-zA-Z0-9]{43,})/);
+        if (idMatch && idMatch[1]) {
+          return `https://arweave.net/${idMatch[1]}`;
+        }
+      }
+      
+      // IPFS URLs with wrong gateway
+      if (url.includes('ipfs') && !url.includes('ipfs.io')) {
+        const ipfsMatch = url.match(/ipfs[:/]([a-zA-Z0-9]+)/);
+        if (ipfsMatch && ipfsMatch[1]) {
+          return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+        }
+      }
+      
+      // Arweave URLs with wrong gateway
+      if (url.includes('arweave') && !url.includes('arweave.net')) {
+        const arweaveMatch = url.match(/([a-zA-Z0-9]{43})/);
+        if (arweaveMatch && arweaveMatch[1]) {
+          return `https://arweave.net/${arweaveMatch[1]}`;
+        }
+      }
+      
+      // Return original if no replacement needed
+      return url;
+    } catch (error) {
+      console.error('Error cleaning image URL:', error);
+      return url;
     }
   }
 
