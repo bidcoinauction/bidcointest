@@ -2,8 +2,8 @@ import axios from 'axios';
 import { log } from './vite';
 
 // Updated API endpoints based on the latest UnleashNFTs documentation
-const BASE_URL_V1 = 'https://api.unleashnfts.com/api/v1';
-const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2';
+const BASE_URL_V1 = 'https://api.unleashnfts.com/v1'; // Note: v1 uses /v1 in path
+const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2'; // Note: v2 uses /api/v2 in path
 // Access the API key directly from the environment variable
 // In server-side code, we need to access process.env directly, not import.meta.env
 // Using fallback to hardcoded value for consistent API access
@@ -54,10 +54,18 @@ export interface NFTMetadata {
 }
 
 export class UnleashNftsService {
-  private headers: Record<string, string>;
+  private headersV1: Record<string, string>;
+  private headersV2: Record<string, string>;
 
   constructor() {
-    this.headers = {
+    // V1 uses Authorization: Bearer <API_KEY>
+    this.headersV1 = {
+      'accept': 'application/json',
+      'Authorization': `Bearer ${API_KEY}`
+    };
+    
+    // V2 uses x-api-key: <API_KEY>
+    this.headersV2 = {
       'accept': 'application/json',
       'x-api-key': API_KEY
     };
@@ -73,8 +81,9 @@ export class UnleashNftsService {
    */
   async getSupportedBlockchains(page: number = 1, limit: number = 30, sortBy: string = 'blockchain_name'): Promise<any[]> {
     try {
+      // This is a v1 API endpoint
       const response = await axios.get(`${BASE_URL_V1}/blockchains`, {
-        headers: this.headers,
+        headers: this.headersV1V1,
         params: {
           sort_by: sortBy,
           offset: (page - 1) * limit,
@@ -107,7 +116,7 @@ export class UnleashNftsService {
       
       // Include comprehensive metrics based on the API documentation
       const response = await axios.get(`${BASE_URL_V1}/collections`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           blockchain: chainId,
           currency: 'usd',
@@ -150,7 +159,7 @@ export class UnleashNftsService {
       try {
         log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/collection/${chainId}/${contractAddress}`, 'unleash-nfts');
         const response = await axios.get(`${BASE_URL_V2}/collection/${chainId}/${contractAddress}`, {
-          headers: this.headers
+          headers: this.headersV1
         });
         
         const collection = response.data;
@@ -168,7 +177,7 @@ export class UnleashNftsService {
         try {
           log(`[unleash-nfts] Trying v1 format: ${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, 'unleash-nfts');
           const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, {
-            headers: this.headers
+            headers: this.headersV1
           });
           
           const collection = response.data;
@@ -201,7 +210,7 @@ export class UnleashNftsService {
       log(`Fetching metrics for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/metrics`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           currency: 'usd',
           time_range: '24h'
@@ -227,7 +236,7 @@ export class UnleashNftsService {
       log(`Fetching trend data for collection ${contractAddress} on chain ${chainId} over ${period}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/trend`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           currency: 'usd',
           time_range: period,
@@ -253,7 +262,7 @@ export class UnleashNftsService {
       log(`Fetching traits for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/traits`, {
-        headers: this.headers
+        headers: this.headersV1
       });
       
       return response.data.traits || [];
@@ -276,7 +285,7 @@ export class UnleashNftsService {
       log(`Fetching NFTs for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/nfts`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           offset: (page - 1) * limit,
           limit,
@@ -362,7 +371,7 @@ export class UnleashNftsService {
       log(`Fetching transactions for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/transactions`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           offset: (page - 1) * limit,
           limit,
@@ -390,7 +399,7 @@ export class UnleashNftsService {
       log(`Fetching collections with valuation on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/nft/valuation/collections`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           blockchain: chainId,
           offset: (page - 1) * limit,
@@ -426,7 +435,7 @@ export class UnleashNftsService {
       log(`Fetching NFTs with valuation for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/nft/valuation/nfts`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           blockchain: chainId,
           collection_address: contractAddress,
@@ -462,7 +471,7 @@ export class UnleashNftsService {
       log(`Fetching valuation for NFT ${contractAddress}/${tokenId} on chain ${chainId}`, 'unleash-nfts');
       
       const response = await axios.get(`${BASE_URL_V1}/nft/valuation`, {
-        headers: this.headers,
+        headers: this.headersV1,
         params: {
           blockchain: chainId,
           collection_address: contractAddress,
@@ -494,7 +503,7 @@ export class UnleashNftsService {
         log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
         
         const response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-          headers: this.headers
+          headers: this.headersV1
         });
         
         const nftData = response.data;
@@ -520,7 +529,7 @@ export class UnleashNftsService {
         try {
           log(`[unleash-nfts] Trying v1 format: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
           const response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-            headers: this.headers
+            headers: this.headersV1
           });
           
           const nftData = response.data;
@@ -600,7 +609,7 @@ export class UnleashNftsService {
         if (contractAddress) {
           log(`[unleash-nfts] Trying direct path: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
           response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-            headers: this.headers
+            headers: this.headersV1
           });
           
           nftData = response.data;
@@ -608,7 +617,7 @@ export class UnleashNftsService {
           // For slug-based lookup, we still need to use params
           log(`[unleash-nfts] Using params with slug: ${BASE_URL_V2}/nft/metadata`, 'unleash-nfts');
           response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
-            headers: this.headers,
+            headers: this.headersV1,
             params
           });
           
@@ -639,13 +648,13 @@ export class UnleashNftsService {
           if (contractAddress) {
             log(`[unleash-nfts] Trying direct v1 path: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
             response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-              headers: this.headers
+              headers: this.headersV1
             });
           } else {
             // For slug-based lookup, use query params
             log(`[unleash-nfts] Trying slug with v1 endpoint: ${BASE_URL_V1}/nft/metadata`, 'unleash-nfts');
             response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
-              headers: this.headers,
+              headers: this.headersV1,
               params
             });
           }
