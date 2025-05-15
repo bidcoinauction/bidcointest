@@ -202,7 +202,7 @@ export class MemStorage implements IStorage {
     const nft1 = await this.createNFT({
       name: "DEGEN TOONZ #4269",
       description: "DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
-      imageUrl: "/assets/nft_images/degen_toonz.png",
+      imageUrl: "https://i.seadn.io/gae/Vj_S9FP09u_1LR_SYjWNLK0OCJcovzQozDfV7lEfuTvCqwVYyCcK4jEXWCXTLYTzCuErkNhbIlbD-UMzRYLVtlYGVYEPrpIc2UP-Pw?auto=format&w=1000",
       tokenId: "4269",
       contractAddress: "0xbba9187d5108e395d0681462523c4404de06a497",
       blockchain: "ETH",
@@ -225,7 +225,7 @@ export class MemStorage implements IStorage {
     const nft2 = await this.createNFT({
       name: "Milady #7218",
       description: "Milady Maker is a collection of 10,000 randomly generated Milady NFTs on the Ethereum blockchain.",
-      imageUrl: "/assets/nft_images/milady.png",
+      imageUrl: "https://i.seadn.io/gcs/files/a9cf46b15e4e3d3dda3de5ae0b4793cf.png?auto=format&dpr=1&w=1000",
       tokenId: "7218",
       contractAddress: "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
       blockchain: "ETH",
@@ -248,7 +248,7 @@ export class MemStorage implements IStorage {
     const nft3 = await this.createNFT({
       name: "MadLads #8993",
       description: "Mad Lads is a collection of 10,000 NFTs on the Solana blockchain. Each Mad Lad represents a member of the community of creators, artists, and builders.",
-      imageUrl: "/assets/nft_images/mad_lads.png",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeigz4l6zdtc3bmj4j7nvj7ruw5shiv71ycmsufvbw3qneubqsj2f7m.ipfs.dweb.link/8993.png",
       tokenId: "8993",
       contractAddress: "0xc88bfed94fd57443a012787bd43958fbd8553c69",
       blockchain: "SOL",
@@ -271,7 +271,7 @@ export class MemStorage implements IStorage {
     const nft4 = await this.createNFT({
       name: "Azuki #9605",
       description: "Azuki starts with a collection of 10,000 avatars that give you membership access to The Garden: a corner of the internet where artists, builders, and web3 enthusiasts meet to create a decentralized future.",
-      imageUrl: "/assets/nft_images/120.png",
+      imageUrl: "https://i.seadn.io/gae/H8jOCJuQokNqGBpkBN5wk1oZwO7LM8bNnrHCaekV2nKjnCqw6UB5oaH8XyNeBDj6bA_n1mjejzhFQUP3O1NfjFLHr3FOaeHcTOOT?auto=format&dpr=1&w=1000",
       tokenId: "9605",
       contractAddress: "0xed5af388653567af2f388e6224dc7c4b3241c544",
       blockchain: "ETH",
@@ -294,7 +294,7 @@ export class MemStorage implements IStorage {
     const nft5 = await this.createNFT({
       name: "DeGods #8748",
       description: "DeGods is a digital art collection and global community of creators, innovators, and frens. Consider this your digital identity into the DeGods ecosystem.",
-      imageUrl: "/assets/nft_images/razor1911nfo.png",
+      imageUrl: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://bafybeie3hbhuwtzcegjllfqf7a3qgkpj4xsvl7fqi73mms3ub3do52dvhy.ipfs.dweb.link/",
       tokenId: "8748",
       contractAddress: "0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6",
       blockchain: "SOL",

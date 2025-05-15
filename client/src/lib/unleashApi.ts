@@ -185,7 +185,7 @@ export const getNFTDetailedMetadata = async (
         token_id: tokenId,
         name: "DEGEN TOONZ #4269",
         description: "DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
-        image_url: "https://img-cdn.magiceden.dev/rs:fill:400:400:0:0/plain/https://arweave.net/y4kKBrW5bJgY3XQ7CVsfS8QDKsj-QyXA3w4rC_TPcgE",
+        image_url: "https://i.seadn.io/gae/Vj_S9FP09u_1LR_SYjWNLK0OCJcovzQozDfV7lEfuTvCqwVYyCcK4jEXWCXTLYTzCuErkNhbIlbD-UMzRYLVtlYGVYEPrpIc2UP-Pw?auto=format&w=1000",
         traits: [
           {
             trait_type: "Background",
