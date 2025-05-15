@@ -387,7 +387,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userBidPack = await storage.createUserBidPack({
         userId: user.id,
         bidPackId: purchaseData.packId,
+        bidsTotal: bidPack.bidCount + bidPack.bonusBids,
         bidsRemaining: bidPack.bidCount + bidPack.bonusBids,
+        purchasePrice: bidPack.price.toString(),
+        paymentMethod: 'ETH', // Default payment method
+        currency: bidPack.currency,
       });
       
       // Broadcast update to WebSocket clients
