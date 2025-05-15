@@ -255,8 +255,7 @@ export default function FeaturedAuction() {
           onClose={() => setShowBidModal(false)}
           auction={featuredAuction}
           minimumBid={Number(featuredAuction.currentBid || 0) + 0.01}
-          onPlaceBid={(amount) => {
-            console.log(`Placed bid: ${amount}`);
+          onPlaceBid={(amount: string) => {
             setShowBidModal(false);
           }}
         />
