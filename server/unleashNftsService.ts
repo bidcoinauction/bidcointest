@@ -184,7 +184,7 @@ export class UnleashNftsService {
 
   /**
    * Get collections by blockchain
-   * @param chain The blockchain name (ethereum, polygon, etc.)
+   * @param chain The blockchain chain_id (1 for Ethereum, 137 for Polygon, etc.)
    * @param page Page number
    * @param limit Items per page
    * @param metrics Type of metrics to include (volume, floor_price, etc.)
@@ -194,36 +194,90 @@ export class UnleashNftsService {
     try {
       // Try v2 endpoint first
       try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collections`, {
+        // Make sure chain is properly formatted (use chain_id value)
+        const chainId = this.normalizeChainId(chain);
+        log(`Attempting to fetch collections for chain ID: ${chainId} with v2 API`, 'unleash-nfts');
+        
+        const response = await axios.get(`${BASE_URL_V2}/collections`, {
           headers: this.headers,
           params: {
-            blockchain: chain,
+            blockchain: parseInt(chainId),  // API expects blockchain as integer
             offset: (page - 1) * limit,
             limit,
             metrics: metrics,
-            sort_by: sortBy
+            sort_by: sortBy,
+            sort_order: 'desc',
+            time_range: '24h'
           }
         });
+        
+        log(`Successfully retrieved ${response.data?.data?.length || 0} collections from v2 API`, 'unleash-nfts');
         return response.data.data || [];
-      } catch (v2Error) {
+      } catch (error: any) {
         // If v2 fails, try v1 endpoint
-        log(`V2 collections endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collections`, {
+        const errorMsg = error?.message || 'Unknown error';
+        log(`V2 collections endpoint failed: ${errorMsg}, trying v1 endpoint...`, 'unleash-nfts');
+        
+        // Make sure chain is properly formatted (use chain_id value)
+        const chainId = this.normalizeChainId(chain);
+        
+        // Try the correct v1 endpoint based on documentation
+        const response = await axios.get(`${BASE_URL_V1}/collections`, {
           headers: this.headers,
           params: {
-            blockchain: chain,
+            blockchain: parseInt(chainId),  // API expects blockchain as integer
             offset: (page - 1) * limit,
             limit,
             metrics: metrics,
-            sort_by: sortBy
+            sort_by: sortBy,
+            sort_order: 'desc',
+            time_range: '24h'
           }
         });
+        
+        log(`Successfully retrieved ${response.data?.data?.length || 0} collections from v1 API`, 'unleash-nfts');
         return response.data.data || [];
       }
     } catch (error) {
       this.handleError('getCollectionsByChain', error);
+      // Return empty array to avoid cascading failures
       return [];
     }
+  }
+  
+  /**
+   * Normalize chain identifier to the format expected by UnleashNFTs API
+   * @param chain Chain identifier (could be name, symbol, or chain_id)
+   */
+  private normalizeChainId(chain: string): string {
+    // Already numeric chain ID
+    if (/^\d+$/.test(chain)) {
+      return chain;
+    }
+    
+    // Convert common chain names to chain_id
+    const chainMap: Record<string, string> = {
+      'ethereum': '1',
+      'eth': '1',
+      'polygon': '137',
+      'matic': '137',
+      'solana': '501',
+      'sol': '501',
+      'binance': '56',
+      'bsc': '56',
+      'avalanche': '43114',
+      'avax': '43114'
+    };
+    
+    const normalizedChain = chain.toLowerCase();
+    if (chainMap[normalizedChain]) {
+      log(`Normalized chain "${chain}" to chain_id "${chainMap[normalizedChain]}"`, 'unleash-nfts');
+      return chainMap[normalizedChain];
+    }
+    
+    // Default to Ethereum if unknown
+    log(`Unknown chain "${chain}", defaulting to Ethereum (chain_id=1)`, 'unleash-nfts');
+    return '1';
   }
 
   /**
