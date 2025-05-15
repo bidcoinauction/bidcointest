@@ -1,5 +1,6 @@
-// Import the base fetchFromAPI function but we'll create a specialized version
+// Import axios for direct API calls
 import { fetchFromAPI as baseFetchFromAPI } from './api';
+// We'll define our own fetch function for external APIs
 import axios from 'axios';
 
 /**
@@ -64,7 +65,28 @@ async function fetchFromAPI<T>(endpoint: string, options?: RequestInit, apiVersi
     apiStatus.lastApiVersion = apiVersion;
     connectionAttempts[apiVersion].lastAttempt = Date.now();
     
-    const response = await baseFetchFromAPI<T>(`https://api.unleashnfts.com/api/${apiVersion}/${endpoint}`, mergedOptions);
+    // Use direct fetch instead of going through the baseFetchFromAPI which adds a "/api" prefix
+    const url = `https://api.unleashnfts.com/api/${apiVersion}/${endpoint}`;
+    console.log(`[unleash-nfts] Fetching from ${url}`);
+    
+    const response = await fetch(url, mergedOptions);
+    
+    if (!response.ok) {
+      let errorMessage = "";
+      try {
+        // Try to parse JSON error response
+        const errorJson = await response.json();
+        errorMessage = errorJson.message || errorJson.error || JSON.stringify(errorJson);
+      } catch {
+        // If not JSON, get plain text
+        errorMessage = await response.text();
+      }
+      
+      const error = new Error(`API Error (${response.status}): ${errorMessage}`);
+      throw error;
+    }
+    
+    const data = await response.json();
     
     // Mark this API version as successful
     connectionAttempts[apiVersion].successful = true;
@@ -73,7 +95,7 @@ async function fetchFromAPI<T>(endpoint: string, options?: RequestInit, apiVersi
     apiStatus.rateLimitHit = false;
     apiStatus.lastUpdated = Date.now();
     
-    return response;
+    return data as T;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     apiStatus.lastError = errorMessage;

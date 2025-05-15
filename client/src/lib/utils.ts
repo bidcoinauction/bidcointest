@@ -168,8 +168,14 @@ export function formatNumber(num: number | null | undefined, digits = 1): string
 export function getRarityColor(rarity: number | null | undefined): string {
   if (rarity === null || rarity === undefined) return 'bg-gray-500';
   
+  // Ensure the rarity is a number
+  const rarityNum = typeof rarity === 'string' ? parseFloat(rarity) : rarity;
+  
+  // Handle NaN
+  if (isNaN(rarityNum)) return 'bg-gray-500';
+  
   // Convert percentage to a 0-100 scale if it's provided as decimal
-  const percentage = rarity <= 1 ? rarity * 100 : rarity;
+  const percentage = rarityNum <= 1 ? rarityNum * 100 : rarityNum;
   
   if (percentage <= 1) return 'bg-red-600'; // Legendary: <1%
   if (percentage <= 5) return 'bg-orange-500'; // Epic: 1-5%
@@ -186,8 +192,14 @@ export function getRarityColor(rarity: number | null | undefined): string {
 export function getRarityLabel(rarity: number | null | undefined): string {
   if (rarity === null || rarity === undefined) return 'Unknown';
   
+  // Ensure the rarity is a number
+  const rarityNum = typeof rarity === 'string' ? parseFloat(rarity) : rarity;
+  
+  // Handle NaN
+  if (isNaN(rarityNum)) return 'Unknown';
+  
   // Convert percentage to a 0-100 scale if it's provided as decimal
-  const percentage = rarity <= 1 ? rarity * 100 : rarity;
+  const percentage = rarityNum <= 1 ? rarityNum * 100 : rarityNum;
   
   if (percentage <= 1) return 'Legendary';
   if (percentage <= 5) return 'Epic';
