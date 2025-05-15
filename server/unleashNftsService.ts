@@ -950,6 +950,48 @@ export class UnleashNftsService {
     }
   }
 
+  /**
+   * Normalize blockchain chain ID to format expected by UnleashNFTs API
+   * @param chain - Chain name (ethereum, polygon, etc.)
+   * @returns Normalized chain ID (1 for ethereum, etc.)
+   */
+  private normalizeChainId(chain: string): string {
+    // Convert common chain names to their numeric IDs as required by the API
+    const chainMap: {[key: string]: string} = {
+      'ethereum': '1',
+      'eth': '1',
+      'polygon': '137',
+      'matic': '137',
+      'binance': '56',
+      'bsc': '56',
+      'avalanche': '43114',
+      'avax': '43114',
+      'arbitrum': '42161',
+      'optimism': '10',
+      'fantom': '250',
+      'ftm': '250',
+      'base': '8453',
+      'solana': 'solana'
+    };
+    
+    // Check if the chain is already a numeric ID
+    if (/^\d+$/.test(chain)) {
+      return chain;
+    }
+    
+    // Look up the chain in our mapping
+    const normalizedChain = chainMap[chain.toLowerCase()];
+    
+    if (normalizedChain) {
+      log(`Normalized chain '${chain}' to '${normalizedChain}'`, 'unleash-nfts');
+      return normalizedChain;
+    }
+    
+    // If not found in the map, return the original (might be a numeric ID already)
+    log(`Using original chain identifier: ${chain}`, 'unleash-nfts');
+    return chain;
+  }
+
   private handleError(method: string, error: any): void {
     const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
     const status = error.response?.status;
