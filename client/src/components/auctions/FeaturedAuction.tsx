@@ -142,20 +142,17 @@ export default function FeaturedAuction() {
         <div className="md:flex">
           <div className="md:w-1/2 relative overflow-hidden">
             <img 
-              src={getOptimalNFTImageSource(featuredAuction.nft)}
+              src="https://animation-url.degods.com/?tokenId=8747"
               alt={featuredAuction.nft.name} 
               className="w-full h-64 md:h-full object-cover"
               onError={(e) => {
-                // Enhanced multi-stage fallback system
+                // Use specific premium collection image for featured auction
                 const target = e.target as HTMLImageElement;
-                const auctionId = featuredAuction.id;
                 
-                // Try direct asset files first - use consistent file naming
-                if (target.src !== `/attached_assets/7218.avif`) {
-                  console.log(`Featured auction: Trying direct attached asset`);
-                  target.src = `/attached_assets/7218.avif`;
+                if (target.src !== `/attached_assets/Screenshot 2025-05-15 at 13.28.23.png`) {
+                  console.log(`Featured auction: Loading DeGod NFT image`);
+                  target.src = `/attached_assets/Screenshot 2025-05-15 at 13.28.23.png`;
                 } else if (target.src !== `/placeholder-nft.png`) {
-                  // If that fails, use the generic placeholder
                   console.log(`Featured auction: Falling back to placeholder`);
                   target.src = `/placeholder-nft.png`;
                 }

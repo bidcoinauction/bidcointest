@@ -141,11 +141,11 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const currency = 'USD';
   
   return (
-    <div className="bg-[#0a0e17] rounded-lg overflow-hidden transition-all">
+    <div className="bg-[#0A0B0F] rounded-lg overflow-hidden transition-all border border-[#1A1E2D]">
       <div className="relative">
-        {/* Bid count badge at top-right of image */}
+        {/* Bid count badge at top-left of image */}
         <Badge 
-          className="absolute top-2 right-2 bg-indigo-600 text-white z-10 rounded-md px-2 py-1 text-xs"
+          className="absolute top-2 left-2 bg-indigo-600 text-white z-10 rounded-full px-2 py-0.5 text-xs"
         >
           {localBidCount || 3} bids
         </Badge>
@@ -155,24 +155,40 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           alt={auction.nft.name}
           className="w-full h-44 object-cover cursor-pointer"
           onError={(e) => {
-            // Staged fallback system for maximum reliability
+            // Staged fallback system based on collection
             const target = e.target as HTMLImageElement;
             const auctionId = auction.id;
             
-            // Try direct attached asset first if we have a matching ID
-            const knownAssets: Record<number, string> = {
-              1: '7218.avif',
-              2: '8993.avif',
-              7: '7218.avif',
-              8: '8993.avif'
+            // Map NFT collections based on screenshots
+            const collectionMapping: Record<number, {collection: string, id: string}> = {
+              1: {collection: 'azuki', id: '9605'},
+              2: {collection: 'degods', id: '8748'},
+              3: {collection: 'claynosaurz', id: '7221'},
+              4: {collection: 'milady', id: '8697'},
+              5: {collection: 'degentoonz', id: '4269'},
+              6: {collection: 'milady', id: '7218'},
+              7: {collection: 'madlads', id: '8993'}
             };
             
-            if (knownAssets[auctionId] && target.src !== `/attached_assets/${knownAssets[auctionId]}`) {
-              console.log(`Trying attached asset for auction #${auctionId}: ${knownAssets[auctionId]}`);
-              target.src = `/attached_assets/${knownAssets[auctionId]}`;
-            } else if (target.src !== `/placeholder-nft.png`) {
-              // If that fails, use the generic placeholder
-              console.log(`Falling back to placeholder for auction #${auctionId}`);
+            const mapping = collectionMapping[auctionId];
+            
+            if (mapping) {
+              if (mapping.collection === 'madlads') {
+                target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
+              } else if (mapping.collection === 'degods') {
+                target.src = 'https://animation-url.degods.com/?tokenId=8747';
+              } else if (mapping.collection === 'degentoonz') {
+                target.src = `/attached_assets/Screenshot 2025-05-15 at 13.25.53.png`;
+              } else if (mapping.collection === 'milady') {
+                target.src = `/attached_assets/8993.avif`;
+              } else if (mapping.collection === 'claynosaurz') {
+                target.src = `/attached_assets/8993.avif`;
+              } else if (mapping.collection === 'azuki') {
+                target.src = `/attached_assets/8993.avif`;
+              } else {
+                target.src = `/placeholder-nft.png`;
+              }
+            } else {
               target.src = `/placeholder-nft.png`;
             }
           }}
@@ -181,93 +197,84 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
       </div>
       
       {/* Item name and ID */}
-      <div className="p-3 pb-0">
-        <h3 className="text-white font-medium text-base cursor-pointer" onClick={() => window.location.href = `/auctions/${auction.id}`}>
-          {auction.nft.name}
-        </h3>
-        <p className="text-gray-400 text-sm">{tokenDisplay}</p>
-      </div>
-      
-      {/* Leader, Price, Time left, Bid Value sections */}
-      <div className="p-3 pt-2 pb-2">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-          <div>
-            <div className="text-xs text-gray-400">Leader</div>
-            <div className="text-xs text-gray-200 truncate font-mono">
-              {leaderDisplay}
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-xs text-gray-400">Price</div>
-            <div className="text-sm text-white font-medium">
-              {formatPriceUSD(localCurrentBid || 0)}
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-xs text-gray-400">Time Left</div>
-            <div className="text-xs text-white flex items-center">
-              <Clock className="h-3 w-3 mr-1 text-gray-400" />
-              {formatTimeLeft()}
-            </div>
-          </div>
-          
-          <div>
-            <div className="text-xs text-gray-400">Bids</div>
-            <div className="text-xs text-white">
-              {localBidCount || 3} bids
-            </div>
-          </div>
+      <div className="p-3 pb-1 border-b border-[#1A1E2D]">
+        <div className="flex justify-between">
+          <h3 className="text-white font-medium text-base cursor-pointer truncate" onClick={() => window.location.href = `/auctions/${auction.id}`}>
+            {auction.nft.name}
+          </h3>
+        </div>
+        <div className="flex justify-between items-start text-xs">
+          <p className="text-gray-400">{tokenDisplay}</p>
+          <p className="text-gray-400 font-medium">Floor<br/>0.244 ETH</p>
         </div>
       </div>
       
-      {/* Bid/Track buttons */}
-      <div className="px-3 pt-0 pb-3 grid grid-cols-2 gap-2">
-        <Button 
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (!isComplete) {
-              // Simulate a bid
-              setLocalBidCount(prev => prev + 1);
-              // Calculate based on bid count (always $0.03 per bid)
-              const newBidCount = localBidCount + 1;
-              setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
-              
-              // Reset timer (Bidcoin reset mechanism)
-              const resetTime = new Date();
-              resetTime.setSeconds(resetTime.getSeconds() + 60);
-              setLocalEndTime(resetTime);
-              
-              // Update random leader
-              const randomBidders = [
-                "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
-                "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
-                "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8"
-              ];
-              setLocalLeader(randomBidders[Math.floor(Math.random() * randomBidders.length)]);
-            }
-          }}
-          disabled={isComplete}
-        >
-          Bid Now
-        </Button>
+      {/* Timer and price */}
+      <div className="p-3 flex items-start justify-between">
+        <div>
+          <p className="text-gray-400 text-xs">Leader</p>
+          <p className="text-gray-200 text-xs truncate font-mono">
+            {leaderDisplay}
+          </p>
+          <p className="text-gray-400 text-xs mt-1">Time Left</p>
+          <div className="text-xs text-white flex items-center">
+            <Clock className="h-3 w-3 mr-1 text-gray-400" />
+            00:{formatTimeLeft()}
+          </div>
+        </div>
         
-        <Button 
-          variant="outline"
-          className={`border border-blue-600 text-blue-600 hover:bg-blue-600/10 font-medium rounded ${
-            isTracked ? 'bg-blue-600/10' : ''
-          }`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setIsTracked(!isTracked);
-          }}
-        >
-          {isTracked ? 'Tracked' : 'Track'}
-        </Button>
+        <div className="text-right">
+          <p className="text-gray-400 text-xs">Price</p>
+          <p className="text-white font-medium">
+            {formatPriceUSD(localCurrentBid || 0.09)}
+          </p>
+          <div className="flex justify-end space-x-2 mt-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-indigo-600 text-indigo-400 hover:bg-indigo-900/20 hover:text-indigo-300 px-3"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsTracked(!isTracked);
+              }}
+            >
+              Track
+            </Button>
+            
+            <Button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isComplete) {
+                  // Simulate a bid
+                  setLocalBidCount(prev => prev + 1);
+                  // Calculate based on bid count (always $0.03 per bid)
+                  const newBidCount = localBidCount + 1;
+                  setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
+                  
+                  // Reset timer (Bidcoin reset mechanism)
+                  const resetTime = new Date();
+                  resetTime.setSeconds(resetTime.getSeconds() + 60);
+                  setLocalEndTime(resetTime);
+                  
+                  // Update random leader
+                  const randomBidders = [
+                    "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
+                    "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
+                    "0x2B96A7178F08F11d3aBc2b95E64CF2c4c55301E8"
+                  ];
+                  setLocalLeader(randomBidders[Math.floor(Math.random() * randomBidders.length)]);
+                }
+              }}
+              size="sm"
+              className="bg-indigo-600 text-white hover:bg-indigo-700 px-3"
+              disabled={isComplete}
+            >
+              Bid Now
+            </Button>
+          </div>
+        </div>
       </div>
       
 
