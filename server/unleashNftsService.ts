@@ -664,7 +664,8 @@ export class UnleashNftsService {
   }
   
   /**
-   * Sanitize NFT image URLs to avoid third-party marketplace routing
+   * Sanitize NFT image URLs to avoid marketplace restrictions
+   * This is a critical function to ensure NFT images load properly from various sources
    * @param url The original image URL
    * @returns Sanitized image URL that uses direct sources
    */
@@ -672,44 +673,122 @@ export class UnleashNftsService {
     if (!url) return '/placeholder-nft.png';
     
     try {
-      // Check for and replace problematic sources
+      log(`Sanitizing image URL: ${url}`, 'unleash-nfts');
       
-      // OpenSea URLs
+      // Check and replace HTTP with HTTPS first for security
+      if (url.startsWith('http://')) {
+        url = url.replace('http://', 'https://');
+        log(`Converted to HTTPS: ${url}`, 'unleash-nfts');
+      }
+      
+      // Special case for data URLs - leave them as is
+      if (url.startsWith('data:image/')) {
+        log(`Data URL detected, keeping as is`, 'unleash-nfts');
+        return url;
+      }
+      
+      // Handle malformed URLs or relative paths
+      if (!url.includes('://') && !url.startsWith('data:')) {
+        if (url.startsWith('/')) {
+          log(`Converting relative path to absolute`, 'unleash-nfts');
+          return url; // Leave server relative paths as is
+        } else if (url.startsWith('ipfs://')) {
+          // Continue processing with IPFS handler below
+        } else {
+          log(`Malformed URL without protocol, adding https://`, 'unleash-nfts');
+          url = 'https://' + url;
+        }
+      }
+      
+      // OpenSea URLs - Use IPFS gateway or direct URL
       if (url.includes('opensea.io') || url.includes('openseauserdata.com')) {
         const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
         if (ipfsMatch && ipfsMatch[1]) {
-          return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+          const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+          log(`Converted OpenSea URL to IPFS gateway: ${newUrl}`, 'unleash-nfts');
+          return newUrl;
+        } else {
+          // Try to extract the direct image URL from OpenSea links
+          const directMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
+          if (directMatch) {
+            // Use a direct CDN URL if possible
+            const newUrl = `https://i.seadn.io/gae/${directMatch[1]}`;
+            log(`Extracted direct image from OpenSea URL: ${newUrl}`, 'unleash-nfts');
+            return newUrl;
+          }
         }
       }
       
-      // Magic Eden URLs
+      // Magic Eden URLs - Convert to Arweave
       if (url.includes('magiceden.io') || url.includes('magiceden.com')) {
-        const idMatch = url.match(/([a-zA-Z0-9]{43,})/);
+        const idMatch = url.match(/([a-zA-Z0-9_-]{43,})/);
         if (idMatch && idMatch[1]) {
-          return `https://arweave.net/${idMatch[1]}`;
+          const newUrl = `https://arweave.net/${idMatch[1]}`;
+          log(`Converted Magic Eden URL to Arweave: ${newUrl}`, 'unleash-nfts');
+          return newUrl;
+        } else {
+          // Try to extract the filename and use a direct URL
+          const filenameMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
+          if (filenameMatch) {
+            // Use a public storage URL if we have the filename
+            log(`Extracted filename from Magic Eden URL: ${filenameMatch[1]}`, 'unleash-nfts');
+            url = `https://user-content.magiceden.io/${filenameMatch[1]}`;
+          }
         }
       }
       
-      // IPFS URLs with wrong gateway
+      // IPFS URLs with IPFS protocol
+      if (url.startsWith('ipfs://')) {
+        const ipfsId = url.substring(7); // Remove ipfs:// prefix
+        const newUrl = `https://ipfs.io/ipfs/${ipfsId}`;
+        log(`Converted IPFS protocol URL to gateway: ${newUrl}`, 'unleash-nfts');
+        return newUrl;
+      }
+      
+      // IPFS URLs with wrong gateway or path format
       if (url.includes('ipfs') && !url.includes('ipfs.io')) {
-        const ipfsMatch = url.match(/ipfs[:/]([a-zA-Z0-9]+)/);
+        // More comprehensive regex to extract IPFS hash
+        const ipfsMatch = url.match(/ipfs[:/ ]+([a-zA-Z0-9]{46}|[a-zA-Z0-9]{59}|Qm[a-zA-Z0-9]{44})/i);
         if (ipfsMatch && ipfsMatch[1]) {
-          return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+          const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+          log(`Converted to IPFS gateway URL: ${newUrl}`, 'unleash-nfts');
+          return newUrl;
         }
       }
       
       // Arweave URLs with wrong gateway
       if (url.includes('arweave') && !url.includes('arweave.net')) {
-        const arweaveMatch = url.match(/([a-zA-Z0-9]{43})/);
+        const arweaveMatch = url.match(/([a-zA-Z0-9_-]{43})/);
         if (arweaveMatch && arweaveMatch[1]) {
-          return `https://arweave.net/${arweaveMatch[1]}`;
+          const newUrl = `https://arweave.net/${arweaveMatch[1]}`;
+          log(`Converted to Arweave gateway URL: ${newUrl}`, 'unleash-nfts');
+          return newUrl;
         }
       }
       
-      // Return original if no replacement needed
+      // Ensure properly encoded URLs for special characters
+      if (url.includes(' ') || url.includes('"') || url.includes("'")) {
+        const encodedUrl = encodeURI(url);
+        if (encodedUrl !== url) {
+          log(`URL encoded to handle special characters: ${encodedUrl}`, 'unleash-nfts');
+          url = encodedUrl;
+        }
+      }
+      
+      // Handle S3 and other cloud storage URLs
+      const s3Match = url.match(/amazonaws\.com\/([^/]+\/[^/]+\/[^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
+      if (s3Match) {
+        // Ensure we're using HTTPS for S3 URLs
+        const newUrl = `https://s3.amazonaws.com/${s3Match[1]}`;
+        log(`Normalized S3 URL: ${newUrl}`, 'unleash-nfts');
+        return newUrl;
+      }
+      
+      log(`No URL transformation needed, returning original`, 'unleash-nfts');
       return url;
     } catch (error) {
       console.error('Error cleaning image URL:', error);
+      // If any error occurs during cleaning, return the original URL
       return url;
     }
   }
