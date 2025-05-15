@@ -346,7 +346,12 @@ export function getOptimalNFTImageSource(nft: any): string {
   };
   
   if (knownLocalAssets[nftId]) {
-    console.log(`Using attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
+    // Only log once per NFT ID to reduce console spam
+    const assetLogKey = `attached_asset_${nftId}`;
+    if (!sessionStorage.getItem(assetLogKey)) {
+      console.log(`Using attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
+      sessionStorage.setItem(assetLogKey, 'true');
+    }
     return `/attached_assets/${knownLocalAssets[nftId]}`;
   }
   
@@ -555,15 +560,32 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
       const matches = url.match(arweavePattern);
       if (matches && matches[0]) {
         const newUrl = `https://arweave.net/${matches[0]}`;
-        console.log(`Normalized Solana/Metaplex URL to Arweave: ${newUrl}`);
+        
+        // Only log once per session
+        if (!sessionStorage.getItem('solana_metaplex_log')) {
+          console.log(`Normalized Solana/Metaplex URL to Arweave`);
+          sessionStorage.setItem('solana_metaplex_log', 'true');
+        }
+        
+        sessionStorage.setItem(cacheKey, newUrl);
         return newUrl;
       }
     }
     
-    console.log(`No URL transformation needed, returning original`);
+    // Only log once per session for no transformation needed
+    if (!sessionStorage.getItem('no_transform_needed_log')) {
+      console.log(`No URL transformation needed, returning original`);
+      sessionStorage.setItem('no_transform_needed_log', 'true');
+    }
+    
+    sessionStorage.setItem(cacheKey, url);
     return url;
   } catch (error) {
-    console.error('Error sanitizing NFT image URL:', error);
+    // Only log errors once per session
+    if (!sessionStorage.getItem('sanitize_error_log')) {
+      console.error('Error sanitizing NFT image URL');
+      sessionStorage.setItem('sanitize_error_log', 'true');
+    }
     return imageUrl || '/placeholder-nft.png';
   }
 }
