@@ -1,0 +1,482 @@
+Jump to Content
+unleashnfts
+Log In
+Guides
+API
+
+Search
+⌘K
+Unleash NFTs
+About
+Getting Started
+Litepaper
+Wash Trading
+Price Estimation
+Docs
+API Reference
+API Endpoints
+Resources
+Simplehash to bitsCrunch Migration Guide
+Legal
+Imprint
+Privacy Policy
+Transparency Policy
+
+Getting Started
+Suggest Edits
+Understand our API specs
+This section contains the complete technical overview of the Unleash NFTs API. You can find it here.
+
+Supported chains
+Chain Name	Chain Id (INT)
+Ethereum	1
+Polygon	137
+Avalanche	43114
+Binance Smart Chain	57
+Ordinals	8086
+Linea	59144
+Solana	900
+How to make your first API call
+To obtain your complimentary developer API key, please complete the following steps:
+
+Begin by connecting your wallet on unleashnfts.com.
+Navigate to the API KEY section, located within the "Your Portfolio" page.
+Submit your email address and proceed with the instructions outlined in the confirmation email.
+Return to this API KEY screen to retrieve your free API key.
+Explore any of the endpoints within the API reference page. For interactive API testing, ensure you provide the API key within the Authorization header.
+How to make your first API call
+Below is an example of an API request to get the list of blockchains supported by Unleash NFTs. Before running the command, make sure "your API key" in the header section is replaced with a valid api key.
+
+curl
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/blockchains?sort_by=blockchain_name&offset=0&limit=30 \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+The API response will provide the list of blockchains supported by Unleash NFTs, along with additional details about the blockchains.
+
+Below is the API response:
+
+JSON
+
+{
+  "blockchains": [
+    {
+      "metadata": {
+        "id": 1,
+        "name": "Ethereum",
+        "description": "Ethereum is the community-run technology powering the cryptocurrency, ether (ETH) and thousands of decentralized applications.",
+        "thumbnail_url": "https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=002",
+        "currency_id": "eth",
+        "latest_data_timestamp": "2022-10-31T00:00:00.000Z"
+      }
+    },
+    {
+      "metadata": {
+        "id": 137,
+        "name": "Polygon",
+        "description": "Polygon, formerly known as the Matic Network, is a scaling solution that aims to provide multiple tools to improve the speed and reduce the cost and complexities of transactions on blockchain networks. ... After the rebranding, Polygon retained its MATIC cryptocurrency, the digital coin underpinning the network.",
+        "thumbnail_url": "https://polygonscan.com/images/svg/brands/polygon.svg",
+        "currency_id": "matic",
+        "latest_data_timestamp": "2022-10-31T00:00:00.000Z"
+      }
+    }
+  ],
+  "pagination": {
+    "total_items": 2,
+    "offset": 0,
+    "limit": 30,
+    "has_next": false
+  }
+}
+How to get the NFT market report
+Some of the sample market metrics are provided below, while the full list of metrics can be found here.
+
+Metric name (in API)	Metric unit	Metric description
+marketcap	[currency]	The total market value of the NFT collection calculated as the sum of each NFT valued at the average trading price of the collection.
+volume	[currency]	A measure of how much of an NFT collection was traded
+sales	count	Number of NFTs sold
+traders	count	Number of traders (either buyer and or seller)
+washtrade_volume	[currency]	Total trade value suspected of washtrade
+holders	Count	Number of traders currently holding NFTs
+transfers	Count	Number of NFTs flipped (includes both sale and non sale NFT transfers)
+Single metric:
+for example, Volume
+
+In this case, all the configuration of the API is managed by query parameters. For example, to obtain a single metric data for a blockchain, by following query parameters
+
+metrics required - metrics sales are passed
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/market/metrics?currency=usd&blockchain=1&metrics=sales&time_range=24h&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+From the response, we get the market metrics values for the selected metrics which can be used for further analysis. In Ethereum, we can obtain how much sales have stood from this endpoint.
+
+Response
+
+JSON
+
+{
+  "metric_values": {
+    "sales": {
+      "value": 58941,
+      "unit": "count"
+    }
+  }
+}
+Multiple metrics:
+for example, Marketcap, Volume, Transaction
+
+To obtain multiple metric data for a particular blockchain. This is used to find multiple trends data for a selected blockchain, like Ethereum and Polygon. All the configuration of the API is managed by query parameters. For example, to obtain multiple metric data for the selected blockchain, by following query parameters.
+
+metrics required - multiple metrics are passed, like transactions and volume
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/market/metrics?currency=usd&blockchain=1&metrics=transactions&metrics=volume&time_range=all&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+When we pass the multiple metrics like transactions and volume in API, it will generate a list of values of that metrics in a blockchain.
+
+Response
+
+JSON
+
+{
+  "metric_values": {
+    "transactions": {
+      "value": 84717,
+      "unit": "count"
+    },
+    "volume": {
+      "value": "22036370.0",
+      "unit": "usd"
+    }
+  }
+}
+Single trend data:
+for example, Volume
+
+To obtain trend data for selected metrics on a Blockchain for a selected time range, like for 24 hours, data will generate results within a day. The query parameters are listed below
+
+metrics required - Single metrics are passed, like transactions and volume
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/market/trend?currency=usd&blockchain=1&metrics=traders&time_range=15m&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+For example, to obtain data for the total trade value for the latest 24h data, we use the API below to generate the latest 24 hours data.
+
+Response
+
+JSON
+
+{
+  "data_points": [
+    {
+      "date": "2022-10-26T23:59:00.000Z",
+      "values": {
+        "traders": 49
+      }
+    },
+    {
+      "date": "2022-10-26T23:48:00.000Z",
+      "values": {
+        "traders": 65
+      }
+    },
+    {
+      "date": "2022-10-26T23:45:00.000Z",
+      "values": {
+        "traders": 83
+      }
+    }
+  ],
+  "metrics": {
+    "traders": {
+      "value": 667,
+      "unit": "count"
+    }
+  },
+  "data_available_since": "2021-06-22T00:00:00.000Z"
+}
+Multiple trend data:
+for example, Traders, Sellers, Buyers
+
+To obtain trend data for multiple metrics in Blockchain for a selected time range, for example, 24 hours data, the API will generate results for multiple trends within a day. It can be used to create a dashboard or data analysis to represent blockchain performance in selected metrics. For example to obtain multiple trend data for a blockchain, follow the query parameters below:
+
+metrics required - Single metrics are passed, like transactions and volume
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/market/trend?currency=usd&blockchain=1&metrics=traders&metrics=traders_buyers_change&time_range=15m&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+Response:
+
+JSON
+
+{
+  "data_points": [
+    {
+      "date": "2022-10-26T23:59:00.000Z",
+      "values": {
+        "traders": 49,
+        "traders_buyers_change": -0.21428571428571427
+      }
+    },
+    {
+      "date": "2022-10-26T23:58:00.000Z",
+      "values": {
+        "traders": 65,
+        "traders_buyers_change": -0.034482758620689655
+      }
+    },
+  ],
+  "metrics": {
+    "traders": {
+      "value": 667,
+      "unit": "count"
+    },
+    "traders_buyers_change": {
+      "value": -0.1797468364238739,
+      "unit": "pct"
+    }
+  },
+  "data_available_since": "2021-06-22T00:00:00.000Z"
+}
+How to get top NFT collections (list)
+To get the complete NFT collections list, select a time range between 24h, seven days, 30 days, and all. The query parameters are listed below:
+
+metrics required - Metrics are passed, like volume
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/collections?metrics=marketcap&currency=usd&blockchain=1&sort_by=holders&sort_order=desc&offset=0&limit=3&time_range=24h&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+Response
+
+JSON
+
+{
+  "collections": [
+    {
+      "metadata": {
+        "contract_address": "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
+        "name": "ENS: Ethereum Name Service",
+        "chain_id": 1,
+        "collection_image_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+        "thumbnail_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+        "thumbnail_palette": [
+          "#8C9EFF",
+          "#89C4F9",
+          "#DBBFFF",
+          "#70F7A9"
+        ],
+        "verified": false,
+        "nft_count": 2743269
+      },
+      "metric_values": {
+        "marketcap": {
+          "value": "1323480704.0",
+          "unit": "usd"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "contract_address": "0x495f947276749ce646f68ac8c248420045cb7b5e",
+        "name": "OpenSea Shared Storefront",
+        "chain_id": 1,
+        "collection_image_url": "https://lh3.googleusercontent.com/HMeSm6mM47Wkap8it2rXBbyCIF0wiAXpamQJQidiCmF4wL-zL5sS2UXZuH6jm65kpXy2XwaS1T9gkD7x2UbB34qlwTLMTBHmyqx5qA=s500",
+        "thumbnail_url": "https://lh3.googleusercontent.com/HMeSm6mM47Wkap8it2rXBbyCIF0wiAXpamQJQidiCmF4wL-zL5sS2UXZuH6jm65kpXy2XwaS1T9gkD7x2UbB34qlwTLMTBHmyqx5qA=s500",
+        "thumbnail_palette": [
+          "#0064C2",
+          "#D2D8F9",
+          "#89C4F9",
+          "#8C9EFF"
+        ],
+        "verified": false,
+        "nft_count": 1858690
+      },
+      "metric_values": {
+        "marketcap": {
+          "value": "NA",
+          "unit": "usd"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "contract_address": "0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270",
+        "name": "Art Blocks",
+        "chain_id": 1,
+        "collection_image_url": "https://logo.nftscan.com/logo/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270.png",
+        "thumbnail_url": "https://logo.nftscan.com/logo/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270.png",
+        "thumbnail_palette": [
+          "#E03131",
+          "#12B886",
+          "#F7F5C9",
+          "#5050C4"
+        ],
+        "verified": false,
+        "nft_count": 195357
+      },
+      "metric_values": {
+        "marketcap": {
+          "value": "453947360.0",
+          "unit": "usd"
+        }
+      }
+    }
+  ],
+  "metric_ranges": {
+    "marketcap": {
+      "minimum": "0.0",
+      "maximum": "1323480704.0",
+      "total": "9152101610.617188"
+    }
+  },
+  "pagination": {
+    "total_items": 386,
+    "offset": 0,
+    "limit": 3,
+    "has_next": true
+  }
+}
+How to get the collection details:
+To get the collection metadata information, such as thumbnail URL, description, and social media URL, all the API configuration is managed by path parameters. For example, to obtain the list of NFT in a collection for a blockchain, follow the path parameters below:
+
+blockchain required - chain id 1 for Ethereum and 137 for Polygon
+
+address required - collection address
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/collection/1/0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85 \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+We need to pass the blockchain and address as path parameters, and thereafter, it will fetch the metadata details of that collection. Then, we can use the data to create a dashboard to view the collection details.
+
+Response:
+
+JSON
+
+{
+  "contract_address": "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
+  "name": "ENS: Ethereum Name Service",
+  "chain_id": 1,
+  "thumbnail_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+  "collection_image_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+  "verified": false,
+  "nft_count": 2743269,
+  "thumbnail_palette": [
+    "#8C9EFF",
+    "#89C4F9",
+    "#DBBFFF",
+    "#70F7A9"
+  ],
+  "description": "Ethereum Name Service (ENS) domains are secure domain names for the decentralized world. ENS domains provide a way for users to map human readable names to blockchain and non-blockchain resources, like Ethereum addresses, IPFS hashes, or website URLs. ENS domains can be bought and sold on secondary markets.",
+  "start_date": "2020-01-30T00:43:54Z",
+  "social_media": [
+    {
+      "platform": "twitter",
+      "url": "https://www.twitter.com/ensdomains"
+    },
+    {
+      "platform": "discord",
+      "url": "NA"
+    },
+    {
+      "platform": "instagram",
+      "url": "NA"
+    },
+    {
+      "platform": "medium",
+      "url": "https://www.medium.com/@the-ethereum-name-service"
+    },
+    {
+      "platform": "telegram",
+      "url": "NA"
+    }
+  ]
+}
+Updated 4 months ago
+
+About
+Wash Trading
+Did this page help you?
+Table of Contents
+Understand our API specs
+Supported chains
+How to make your first API call
+How to make your first API call
+How to get the NFT market report
+Single metric:
+Multiple metrics:
+Single trend data:
+Multiple trend data:
+How to get top NFT collections (list)
+How to get the collection details:
