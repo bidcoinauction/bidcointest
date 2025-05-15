@@ -7,7 +7,7 @@ import useCountdown from "@/hooks/useCountdown";
 import BidModal from "@/components/modals/BidModal";
 import { useCallback, useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatPriceUSD, formatCurrency, formatAddress, sanitizeNFTImageUrl } from "@/lib/utils";
+import { formatPriceUSD, formatCurrency, formatAddress, sanitizeNFTImageUrl, getOptimalNFTImageSource } from "@/lib/utils";
 
 export default function FeaturedAuction() {
   const [showBidModal, setShowBidModal] = useState(false);
@@ -142,13 +142,21 @@ export default function FeaturedAuction() {
         <div className="md:flex">
           <div className="md:w-1/2 relative overflow-hidden">
             <img 
-              src={sanitizeNFTImageUrl(featuredAuction.nft.imageUrl)}
+              src={getOptimalNFTImageSource(featuredAuction.nft)}
               alt={featuredAuction.nft.name} 
               className="w-full h-64 md:h-full object-cover"
               onError={(e) => {
-                // Fallback if the image fails to load (even after sanitization)
+                // Enhanced multi-stage fallback system
                 const target = e.target as HTMLImageElement;
-                if (target.src !== `/placeholder-nft.png`) {
+                const auctionId = featuredAuction.id;
+                
+                // Try direct asset files first - use consistent file naming
+                if (target.src !== `/attached_assets/7218.avif`) {
+                  console.log(`Featured auction: Trying direct attached asset`);
+                  target.src = `/attached_assets/7218.avif`;
+                } else if (target.src !== `/placeholder-nft.png`) {
+                  // If that fails, use the generic placeholder
+                  console.log(`Featured auction: Falling back to placeholder`);
                   target.src = `/placeholder-nft.png`;
                 }
               }}

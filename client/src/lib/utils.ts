@@ -282,6 +282,44 @@ export function getBlockchainExplorerUrl(
 }
 
 /**
+ * Get the optimal image source for an NFT with integrated fallback systems
+ * Uses a multi-tiered approach: 
+ * 1. Try direct local asset if available
+ * 2. Try API-provided URL with sanitization
+ * 3. Fall back to placeholder
+ * 
+ * @param nft The NFT object
+ * @returns The optimal image URL
+ */
+export function getOptimalNFTImageSource(nft: any): string {
+  // First priority: Check for local assets that match this NFT ID (most reliable)
+  const nftId = nft.id;
+  
+  // Known local assets with their filenames
+  const knownLocalAssets: Record<number, string> = {
+    1: '7218.avif',    // Map auction ID to asset filename
+    2: '8993.avif',    // These are the assets we have available
+    7: '7218.avif',    // Some duplicates for testing
+    8: '8993.avif'
+  };
+  
+  // If we have a matching local asset, use it directly (most reliable)
+  if (knownLocalAssets[nftId]) {
+    console.log(`Using direct attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
+    return `/attached_assets/${knownLocalAssets[nftId]}`;
+  }
+  
+  // Second priority: If token_image_url is available from UnleashNFTs API
+  if (nft.token_image_url && nft.token_image_url !== 'NA') {
+    console.log(`Using token_image_url from API for NFT #${nftId}`);
+    return nft.token_image_url;
+  }
+  
+  // Third priority: Use the API-provided URL with sanitization
+  return sanitizeNFTImageUrl(nft.imageUrl);
+}
+
+/**
  * Sanitize NFT image URLs to use direct IPFS gateways or authenticated sources instead of
  * third-party marketplaces which may block access
  * 
@@ -292,48 +330,131 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
   if (!imageUrl) return '/placeholder-nft.png';
   
   try {
-    const url = imageUrl.trim();
+    let url = imageUrl.trim();
+    console.log(`Sanitizing NFT image URL: ${url}`);
     
-    // Check for and replace unsupported providers
+    // Check and replace HTTP with HTTPS first for security
+    if (url.startsWith('http://')) {
+      url = url.replace('http://', 'https://');
+      console.log(`Converted to HTTPS: ${url}`);
+    }
     
-    // 1. Replace OpenSea URLs with direct IPFS gateway
+    // Special case for data URLs - leave them as is
+    if (url.startsWith('data:image/')) {
+      console.log(`Data URL detected, keeping as is`);
+      return url;
+    }
+    
+    // Handle malformed URLs or relative paths
+    if (!url.includes('://') && !url.startsWith('data:')) {
+      if (url.startsWith('/')) {
+        console.log(`Keeping relative path as is`);
+        return url; // Leave server relative paths as is
+      } else if (url.startsWith('ipfs://')) {
+        // Continue processing with IPFS handler below
+      } else {
+        console.log(`Malformed URL without protocol, adding https://`);
+        url = 'https://' + url;
+      }
+    }
+    
+    // OpenSea URLs - Use IPFS gateway or direct URL
     if (url.includes('opensea.io') || url.includes('openseauserdata.com')) {
-      // Extract IPFS hash if present
       const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
       if (ipfsMatch && ipfsMatch[1]) {
-        return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+        const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+        console.log(`Converted OpenSea URL to IPFS gateway: ${newUrl}`);
+        return newUrl;
+      } else {
+        // Try to extract the direct image URL from OpenSea links
+        const directMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
+        if (directMatch) {
+          // Use a direct CDN URL if possible
+          const newUrl = `https://i.seadn.io/gae/${directMatch[1]}`;
+          console.log(`Extracted direct image from OpenSea URL: ${newUrl}`);
+          return newUrl;
+        }
       }
     }
     
-    // 2. Replace Magic Eden URLs with direct sources
+    // Magic Eden URLs - Convert to Arweave
     if (url.includes('magiceden.io') || url.includes('magiceden.com')) {
-      // For Magic Eden, we often need to extract the arweave or solana ID
-      const idMatch = url.match(/([a-zA-Z0-9]{43,})/);
+      const idMatch = url.match(/([a-zA-Z0-9_-]{43,})/);
       if (idMatch && idMatch[1]) {
-        // Try to use arweave gateway
-        return `https://arweave.net/${idMatch[1]}`;
+        const newUrl = `https://arweave.net/${idMatch[1]}`;
+        console.log(`Converted Magic Eden URL to Arweave: ${newUrl}`);
+        return newUrl;
+      } else {
+        // Try to extract the filename and use a direct URL
+        const filenameMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
+        if (filenameMatch) {
+          // Use a public storage URL if we have the filename
+          console.log(`Extracted filename from Magic Eden URL: ${filenameMatch[1]}`);
+          const newUrl = `https://user-content.magiceden.io/${filenameMatch[1]}`;
+          return newUrl;
+        }
       }
     }
     
-    // 3. Already IPFS URL but using wrong gateway
+    // IPFS URLs with IPFS protocol
+    if (url.startsWith('ipfs://')) {
+      const ipfsId = url.substring(7); // Remove ipfs:// prefix
+      const newUrl = `https://ipfs.io/ipfs/${ipfsId}`;
+      console.log(`Converted IPFS protocol URL to gateway: ${newUrl}`);
+      return newUrl;
+    }
+    
+    // IPFS URLs with wrong gateway or path format
     if (url.includes('ipfs') && !url.includes('ipfs.io')) {
-      // Extract IPFS hash
-      const ipfsMatch = url.match(/ipfs[:/]([a-zA-Z0-9]+)/);
+      // More comprehensive regex to extract IPFS hash
+      const ipfsMatch = url.match(/ipfs[:/ ]+([a-zA-Z0-9]{46}|[a-zA-Z0-9]{59}|Qm[a-zA-Z0-9]{44})/i);
       if (ipfsMatch && ipfsMatch[1]) {
-        return `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+        const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
+        console.log(`Converted to IPFS gateway URL: ${newUrl}`);
+        return newUrl;
       }
     }
     
-    // 4. Already Arweave but using wrong gateway
+    // Arweave URLs with wrong gateway
     if (url.includes('arweave') && !url.includes('arweave.net')) {
-      // Extract Arweave hash
-      const arweaveMatch = url.match(/([a-zA-Z0-9]{43})/);
+      const arweaveMatch = url.match(/([a-zA-Z0-9_-]{43})/);
       if (arweaveMatch && arweaveMatch[1]) {
-        return `https://arweave.net/${arweaveMatch[1]}`;
+        const newUrl = `https://arweave.net/${arweaveMatch[1]}`;
+        console.log(`Converted to Arweave gateway URL: ${newUrl}`);
+        return newUrl;
       }
     }
     
-    // Return the original URL if no replacement needed
+    // Ensure properly encoded URLs for special characters
+    if (url.includes(' ') || url.includes('"') || url.includes("'")) {
+      const encodedUrl = encodeURI(url);
+      if (encodedUrl !== url) {
+        console.log(`URL encoded to handle special characters: ${encodedUrl}`);
+        url = encodedUrl;
+      }
+    }
+    
+    // Handle S3 and other cloud storage URLs
+    const s3Match = url.match(/amazonaws\.com\/([^/]+\/[^/]+\/[^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
+    if (s3Match) {
+      // Ensure we're using HTTPS for S3 URLs
+      const newUrl = `https://s3.amazonaws.com/${s3Match[1]}`;
+      console.log(`Normalized S3 URL: ${newUrl}`);
+      return newUrl;
+    }
+    
+    // Special case for Solana NFTs - normalize to Arweave or Metaplex CDN
+    if (url.includes('solana') || url.includes('metaplex')) {
+      const arweavePattern = /[a-zA-Z0-9_-]{43}/;
+      const matches = url.match(arweavePattern);
+      if (matches && matches[0]) {
+        const newUrl = `https://arweave.net/${matches[0]}`;
+        console.log(`Normalized Solana/Metaplex URL to Arweave: ${newUrl}`);
+        return newUrl;
+      }
+    }
+    
+    console.log(`No URL transformation needed, returning original`);
     return url;
   } catch (error) {
     console.error('Error sanitizing NFT image URL:', error);

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
-import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl } from "@/lib/utils";
+import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl, getOptimalNFTImageSource } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -151,13 +151,28 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </Badge>
         
         <img 
-          src={sanitizeNFTImageUrl(auction.nft.imageUrl) || `https://via.placeholder.com/400x240/171717/FFFFFF?text=${encodeURIComponent(auction.nft.name)}`}
+          src={getOptimalNFTImageSource(auction.nft)}
           alt={auction.nft.name}
           className="w-full h-44 object-cover cursor-pointer"
           onError={(e) => {
-            // Fallback if the image fails to load (even after sanitization)
+            // Staged fallback system for maximum reliability
             const target = e.target as HTMLImageElement;
-            if (target.src !== `/placeholder-nft.png`) {
+            const auctionId = auction.id;
+            
+            // Try direct attached asset first if we have a matching ID
+            const knownAssets: Record<number, string> = {
+              1: '7218.avif',
+              2: '8993.avif',
+              7: '7218.avif',
+              8: '8993.avif'
+            };
+            
+            if (knownAssets[auctionId] && target.src !== `/attached_assets/${knownAssets[auctionId]}`) {
+              console.log(`Trying attached asset for auction #${auctionId}: ${knownAssets[auctionId]}`);
+              target.src = `/attached_assets/${knownAssets[auctionId]}`;
+            } else if (target.src !== `/placeholder-nft.png`) {
+              // If that fails, use the generic placeholder
+              console.log(`Falling back to placeholder for auction #${auctionId}`);
               target.src = `/placeholder-nft.png`;
             }
           }}

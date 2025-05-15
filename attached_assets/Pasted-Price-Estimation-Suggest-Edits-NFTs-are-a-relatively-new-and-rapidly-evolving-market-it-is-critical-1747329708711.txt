@@ -1,0 +1,356 @@
+Price Estimation
+Suggest Edits
+NFTs are a relatively new and rapidly evolving market, it is critical for the users to understand the value of an NFT to spot an opportunity and determine whether to buy or sell NFT. Price estimates are further helpful to assess NFT as collateral in the DeFi play.
+
+What determines NFT Price
+NFTs (non-fungible tokens) are unique digital assets that are bought and sold on online marketplaces. Their value is determined by the rarity, uniqueness, and perceived value of the asset they represent. This can include digital art, collectibles, in-game items, and other types of digital media.
+
+How we compute price estimate - our approach
+We look at the following to engineer features
+
+Transactions: Look at the historical performance of the NFT of interest or similar NFTs that have been sold in the past.
+Buy/Sell Intent: Another factor to consider when estimating the price of an NFT is the demand for the asset it represents
+Rarity: Assess traits of an NFT and how rare (or common) those traits are
+and build a robust ML model to estimate the fair price along with giving a confidence interval (range) for the prediction
+
+In addition to the above, we also use our in-house wash trade detector suite to further enrich predictions
+
+As of the today, we support price estimate for 2200+ collections summing to 30+MM tokens (NFT’s)
+
+To get supported collections for price estimate
+To get the list of NFT collections for which price estimate is supported hit the below endpoint
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/collections/{blockchain}/price_estimate/supported_collections \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+This endpoint gives the list of collections that are supported for price estimate
+
+Required Param
+To use the above endpoint, blockchain is a required param.
+
+This expects an integer chain id as present in Chainlist (example - ethereum: 1 and polygon: 137)
+
+
+
+API call example - with blockchain id 137
+Request - Python
+Python
+
+import requests
+
+url = "https://api.unleashnfts.com/api/v1/collections/137/price_estimate/supported_collections"
+
+headers = {
+    "accept": "application/json",
+    "x-api-key": "your_api_key_here"
+}
+
+response = requests.get(url, headers=headers)
+
+print(response.text)
+cURL
+
+curl --request GET \
+     --url https://api.unleashnfts.com/api/v1/collections/137/price_estimate/supported_collections \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your_api_key_here'
+Response:
+
+JSON
+
+{
+  "collections": [
+    {
+      "metadata": {
+        "chain_id": 137,
+        "contract_address": "0xda302bc91cad1af9afcd40cff238d59424d6ba11",
+        "collection_name": "BITCONUSI Collection",
+        "thumbnail_url": "https://lh3.googleusercontent.com/XW7UFgux-vr6s0MmY0_kqSJ0B2tNsTeHxCJ2Z46V9VqG-WZlPQaAfvvyjon4rtsTfDokwKJFEvYMA0hj-e1TLvrBkv6QstJa0wLC_A=s500",
+        "thumbnail_palette": [
+          "#DBBFFF",
+          "#5050C4",
+          "#CC6AB5",
+          "#753DC4"
+        ],
+        "verified": "false"
+      }
+    },
+    ....
+    ....
+    ....
+    ....
+    {
+      "metadata": {
+        "chain_id": 137,
+        "contract_address": "0x86935f11c86623dec8a25696e1c19a8659cbf95d",
+        "collection_name": "Aavegotchi",
+        "thumbnail_url": "https://lh3.googleusercontent.com/tch-qD7u-5QkwwdxQ4VS2iXsOxXE6EXimBmMVEqkdXnJY19eMYlp7szZodSCJWFX_CZ0Il0pByCEhdFU5zws1aLK1hm_zho5cMAqDw=s500",
+        "thumbnail_palette": [
+          "#DBBFFF",
+          "#9D5DF7",
+          "#753DC4",
+          "#5050C4"
+        ],
+        "verified": "false"
+      }
+    },
+  ],
+  "pagination": {
+    "total_items": 247,
+    "offset": 0,
+    "limit": 30,
+    "has_next": true
+  }
+}
+Response Inference
+The response has a list of two dictionaries
+
+collections and pagination
+
+collections
+chain_id: the blockchain queried for
+contract_address: the blockchain contract address of the supported collection
+collection_name: the name of the supported collection
+thumbnail_url: the URL for the supported collection's thumbnail (used for visual representation)
+thumbnail_palette: The hexadecimal color representation for the supported collection's thumbnail (used for visual representation)
+pagination
+Under pagination we give the following information
+
+total_items: total number of supported collections available for this query
+offset: the page currently retrieved (starting with 0). we use offset based pagination with a default limit of 30 supported collections retrieved in one API hit
+limit: paired with offset for pagination purposes
+has_next: a boolean to indicate if we have more pages to retrieve
+For pagination, we can use the below query params while calling the API
+
+
+
+Sample query with pagination-related params
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/collections/137/price_estimate/supported_collections?offset=1&limit=100' \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your_api_key_here'
+To get price estimate for all tokens of a given collection
+Price estimate for ALL tokens in a given collection, hit the below endpoint
+
+
+/nft/{blockchain}/{address}/{token}/price-estimate_all
+This endpoint gives the estimated price and the estimated price interval (lower and upper bound) for all tokens of a collection queried for
+
+Required Params
+This endpoint requires two parameters
+
+
+
+blockchain - This expects an integer chain id as present in Chainlist (example - ethereum: 1 and polygon: 137)
+address : The contract address of the NFT collection for which price estimates are queried for
+API call example
+In this example, we use
+
+blockchain id 1 and contract_address - 0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d (BAYC)
+
+Request - Python
+Python
+
+import requests
+
+url = "https://api.unleashnfts.com/api/v1/collections/1/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/nfts/price_estimate_all"
+
+headers = {
+    "accept": "application/json",
+    "x-api-key": "your_api_key_here"
+}
+
+response = requests.get(url, headers=headers)
+
+print(response.text)
+or curl
+
+cURL
+
+curl --request GET \
+     --url https://api.unleashnfts.com/api/v1/collections/1/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/nfts/price_estimate_all \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your_api_key_here'
+Response
+JSON
+
+{
+  "nfts": [
+    {
+      "metadata": {
+        "chain_id": 1,
+        "contract_address": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
+        "token_id": "1000",
+        "collection_name": "Bored Ape Yacht Club",
+        "token_image_url": "https://res.cloudinary.com/alchemyapi/image/upload/mainnet/a0768592f9ab0b8ddc15add9f88e14d1.png",
+        "thumbnail_url": "https://lh3.googleusercontent.com/Ju9CkWtV-1Okvf45wo8UctR-M9He2PjILP0oOvxE89AyiPPGtrR3gysu1Zgy0hjd2xKIgjJJtWIc0ybj4Vd7wv8t3pxDGHoJBzDB=s500",
+        "thumbnail_palette": [
+          "#0064C2",
+          "#D2D8F9",
+          "#5050C4",
+          "#753DC4"
+        ],
+        "verified": "false"
+      },
+      "metric_values": {
+        "price_estimate": {
+          "value": 76.07025169818286,
+          "unit": "eth"
+        },
+        "price_estimate_upper_bound": {
+          "value": 143.31124955729766,
+          "unit": "eth"
+        },
+        "price_estimate_lower_bound": {
+          "value": 60.67485783262636,
+          "unit": "eth"
+        }
+      }
+    },
+    ....
+    ....
+    ....
+    ....
+    {
+      "metadata": {
+        "chain_id": 1,
+        "contract_address": "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
+        "token_id": "1010",
+        "collection_name": "Bored Ape Yacht Club",
+        "token_image_url": "NA",
+        "thumbnail_url": "https://lh3.googleusercontent.com/Ju9CkWtV-1Okvf45wo8UctR-M9He2PjILP0oOvxE89AyiPPGtrR3gysu1Zgy0hjd2xKIgjJJtWIc0ybj4Vd7wv8t3pxDGHoJBzDB=s500",
+        "thumbnail_palette": [
+          "#0064C2",
+          "#D2D8F9",
+          "#5050C4",
+          "#753DC4"
+        ],
+        "verified": "false"
+      },
+      "metric_values": {
+        "price_estimate": {
+          "value": 80.84854948146726,
+          "unit": "eth"
+        },
+        "price_estimate_upper_bound": {
+          "value": 142.0951441260468,
+          "unit": "eth"
+        },
+        "price_estimate_lower_bound": {
+          "value": 63.571972423886685,
+          "unit": "eth"
+        }
+      }
+    }
+    
+  ],
+  "pagination": {
+    "total_items": 10000,
+    "offset": 0,
+    "limit": 30,
+    "has_next": true
+  }
+}
+Response Inference
+The response has a list of two dictionaries
+
+nfts and pagination
+
+nfts
+
+nfts → metadata
+
+Under nfts → metadata, information about the queried collection and a token (within the collection) is available
+
+chain_id: the blockchain queried for
+contract_address: the blockchain contract address of the queried collection
+token_id: token id of a specific token in the collection for which metrics (discussed below) are populated
+collection_name: the name of the queried collection
+token_image_url: the URL for the specific token in the collection for which metrics (discussed below) are populated
+thumbnail_url: the URL for the queried collection's thumbnail (used for visual representation)
+thumbnail_palette: The hexadecimal color representation for the queried collection's thumbnail (used for visual representation)
+nfts → metrics
+
+Under nfts → metrics, information about the price estimate for the token id specified in metadata is available
+
+price_estimate: our proprietary AI model’s predicted price for the token specified in the metadata
+price_estimate_upper_bound: our proprietary AI model’s prediction interval - upper cap for the token specified in the metadata - we can think of this value as bitCrunch’s bullish estimate for this NFT price
+price_estimate_lower_bound: our proprietary AI model’s prediction interval - lower cap for the token specified in the metadata - we can think of this value as bitCrunch’s bearish estimate for this NFT price
+All the three have value - which is describe above and the unit which gives the currency in which the metrics are available (we currently support ETH only)
+
+Price estimate for a particular NFT of interest
+To get price estimate for a particular token (belonging to a particular collection) hit the below endpoint
+
+
+/nft/{blockchain}/{address}/{token}/price-estimate_all
+This endpoint gives the estimated price and the estimated price interval (lower and upper bound) for a token of interest in the collection queried for
+
+Required Params
+This endpoint requires three parameters
+
+
+
+blockchain: This expects an integer chain id as present in Chainlist (example - ethereum: 1 and polygon: 137)
+address: The contract address of the NFT collection for which price estimates are requested for
+token: The token of interest in the above specified collection for which price estimates are requested for
+API call example
+In this example, we use
+
+blockchain id 1 and contract_address - 0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d (BAYC) and token - 1000 BAYC token id - 1000
+
+Request - Python
+Python
+
+import requests
+
+url = "https://api.unleashnfts.com/api/v1/nft/1/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/1000/price-estimate"
+
+headers = {
+    "accept": "application/json",
+    "x-api-key": "your_api_key_here"
+}
+
+response = requests.get(url, headers=headers)
+
+print(response.text)
+or curl
+
+cURL
+
+curl --request GET \
+     --url https://api.unleashnfts.com/api/v1/nft/1/0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d/1000/price-estimate \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your_api_key_here'
+
+Response
+JSON
+
+{
+  "price_estimate": {
+    "value": 76.07025169818286,
+    "unit": "ETH"
+  },
+  "price_estimate_upper_bound": {
+    "value": 143.31124955729766,
+    "unit": "ETH"
+  },
+  "price_estimate_lower_bound": {
+    "value": 60.67485783262636,
+    "unit": "ETH"
+  }
+}
+Response Inference
+The response has a dictionary of three dictionaries
+
+price_estimate , price_estimate_upper_bound, price_estimate_lower_bound
+
+price_estimate: our proprietary AI model’s predicted price for the token requested
+price_estimate_upper_bound: our proprietary AI model’s prediction interval - upper cap for the token requested - we can think of this value as bitCrunch’s bullish estimate for this NFT price
+price_estimate_lower_bound: our proprietary AI model’s prediction interval - lower cap for the token requested - we can think of this value as bitCrunch’s bearish estimate for this NFT price
+All the three have value - which is describe
