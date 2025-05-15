@@ -716,24 +716,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Set consistent floor prices based on premium data
             if (nft.contractAddress === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
-              enrichedNFT.floorPrice = 11.73;
-              enrichedNFT.floorPriceUsd = 25560.94;
+              enrichedNFT.floorPrice = '11.73';
+              enrichedNFT.floorPriceUsd = '25560.94';
             } else if (nft.contractAddress === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6') { // DeGods
-              enrichedNFT.floorPrice = 4.58;
-              enrichedNFT.floorPriceUsd = 9945.10;
+              enrichedNFT.floorPrice = '4.58';
+              enrichedNFT.floorPriceUsd = '9945.10';
             } else if (nft.contractAddress === '0x4aeb52db83daa33a31673599e892d9247b0449ca') { // Claynosaurz
-              enrichedNFT.floorPrice = 3.85;
-              enrichedNFT.floorPriceUsd = 8398.75;
+              enrichedNFT.floorPrice = '3.85';
+              enrichedNFT.floorPriceUsd = '8398.75';
             } else if (nft.contractAddress === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
-              enrichedNFT.floorPrice = 2.35;
-              enrichedNFT.floorPriceUsd = 5129.75;
+              enrichedNFT.floorPrice = '2.35';
+              enrichedNFT.floorPriceUsd = '5129.75';
             } else if (nft.contractAddress === '0xbba9187d5108e395d0681462523c4404de06a497') { // DegenToonz
-              enrichedNFT.floorPrice = 5.72;
-              enrichedNFT.floorPriceUsd = 12435.67;
+              enrichedNFT.floorPrice = '5.72';
+              enrichedNFT.floorPriceUsd = '12435.67';
             } else if (nft.contractAddress === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
                       nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') { // MadLads
-              enrichedNFT.floorPrice = 181.83;
-              enrichedNFT.floorPriceUsd = 12890.56;
+              enrichedNFT.floorPrice = '5.91';
+              enrichedNFT.floorPriceUsd = '12890.56';
             }
           }
         }
