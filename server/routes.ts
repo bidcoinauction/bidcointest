@@ -853,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // If metadata wasn't found with UnleashNFTs, try with Alchemy
         if (!metadataFound) {
           try {
-            console.log(`Falling back to Alchemy for NFT metadata: ${nft.contractAddress}/${nft.tokenId}`);
+            // Fallback to Alchemy API for NFT metadata
             const alchemyData = await alchemyNftService.getNFTMetadata(nft.contractAddress, nft.tokenId);
             
             if (alchemyData) {
@@ -878,10 +878,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   : enrichedNFT.attributes
               };
               
-              console.log(`Successfully enriched NFT with Alchemy data: ${nft.contractAddress}/${nft.tokenId}`);
+              // Successfully enriched NFT with Alchemy data
             }
           } catch (alchemyError) {
-            console.error('Error enriching NFT with Alchemy metadata:', alchemyError);
             // Continue with the original NFT data if enrichment fails
           }
         }
@@ -1054,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } catch (unleashError) {
-          console.log('Unable to fetch UnleashNFTs data:', unleashError);
+          // Unable to fetch UnleashNFTs data, continue with basic data
           // Continue with basic Magic Eden data
         }
         
@@ -1387,7 +1386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       } catch (unleashError) {
-        console.log('Unable to fetch UnleashNFTs data:', unleashError);
+        // Unable to fetch UnleashNFTs data, continue with basic data
         // Continue with basic Moralis data
       }
       
@@ -1518,7 +1517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           }
         } catch (unleashError) {
-          console.log('Unable to fetch UnleashNFTs data:', unleashError);
+          // Unable to fetch UnleashNFTs data, continue with basic data
           // Continue with basic Moralis data
         }
         
