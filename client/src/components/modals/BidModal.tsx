@@ -30,7 +30,7 @@ interface BidModalProps {
   minimumBid: number;
 }
 
-export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimumBid }: BidModalProps) {
+export default function BidModal({ isOpen, onClose, auction, minimumBid }: BidModalProps) {
   // Fixed values for penny auction mechanics
   const [bidAmount, setBidAmount] = useState<string>("0.03");
   const [isPending, setIsPending] = useState(false);
@@ -198,8 +198,7 @@ export default function BidModal({ isOpen, onClose, auction, onPlaceBid, minimum
         ),
       });
       
-      // Notify parent component
-      onPlaceBid(bidAmount);
+      // We used to notify parent component, now handling it locally
       
       // Close modal
       onClose();
