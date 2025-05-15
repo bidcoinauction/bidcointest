@@ -281,9 +281,27 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           <p className="text-gray-400 font-medium">
             Floor<br/>
             {detailedMetadata?.floor_price ? (
-              <span className="text-primary font-bold">{detailedMetadata.floor_price} ETH</span>
+              <span className="flex flex-col items-start">
+                <span className="text-primary font-bold">{detailedMetadata.floor_price} ETH</span>
+                {detailedMetadata.floor_price_usd && (
+                  <span className="text-gray-400 text-xs">
+                    (${formatPriceUSD(detailedMetadata.floor_price_usd)})
+                  </span>
+                )}
+              </span>
             ) : auction.nft.floorPrice ? (
-              <span className="text-primary font-bold">${formatPriceUSD(auction.nft.floorPrice)}</span>
+              <span className="flex flex-col items-start">
+                <span className="text-primary font-bold">{parseFloat(auction.nft.floorPrice.toString()).toFixed(2)} ETH</span>
+                {auction.nft.floorPriceUsd ? (
+                  <span className="text-gray-400 text-xs">
+                    (${formatPriceUSD(auction.nft.floorPriceUsd)})
+                  </span>
+                ) : (
+                  <span className="text-gray-400 text-xs">
+                    (${formatPriceUSD(auction.nft.floorPrice)})
+                  </span>
+                )}
+              </span>
             ) : (
               "N/A"
             )}
