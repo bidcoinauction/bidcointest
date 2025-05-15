@@ -28,9 +28,10 @@ interface BidModalProps {
   onClose: () => void;
   auction: Auction;
   minimumBid: number;
+  onPlaceBid?: (amount: string) => void;
 }
 
-export default function BidModal({ isOpen, onClose, auction, minimumBid }: BidModalProps) {
+export default function BidModal({ isOpen, onClose, auction, minimumBid, onPlaceBid }: BidModalProps) {
   // Fixed values for penny auction mechanics
   const [bidAmount, setBidAmount] = useState<string>("0.03");
   const [isPending, setIsPending] = useState(false);
