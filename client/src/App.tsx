@@ -13,6 +13,7 @@ import { queryClient } from "@/lib/queryClient";
 import Header from "@/components/layout/Header";
 import Navigation from "@/components/layout/Navigation";
 import Footer from "@/components/layout/Footer";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 function App() {
   const { isConnected, subscribe } = useWebSocket();
@@ -41,24 +42,26 @@ function App() {
   }, [isConnected, subscribe]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      <Navigation />
-      <main className="flex-grow">
-        <Switch>
-          <Route path="/" component={AuctionsPage}/>
-          <Route path="/auctions" component={AuctionsPage}/>
-          <Route path="/auctions/:id" component={AuctionDetailsPage}/>
-          <Route path="/bid-packs" component={BidPacksPage}/>
-          <Route path="/activity" component={ActivityPage}/>
-          <Route path="/dashboard" component={DashboardPage}/>
-          <Route path="/nft-collections" component={NFTCollectionsPage}/>
-          <Route path="/about" component={AboutPage}/>
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <Footer />
-    </div>
+    <CurrencyProvider>
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <Navigation />
+        <main className="flex-grow">
+          <Switch>
+            <Route path="/" component={AuctionsPage}/>
+            <Route path="/auctions" component={AuctionsPage}/>
+            <Route path="/auctions/:id" component={AuctionDetailsPage}/>
+            <Route path="/bid-packs" component={BidPacksPage}/>
+            <Route path="/activity" component={ActivityPage}/>
+            <Route path="/dashboard" component={DashboardPage}/>
+            <Route path="/nft-collections" component={NFTCollectionsPage}/>
+            <Route path="/about" component={AboutPage}/>
+            <Route component={NotFound} />
+          </Switch>
+        </main>
+        <Footer />
+      </div>
+    </CurrencyProvider>
   );
 }
 
