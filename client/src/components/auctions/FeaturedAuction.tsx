@@ -7,7 +7,7 @@ import useCountdown from "@/hooks/useCountdown";
 import BidModal from "@/components/modals/BidModal";
 import { useCallback, useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatPriceUSD, formatCurrency, formatAddress } from "@/lib/utils";
+import { formatPriceUSD, formatCurrency, formatAddress, sanitizeNFTImageUrl } from "@/lib/utils";
 
 export default function FeaturedAuction() {
   const [showBidModal, setShowBidModal] = useState(false);
@@ -142,9 +142,16 @@ export default function FeaturedAuction() {
         <div className="md:flex">
           <div className="md:w-1/2 relative overflow-hidden">
             <img 
-              src={featuredAuction.nft.imageUrl}
+              src={sanitizeNFTImageUrl(featuredAuction.nft.imageUrl)}
               alt={featuredAuction.nft.name} 
               className="w-full h-64 md:h-full object-cover"
+              onError={(e) => {
+                // Fallback if the image fails to load (even after sanitization)
+                const target = e.target as HTMLImageElement;
+                if (target.src !== `/placeholder-nft.png`) {
+                  target.src = `/placeholder-nft.png`;
+                }
+              }}
             />
             <div className="absolute top-4 left-4 bg-accent/80 text-white text-sm font-bold px-3 py-1 rounded-full backdrop-blur-sm">
               Featured Auction

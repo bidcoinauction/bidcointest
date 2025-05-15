@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
-import { formatCurrency, formatAddress, formatPriceUSD } from "@/lib/utils";
+import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -151,9 +151,16 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </Badge>
         
         <img 
-          src={auction.nft.imageUrl || `https://via.placeholder.com/400x240/171717/FFFFFF?text=${encodeURIComponent(auction.nft.name)}`}
+          src={sanitizeNFTImageUrl(auction.nft.imageUrl) || `https://via.placeholder.com/400x240/171717/FFFFFF?text=${encodeURIComponent(auction.nft.name)}`}
           alt={auction.nft.name}
           className="w-full h-44 object-cover cursor-pointer"
+          onError={(e) => {
+            // Fallback if the image fails to load (even after sanitization)
+            const target = e.target as HTMLImageElement;
+            if (target.src !== `/placeholder-nft.png`) {
+              target.src = `/placeholder-nft.png`;
+            }
+          }}
           onClick={() => window.location.href = `/auctions/${auction.id}`}
         />
       </div>
