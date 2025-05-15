@@ -194,7 +194,8 @@ export default function AuctionDetailsPage() {
   
   // Use local countdown instead of server time
   const { formattedTime, isComplete } = useCountdown({
-    endTime: localEndTime,
+    // Ensure we always pass a valid Date object to useCountdown
+    endTime: localEndTime || new Date(Date.now() + 60 * 1000),
     onComplete: () => {
       console.log("Auction complete!");
       
@@ -602,31 +603,31 @@ export default function AuctionDetailsPage() {
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Retail Price</p>
                     <p className="text-white font-medium">
-                      {auction.nft.retailPrice && typeof auction.nft.retailPrice !== 'string' 
-                        ? `$${auction.nft.retailPrice.toFixed(2)}` 
-                        : auction.nft.retailPrice 
-                          ? `$${parseFloat(String(auction.nft.retailPrice)).toFixed(2)}`
-                          : "N/A"}
+                      {auction.nft.retailPrice 
+                        ? (typeof auction.nft.retailPrice === 'number'
+                            ? `$${auction.nft.retailPrice.toFixed(2)}`
+                            : `$${parseFloat(String(auction.nft.retailPrice)).toFixed(2)}`)
+                        : "N/A"}
                     </p>
                   </div>
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Floor Price</p>
                     <p className="text-white font-medium">
-                      {auction.nft.floorPrice && typeof auction.nft.floorPrice !== 'string' 
-                        ? `$${auction.nft.floorPrice.toFixed(2)}` 
-                        : auction.nft.floorPrice 
-                          ? `$${parseFloat(String(auction.nft.floorPrice)).toFixed(2)}`
-                          : "N/A"}
+                      {auction.nft.floorPrice 
+                        ? (typeof auction.nft.floorPrice === 'number'
+                            ? `$${auction.nft.floorPrice.toFixed(2)}`
+                            : `$${parseFloat(String(auction.nft.floorPrice)).toFixed(2)}`)
+                        : "N/A"}
                     </p>
                   </div>
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Volume (24h)</p>
                     <p className="text-white font-medium">
-                      {auction.nft.volume24h && typeof auction.nft.volume24h !== 'string' 
-                        ? `$${auction.nft.volume24h.toFixed(2)}` 
-                        : auction.nft.volume24h 
-                          ? `$${parseFloat(String(auction.nft.volume24h)).toFixed(2)}`
-                          : "N/A"}
+                      {auction.nft.volume24h 
+                        ? (typeof auction.nft.volume24h === 'number'
+                            ? `$${auction.nft.volume24h.toFixed(2)}`
+                            : `$${parseFloat(String(auction.nft.volume24h)).toFixed(2)}`)
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
