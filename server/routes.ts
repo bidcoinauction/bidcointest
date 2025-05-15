@@ -485,6 +485,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(500).json({ message: 'Failed to fetch NFT collections' });
     }
   });
+  
+  // New endpoint for collections with native currency support
+  app.get('/api/unleash/collections-by-chain', async (req, res) => {
+    try {
+      const blockchain = req.query.blockchain as string || 'ethereum';
+      const currency = req.query.currency as string || 'native';
+      const page = parseInt(req.query.page as string || '1');
+      const limit = parseInt(req.query.limit as string || '10');
+      
+      // Map blockchain names to currency symbols
+      const chainCurrencyMap: Record<string, string> = {
+        'ethereum': 'ETH',
+        'polygon': 'MATIC',
+        'arbitrum': 'ETH',
+        'optimism': 'ETH',
+        'base': 'ETH',
+        'solana': 'SOL',
+        'binance': 'BNB',
+        'avalanche': 'AVAX'
+      };
+      
+      try {
+        // Get collections using the existing service
+        const collections = await unleashNftsService.getCollectionsByChain(blockchain, page, limit);
+        
+        // Log what we received
+        console.log('[unleash-collections] Received collections from service:', collections);
+        
+        // Handle the case where no collections were returned or collections is not an array
+        const collectionsArray = Array.isArray(collections) ? collections : [];
+        
+        // Enhance collections with native currency information
+        const enhancedCollections = collectionsArray.map(collection => {
+          // Determine the native currency symbol
+          const currencySymbol = chainCurrencyMap[blockchain.toLowerCase()] || 'ETH';
+          
+          // Add native currency data
+          return {
+            ...collection,
+            currency_symbol: currencySymbol,
+            floor_price_native: collection.floor_price,
+            floor_price_usd: collection.floor_price_usd || collection.floor_price
+          };
+        });
+        
+        if (enhancedCollections.length > 0) {
+          res.json({ collections: enhancedCollections });
+          return;
+        }
+        
+        // If we didn't get any collections, our fallback in the client should handle it
+        res.json({ collections: [] });
+      } catch (apiError) {
+        console.error(`[unleash-collections] API error: ${apiError}`);
+        res.json({ collections: [] });
+      }
+    } catch (error) {
+      console.error('Error fetching collections with native currency:', error);
+      res.status(500).json({ error: 'Failed to fetch NFT collections with native currency' });
+    }
+  });
 
   app.get('/api/unleash/collection/:address', async (req, res) => {
     try {
