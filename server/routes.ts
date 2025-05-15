@@ -16,6 +16,7 @@ import { z } from "zod";
 import { magicEdenService } from "./magicEden";
 import { moralisService } from "./moralisService";
 import { unleashNftsService } from "./unleashNftsService";
+import { alchemyNftService } from "./alchemyNftService";
 import { EvmChain } from "@moralisweb3/common-evm-utils";
 
 // WebSocket clients and utility functions
@@ -670,6 +671,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Enrich the NFT with detailed metadata
       let enrichedNFT = { ...nft };
+      let metadataFound = false;
       
       try {
         // Attempt to get more detailed metadata from UnleashNFTs
@@ -680,6 +682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         if (metadata) {
+          metadataFound = true;
           // Merge the metadata with our NFT object
           enrichedNFT = {
             ...enrichedNFT,
@@ -735,9 +738,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       } catch (metadataError) {
-        console.error('Error enriching NFT with metadata:', metadataError);
-        // Continue with the original NFT data if enrichment fails
+        console.error('Error enriching NFT with metadata from UnleashNFTs:', metadataError);
+        
+        // If metadata wasn't found with UnleashNFTs, try with Alchemy
+        if (!metadataFound) {
+          try {
+            console.log(`Falling back to Alchemy for NFT metadata: ${nft.contractAddress}/${nft.tokenId}`);
+            const alchemyData = await alchemyNftService.getNFTMetadata(nft.contractAddress, nft.tokenId);
+            
+            if (alchemyData) {
+              const formattedData = alchemyNftService.formatNFTMetadata(alchemyData);
+              metadataFound = true;
+              
+              // Merge the Alchemy data with our NFT object
+              enrichedNFT = {
+                ...enrichedNFT,
+                floorPrice: formattedData.floor_price 
+                  ? parseFloat(formattedData.floor_price.toString()) 
+                  : enrichedNFT.floorPrice,
+                floorPriceUsd: formattedData.floor_price_usd 
+                  ? parseFloat(formattedData.floor_price_usd.toString())
+                  : null,
+                attributes: formattedData.traits && formattedData.traits.length > 0
+                  ? formattedData.traits.map((trait: any) => ({
+                      trait_type: trait.trait_type,
+                      value: trait.value,
+                      rarity: trait.rarity || null
+                    }))
+                  : enrichedNFT.attributes
+              };
+              
+              console.log(`Successfully enriched NFT with Alchemy data: ${nft.contractAddress}/${nft.tokenId}`);
+            }
+          } catch (alchemyError) {
+            console.error('Error enriching NFT with Alchemy metadata:', alchemyError);
+            // Continue with the original NFT data if enrichment fails
+          }
+        }
       }
+      
+      // Apply premium data override regardless of API success
+      applyPremiumDataOverride(nft, enrichedNFT);
       
       return res.json(enrichedNFT);
     } catch (error) {
@@ -965,6 +1006,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import NFT from Moralis to our system
+  // ALCHEMY NFT API ENDPOINTS
+  app.get('/api/alchemy/nft/:contractAddress/:tokenId', async (req, res) => {
+    try {
+      const { contractAddress, tokenId } = req.params;
+      
+      const nftData = await alchemyNftService.getNFTMetadata(contractAddress, tokenId);
+      
+      if (!nftData) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      const formattedData = alchemyNftService.formatNFTMetadata(nftData);
+      return res.json(formattedData);
+    } catch (error) {
+      console.error('Error fetching NFT metadata from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFT metadata' });
+    }
+  });
+
+  app.get('/api/alchemy/collection/:contractAddress', async (req, res) => {
+    try {
+      const { contractAddress } = req.params;
+      
+      const collectionData = await alchemyNftService.getContractMetadata(contractAddress);
+      
+      if (!collectionData) {
+        return res.status(404).json({ message: 'Collection not found' });
+      }
+      
+      return res.json(collectionData);
+    } catch (error) {
+      console.error('Error fetching collection metadata from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch collection metadata' });
+    }
+  });
+
+  app.get('/api/alchemy/collection/:contractAddress/nfts', async (req, res) => {
+    try {
+      const { contractAddress } = req.params;
+      const pageKey = req.query.pageKey as string;
+      const pageSize = parseInt(req.query.pageSize as string || '20');
+      
+      const nftsData = await alchemyNftService.getNFTsForContract(contractAddress, pageKey, pageSize);
+      
+      if (!nftsData) {
+        return res.status(404).json({ message: 'NFTs not found' });
+      }
+      
+      return res.json(nftsData);
+    } catch (error) {
+      console.error('Error fetching NFTs for collection from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFTs for collection' });
+    }
+  });
+
+  app.get('/api/alchemy/owner/:ownerAddress/nfts', async (req, res) => {
+    try {
+      const { ownerAddress } = req.params;
+      const pageKey = req.query.pageKey as string;
+      const pageSize = parseInt(req.query.pageSize as string || '20');
+      
+      const nftsData = await alchemyNftService.getNFTsForOwner(ownerAddress, pageKey, pageSize);
+      
+      if (!nftsData) {
+        return res.status(404).json({ message: 'NFTs not found' });
+      }
+      
+      return res.json(nftsData);
+    } catch (error) {
+      console.error('Error fetching NFTs for owner from Alchemy:', error);
+      return res.status(500).json({ message: 'Failed to fetch NFTs for owner' });
+    }
+  });
+
   app.post('/api/nfts/import', async (req, res) => {
     try {
       const { tokenAddress, tokenId, creatorId = 1, chain = 'ethereum' } = req.body;
