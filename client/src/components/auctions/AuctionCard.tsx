@@ -220,7 +220,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             // First try collection-specific assets if we know tokenURI failed 
             // or if tokenURI image failed to load specifically
             if (tokenURIUnavailable || (tokenImageUrl && target.src === tokenImageUrl)) {
-              console.log(`TokenURI unavailable for auction #${auctionId}, using premium sources`);
+              // Only log once per auction ID to reduce console spam
+              const logKey = `tokenuri_log_${auctionId}`;
+              if (!sessionStorage.getItem(logKey)) {
+                console.log(`TokenURI unavailable for auction #${auctionId}, using premium sources`);
+                sessionStorage.setItem(logKey, 'true');
+              }
               
               // Map NFT collections based on auction ID to premium sources
               const collectionMapping: Record<number, {collection: string, id: string}> = {
@@ -237,7 +242,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
               
               // Premium sources for high-value collections
               if (mapping) {
-                console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
+                // Only log once per collection to reduce console spam
+                const sourceLogKey = `premium_source_${mapping.collection}_${mapping.id}`;
+                if (!sessionStorage.getItem(sourceLogKey)) {
+                  console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
+                  sessionStorage.setItem(sourceLogKey, 'true');
+                }
                 
                 if (mapping.collection === 'degentoonz') {
                   target.src = `/attached_assets/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png`;
@@ -261,7 +271,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             
             // Final fallback: use placeholder
             if (target.src !== `/placeholder-nft.png`) {
-              console.log(`Using placeholder for auction #${auctionId}`);
+              // Only log once per auction ID
+              const placeholderLogKey = `placeholder_${auctionId}`;
+              if (!sessionStorage.getItem(placeholderLogKey)) {
+                console.log(`Using placeholder for auction #${auctionId}`);
+                sessionStorage.setItem(placeholderLogKey, 'true');
+              }
               target.src = `/placeholder-nft.png`;
             }
           }}

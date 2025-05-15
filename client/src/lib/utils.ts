@@ -366,17 +366,31 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
   
   try {
     let url = imageUrl.trim();
-    console.log(`Sanitizing NFT image URL: ${url}`);
+    
+    // Create a cache key based on URL for session storage
+    const cacheKey = `sanitize_${url.substring(0, 50)}`;
+    
+    // Check if we've processed this URL before
+    const cachedResult = sessionStorage.getItem(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+    
+    // Only log once per URL type to reduce console spam
+    const logKey = `sanitize_log_${url.substring(0, 20)}`;
+    if (!sessionStorage.getItem(logKey)) {
+      console.log(`Sanitizing NFT image URL: ${url}`);
+      sessionStorage.setItem(logKey, 'true');
+    }
     
     // Check and replace HTTP with HTTPS first for security
     if (url.startsWith('http://')) {
       url = url.replace('http://', 'https://');
-      console.log(`Converted to HTTPS: ${url}`);
     }
     
     // Special case for data URLs - leave them as is
     if (url.startsWith('data:image/')) {
-      console.log(`Data URL detected, keeping as is`);
+      sessionStorage.setItem(cacheKey, url);
       return url;
     }
     
@@ -385,19 +399,18 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
         url.includes('animation-url.degods.com') ||
         url.includes('seadn.io/polygon') ||
         url.includes('cdn.degentoonz.io')) {
-      console.log(`Premium NFT collection URL detected: ${url}`);
+      sessionStorage.setItem(cacheKey, url);
       return url; // These are already optimized and reliable
     }
     
     // Handle malformed URLs or relative paths
     if (!url.includes('://') && !url.startsWith('data:')) {
       if (url.startsWith('/')) {
-        console.log(`Keeping relative path as is`);
+        sessionStorage.setItem(cacheKey, url);
         return url; // Leave server relative paths as is
       } else if (url.startsWith('ipfs://')) {
         // Continue processing with IPFS handler below
       } else {
-        console.log(`Malformed URL without protocol, adding https://`);
         url = 'https://' + url;
       }
     }

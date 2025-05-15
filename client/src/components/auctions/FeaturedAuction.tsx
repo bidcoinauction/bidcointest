@@ -150,7 +150,12 @@ export default function FeaturedAuction() {
                 const target = e.target as HTMLImageElement;
                 
                 if (!target.src.includes(`Screenshot 2025-05-15 at 17.04.25.png`)) {
-                  console.log(`Featured auction: Loading DEGEN TOONZ NFT image`);
+                  // Only log once per session
+                  const logKey = 'featured_auction_loading';
+                  if (!sessionStorage.getItem(logKey)) {
+                    console.log(`Featured auction: Loading DEGEN TOONZ NFT image`);
+                    sessionStorage.setItem(logKey, 'true');
+                  }
                   target.src = `/attached_assets/Screenshot 2025-05-15 at 17.04.25.png`;
                 }
               }}
