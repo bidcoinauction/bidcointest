@@ -292,30 +292,47 @@ export function getBlockchainExplorerUrl(
  * @returns The optimal image URL
  */
 export function getOptimalNFTImageSource(nft: any): string {
-  // First priority: Check for local assets that match this NFT ID (most reliable)
+  // First priority: Collection-specific premium URLs by NFT ID
   const nftId = nft.id;
   
-  // Known local assets with their filenames
+  // Premium NFT collection URLs (direct from verified sources)
+  const premiumNFTUrls: Record<number, string> = {
+    1: 'https://cdn.degentoonz.io/public/toonz/viewer/index.html#4269', // DegenToonz #4269
+    2: 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000', // MadLads #8993
+    3: 'https://animation-url.degods.com/?tokenId=8747', // DeGods #8747
+    // Map additional premium NFTs here
+    6: 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000',
+    7: 'https://cdn.degentoonz.io/public/toonz/viewer/index.html#4269',
+    8: 'https://animation-url.degods.com/?tokenId=8747'
+  };
+  
+  // Known local assets for fallback
   const knownLocalAssets: Record<number, string> = {
-    1: '7218.avif',    // Map auction ID to asset filename
-    2: '8993.avif',    // These are the assets we have available
-    7: '7218.avif',    // Some duplicates for testing
+    1: '7218.avif',
+    2: '8993.avif',
+    7: '7218.avif',
     8: '8993.avif'
   };
   
-  // If we have a matching local asset, use it directly (most reliable)
+  // First check if we have a premium URL for this NFT ID
+  if (premiumNFTUrls[nftId]) {
+    console.log(`Using premium NFT image source for NFT #${nftId}`);
+    return premiumNFTUrls[nftId];
+  }
+  
+  // Second check if we have a local asset
   if (knownLocalAssets[nftId]) {
     console.log(`Using direct attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
     return `/attached_assets/${knownLocalAssets[nftId]}`;
   }
   
-  // Second priority: If token_image_url is available from UnleashNFTs API
+  // Third priority: If token_image_url is available from UnleashNFTs API
   if (nft.token_image_url && nft.token_image_url !== 'NA') {
     console.log(`Using token_image_url from API for NFT #${nftId}`);
     return nft.token_image_url;
   }
   
-  // Third priority: Use the API-provided URL with sanitization
+  // Fourth priority: Use the API-provided URL with sanitization
   return sanitizeNFTImageUrl(nft.imageUrl);
 }
 
@@ -343,6 +360,15 @@ export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string
     if (url.startsWith('data:image/')) {
       console.log(`Data URL detected, keeping as is`);
       return url;
+    }
+    
+    // Handle premium NFT collection URLs (direct from verified sources)
+    if (url.includes('degentoonz.io') || 
+        url.includes('animation-url.degods.com') ||
+        url.includes('seadn.io/polygon') ||
+        url.includes('cdn.degentoonz.io')) {
+      console.log(`Premium NFT collection URL detected: ${url}`);
+      return url; // These are already optimized and reliable
     }
     
     // Handle malformed URLs or relative paths
