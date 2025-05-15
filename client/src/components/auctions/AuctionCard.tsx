@@ -9,6 +9,7 @@ import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import useTokenURI from "@/hooks/useTokenURI";
+import { getNFTDetailedMetadata, type NFTDetailedMetadata } from "@/lib/unleashApi";
 
 interface AuctionCardProps {
   auction: Auction;
@@ -18,6 +19,8 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [showBidModal, setShowBidModal] = useState(false);
   const [isTracked, setIsTracked] = useState(false);
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
+  const [detailedMetadata, setDetailedMetadata] = useState<NFTDetailedMetadata | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   
   // Calculate proper current bid based on bid count (each bid = $0.03)
   const initialBid = parseFloat(((auction.bidCount || 0) * 0.03).toFixed(2));
@@ -34,6 +37,50 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     auction.nft.contractAddress,
     auction.nft.tokenId
   );
+  
+  // Fetch detailed metadata from UnleashNFTs API
+  useEffect(() => {
+    const fetchDetailedMetadata = async () => {
+      try {
+        setLoading(true);
+        
+        // Get the contract address and token ID from the NFT
+        const { contractAddress, tokenId, blockchain } = auction.nft;
+        
+        if (!contractAddress || !tokenId) {
+          console.log('Missing contract address or token ID for detailed metadata');
+          setLoading(false);
+          return;
+        }
+        
+        // Call the UnleashNFTs API to get the detailed metadata
+        console.log('Attempting to fetch NFT metadata for:', {
+          contractAddress,
+          tokenId,
+          blockchain: blockchain || 'ethereum'
+        });
+        
+        const metadata = await getNFTDetailedMetadata(
+          contractAddress, 
+          tokenId, 
+          blockchain || 'ethereum'
+        );
+        
+        if (metadata) {
+          console.log('✅ Detailed metadata loaded:', metadata);
+          setDetailedMetadata(metadata);
+        } else {
+          console.log('❌ No detailed metadata available from UnleashNFTs API');
+        }
+      } catch (error) {
+        console.error('Error fetching detailed metadata:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDetailedMetadata();
+  }, [auction.nft]);
   
   // Get real-time auction data via WebSocket
   const { subscribe } = useWebSocket();
@@ -231,7 +278,16 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </div>
         <div className="flex justify-between items-start text-xs">
           <p className="text-gray-400">{tokenDisplay}</p>
-          <p className="text-gray-400 font-medium">Floor<br/>0.244 ETH</p>
+          <p className="text-gray-400 font-medium">
+            Floor<br/>
+            {detailedMetadata?.floor_price ? (
+              <span className="text-primary font-bold">{detailedMetadata.floor_price} ETH</span>
+            ) : auction.nft.floorPrice ? (
+              <span className="text-primary font-bold">${formatPriceUSD(auction.nft.floorPrice)}</span>
+            ) : (
+              "N/A"
+            )}
+          </p>
         </div>
       </div>
       
