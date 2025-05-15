@@ -56,14 +56,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
   wss.on('connection', (ws) => {
-    console.log('WebSocket client connected');
-    
     // Add client to our list
     wsClients.push(ws);
     
     ws.on('message', (message) => {
-      console.log('received: %s', message);
-      
       // You can handle incoming messages here if needed
       try {
         const data = JSON.parse(message.toString());
@@ -72,12 +68,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
         }
       } catch (error) {
-        console.error('Error processing WebSocket message:', error);
+        // Silent error handling
       }
     });
     
     ws.on('close', () => {
-      console.log('WebSocket client disconnected');
       // Remove client from our list when they disconnect
       wsClients = wsClients.filter(client => client !== ws);
     });

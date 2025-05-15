@@ -51,39 +51,34 @@ export function useWebSocket() {
           if (unmounted) return;
           try {
             const message = JSON.parse(event.data);
-            console.log('WebSocket message received:', message);
             
             // Handle messages based on their type
             if (message && message.type && handlersRef.current[message.type]) {
               handlersRef.current[message.type].forEach(handler => handler(message.data));
             }
           } catch (err) {
-            console.error('Error parsing WebSocket message:', err);
+            // Silent error handling
           }
         };
 
         ws.onerror = (event) => {
           if (unmounted) return;
-          console.error('WebSocket error:', event);
           setError('WebSocket connection error');
         };
 
         ws.onclose = (event) => {
           if (unmounted) return;
-          console.log('WebSocket connection closed', event.code, event.reason);
           setIsConnected(false);
           
           // Attempt to reconnect after a delay, but only if it wasn't an intentional close
           if (!event.wasClean) {
             reconnectTimeoutRef.current = setTimeout(() => {
-              console.log('Attempting to reconnect WebSocket...');
               connect();
             }, RECONNECT_DELAY);
           }
         };
       } catch (err) {
         if (unmounted) return;
-        console.error('Error setting up WebSocket:', err);
         setError('Failed to establish WebSocket connection');
         
         // Try to reconnect after a delay
