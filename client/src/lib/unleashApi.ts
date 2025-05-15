@@ -310,13 +310,22 @@ export const getCollectionsByChain = async (
   limit: number = 10
 ): Promise<NFTCollection[]> => {
   try {
-    const endpoint = `collections?chain=${chain}&page=${page}&limit=${limit}`;
+    // Updated endpoint with required parameters
+    const endpoint = `collections?chain=${chain}&page=${page}&limit=${limit}&metrics=true&sort_by=volume_24h`;
     const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
     
     const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
     
-    if (response && Array.isArray(response.result)) {
-      return response.result;
+    console.log(`[unleash-nfts] Collections response:`, response);
+    
+    if (response && (Array.isArray(response.result) || (response.collections && Array.isArray(response.collections)))) {
+      // Handle different response formats
+      const collections = Array.isArray(response.result) 
+        ? response.result 
+        : (response.collections || []);
+      
+      console.log(`[unleash-nfts] Found ${collections.length} collections for ${chain}`);
+      return collections;
     }
     
     return [];

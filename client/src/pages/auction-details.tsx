@@ -237,7 +237,8 @@ export default function AuctionDetailsPage() {
     setShowPaymentModal(false);
     
     // Get the total amount to pay based on current bid
-    const paymentAmount = localCurrentBid.toFixed(2);
+    // Make sure localCurrentBid is a valid number before calling toFixed
+    const paymentAmount = typeof localCurrentBid === 'number' ? localCurrentBid.toFixed(2) : '0.00';
     const nftName = auction?.nft.name || "NFT";
     
     toast({
