@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   NFTCollection, 
   getCollectionsByChain,
+  getCollectionsByBlockchain,
   getCollectionMetrics,
   getCollectionNFTs,
   getNFTValuation,
@@ -27,12 +28,15 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { 
-  formatPriceUSD, 
   formatNumber, 
   formatRarity, 
   getRarityColor, 
   getRarityLabel 
 } from '@/lib/utils';
+import {
+  formatPriceUSD,
+  formatPriceNative
+} from '@/lib/api';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -60,7 +64,10 @@ export default function NFTCollectionsPage() {
   const limit = 8; // Collections per page
   const { toast } = useToast();
 
-  // Fetch collections based on chain
+  // State for currency display preference
+  const [currencyDisplay, setCurrencyDisplay] = useState<'native' | 'usd'>('native');
+  
+  // Fetch collections based on chain with native currency support
   const { 
     data: collections, 
     isLoading: isLoadingCollections,
@@ -68,8 +75,8 @@ export default function NFTCollectionsPage() {
     error: collectionsError,
     isError: isCollectionsError
   } = useQuery({
-    queryKey: ['/unleash/collections', selectedChain, page, limit],
-    queryFn: () => getCollectionsByChain(selectedChain, page, limit),
+    queryKey: ['/unleash/collections-by-chain', selectedChain, currencyDisplay, page, limit],
+    queryFn: () => getCollectionsByBlockchain(selectedChain, currencyDisplay, page, limit),
     retry: 1 // Only retry once before showing error state
   });
 
