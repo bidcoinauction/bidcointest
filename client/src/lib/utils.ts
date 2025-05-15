@@ -88,12 +88,21 @@ export function formatCountdown(totalSeconds: number): string {
 }
 
 // Calculate time remaining in seconds
-export function getTimeRemaining(endTime: Date | string | number): number {
-  const now = new Date().getTime();
-  const end = new Date(endTime).getTime();
-  const diff = end - now;
+export function getTimeRemaining(endTime: Date | string | number | null): number {
+  if (endTime === null) {
+    return 0;
+  }
   
-  return diff > 0 ? Math.floor(diff / 1000) : 0;
+  try {
+    const now = new Date().getTime();
+    const end = new Date(endTime).getTime();
+    const diff = end - now;
+    
+    return diff > 0 ? Math.floor(diff / 1000) : 0;
+  } catch (error) {
+    console.error("Error calculating time remaining:", error);
+    return 0;
+  }
 }
 
 // Get appropriate chain currency symbol

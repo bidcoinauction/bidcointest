@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { formatCountdown, getTimeRemaining } from "@/lib/utils";
 
 interface UseCountdownProps {
-  endTime: Date | string | number;
+  endTime: Date | string | number | null;
   onComplete?: () => void;
 }
 
@@ -34,9 +34,25 @@ export function useCountdown({ endTime, onComplete }: UseCountdownProps) {
 
   // Calculate percentages for progress displays
   const calculatePercentRemaining = (): number => {
-    const totalDuration = new Date(endTime).getTime() - new Date().getTime() + timeRemaining * 1000;
-    const percentRemaining = (timeRemaining * 1000) / totalDuration * 100;
-    return Math.max(0, Math.min(100, percentRemaining));
+    try {
+      if (endTime === null) {
+        return 0;
+      }
+      
+      const now = new Date().getTime();
+      const end = endTime ? new Date(endTime).getTime() : now + 60000; // Default to 1 minute if null
+      const totalDuration = end - now + timeRemaining * 1000;
+      
+      if (totalDuration <= 0) {
+        return 0;
+      }
+      
+      const percentRemaining = (timeRemaining * 1000) / totalDuration * 100;
+      return Math.max(0, Math.min(100, percentRemaining));
+    } catch (error) {
+      console.error("Error calculating percent remaining:", error);
+      return 0;
+    }
   };
 
   // Get the seconds part for Bidcoin timer reset mechanism

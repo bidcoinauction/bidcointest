@@ -121,6 +121,20 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
               To access NFT data, you need a valid UnleashNFTs API key. Enter your API key below to connect to the service.
             </p>
             
+            <div className="bg-[#111827] p-3 mb-4 rounded text-gray-300 text-xs">
+              <p className="mb-2">
+                <strong>API Status:</strong> {getApiStatus().isConnected ? '✅ Connected' : '❌ Disconnected'}
+              </p>
+              <p className="mb-2">
+                <strong>Last API Version:</strong> {getApiStatus().lastApiVersion}
+              </p>
+              {getApiStatus().lastError && (
+                <p className="mb-2 text-red-400">
+                  <strong>Error:</strong> {getApiStatus().lastError}
+                </p>
+              )}
+            </div>
+            
             <div className="mb-4">
               <Label htmlFor="apiKey" className="text-white mb-2 block">
                 API Key
