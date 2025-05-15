@@ -35,7 +35,9 @@ export const nfts = pgTable("nfts", {
   tokenStandard: text("token_standard").notNull(),
   royalty: decimal("royalty", { precision: 5, scale: 2 }).default("0"),
   collection: text("collection"),
+  collectionImage: text("collection_image"), // Added for collection image
   floorPrice: decimal("floor_price", { precision: 10, scale: 6 }),
+  volume24h: decimal("volume_24h", { precision: 10, scale: 6 }), // Added for 24h volume
   currency: text("currency").default("ETH"),
   items: integer("items"),
   category: text("category").default("art"),
@@ -54,7 +56,9 @@ export const insertNftSchema = createInsertSchema(nfts).pick({
   tokenStandard: true,
   royalty: true,
   collection: true,
+  collectionImage: true,
   floorPrice: true,
+  volume24h: true,
   currency: true,
   items: true,
   category: true,
