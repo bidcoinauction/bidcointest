@@ -27,7 +27,6 @@ interface BidModalProps {
   isOpen: boolean;
   onClose: () => void;
   auction: Auction;
-  onPlaceBid: (amount: string) => void;
   minimumBid: number;
 }
 

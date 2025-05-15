@@ -601,15 +601,33 @@ export default function AuctionDetailsPage() {
                 <div className="flex space-x-4 mb-4">
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Retail Price</p>
-                    <p className="text-white font-medium">${auction.nft.retailPrice?.toFixed(2) || "N/A"}</p>
+                    <p className="text-white font-medium">
+                      {auction.nft.retailPrice && typeof auction.nft.retailPrice !== 'string' 
+                        ? `$${auction.nft.retailPrice.toFixed(2)}` 
+                        : auction.nft.retailPrice 
+                          ? `$${parseFloat(String(auction.nft.retailPrice)).toFixed(2)}`
+                          : "N/A"}
+                    </p>
                   </div>
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Floor Price</p>
-                    <p className="text-white font-medium">${auction.nft.floorPrice?.toFixed(2) || "N/A"}</p>
+                    <p className="text-white font-medium">
+                      {auction.nft.floorPrice && typeof auction.nft.floorPrice !== 'string' 
+                        ? `$${auction.nft.floorPrice.toFixed(2)}` 
+                        : auction.nft.floorPrice 
+                          ? `$${parseFloat(String(auction.nft.floorPrice)).toFixed(2)}`
+                          : "N/A"}
+                    </p>
                   </div>
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Volume (24h)</p>
-                    <p className="text-white font-medium">${auction.nft.volume24h?.toFixed(2) || "N/A"}</p>
+                    <p className="text-white font-medium">
+                      {auction.nft.volume24h && typeof auction.nft.volume24h !== 'string' 
+                        ? `$${auction.nft.volume24h.toFixed(2)}` 
+                        : auction.nft.volume24h 
+                          ? `$${parseFloat(String(auction.nft.volume24h)).toFixed(2)}`
+                          : "N/A"}
+                    </p>
                   </div>
                 </div>
                 
@@ -642,7 +660,9 @@ export default function AuctionDetailsPage() {
                     <p className="text-gray-400 text-xs mb-1">Discount</p>
                     <p className="text-green-400 font-medium">
                       {auction.nft.retailPrice && localCurrentBid
-                        ? `${Math.max(0, Math.round((1 - localCurrentBid / auction.nft.retailPrice) * 100))}% off`
+                        ? `${Math.max(0, Math.round((1 - localCurrentBid / (typeof auction.nft.retailPrice === 'string' 
+                            ? parseFloat(auction.nft.retailPrice) 
+                            : Number(auction.nft.retailPrice))) * 100))}% off`
                         : "N/A"}
                     </p>
                   </div>
@@ -650,7 +670,11 @@ export default function AuctionDetailsPage() {
                     <p className="text-gray-400 text-xs mb-1">You Save</p>
                     <p className="text-green-400 font-medium">
                       {auction.nft.retailPrice && localCurrentBid
-                        ? `$${(auction.nft.retailPrice - localCurrentBid).toFixed(2)}`
+                        ? `$${(
+                            (typeof auction.nft.retailPrice === 'string' 
+                              ? parseFloat(auction.nft.retailPrice) 
+                              : Number(auction.nft.retailPrice)) - localCurrentBid
+                          ).toFixed(2)}`
                         : "N/A"}
                     </p>
                   </div>
@@ -723,7 +747,6 @@ export default function AuctionDetailsPage() {
           isOpen={true}
           onClose={handleCloseBidModal}
           auction={auction}
-          onPlaceBid={handlePlaceBid}
           minimumBid={minimumBid}
         />
       )}
