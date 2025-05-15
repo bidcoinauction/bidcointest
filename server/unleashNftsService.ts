@@ -82,7 +82,19 @@ export class UnleashNftsService {
     try {
       log(`Testing connection to UnleashNFTs API...`, 'unleash-nfts');
       
-      // Try to fetch collections with our refined approach
+      // First test metadata endpoint which is critical for our application
+      try {
+        await this.testNFTMetadataEndpoint();
+        
+        // If metadata test succeeds, we can stop here since it's our most important endpoint
+        return;
+      } catch (metadataError: any) {
+        const errorMsg = metadataError.response?.data?.message || metadataError.message || 'Unknown error';
+        log(`⚠️ NFT metadata endpoint test failed: ${errorMsg}`, 'unleash-nfts');
+        log(`Falling back to collections API test...`, 'unleash-nfts');
+      }
+      
+      // Try to fetch collections if metadata test fails
       try {
         // Make a direct API call instead of using getCollectionsByChain to isolate test
         log(`Testing collections API with correct parameters...`, 'unleash-nfts');
@@ -146,6 +158,93 @@ export class UnleashNftsService {
         log(`2. Navigate to your profile settings`, 'unleash-nfts');
         log(`3. Request an API key and follow verification steps`, 'unleash-nfts');
         log(`4. Add the new key to your environment as VITE_BITCRUNCH_API_KEY`, 'unleash-nfts');
+      }
+    }
+  }
+  
+  /**
+   * Test the NFT metadata endpoint with a known NFT
+   * This is crucial for verifying our image loading functionality
+   */
+  private async testNFTMetadataEndpoint(): Promise<void> {
+    // Use CryptoPunks collection which is well-known and should be available
+    const testCollection = '0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb'; // CryptoPunks
+    const testTokenId = '1000'; // A well-known CryptoPunk
+    const testChain = '1'; // Ethereum (numeric chain ID)
+    
+    log(`Testing NFT metadata endpoint directly...`, 'unleash-nfts');
+    log(`Parameters: Collection=${testCollection}, TokenID=${testTokenId}, Chain=${testChain}`, 'unleash-nfts');
+    
+    try {
+      // Test v2 endpoint first (preferred according to documentation)
+      const url = `${BASE_URL_V2}/nft/metadata`;
+      const response = await axios.get(url, {
+        headers: this.headers,
+        params: {
+          collection_address: testCollection,
+          token_id: testTokenId,
+          blockchain: testChain
+        }
+      });
+      
+      const nftData = response.data;
+      
+      if (nftData) {
+        log(`✅ NFT metadata endpoint test SUCCESSFUL`, 'unleash-nfts');
+        log(`Retrieved metadata for: ${nftData.name || 'Unknown NFT'}`, 'unleash-nfts');
+        
+        // Test image URL cleaning
+        if (nftData.image_url) {
+          const cleanedUrl = this.cleanImageUrl(nftData.image_url);
+          log(`Original image URL: ${nftData.image_url}`, 'unleash-nfts');
+          log(`Sanitized image URL: ${cleanedUrl}`, 'unleash-nfts');
+        } else {
+          log(`⚠️ NFT has no image URL in response`, 'unleash-nfts');
+        }
+        
+        return; // Success
+      } else {
+        log(`⚠️ NFT metadata endpoint returned empty data`, 'unleash-nfts');
+        throw new Error('Empty metadata response');
+      }
+    } catch (v2Error: any) {
+      const errorMsg = v2Error.response?.data?.message || v2Error.message || 'Unknown error';
+      log(`V2 metadata endpoint failed: ${errorMsg}. Trying v1...`, 'unleash-nfts');
+      
+      // Try v1 endpoint as fallback
+      try {
+        const url = `${BASE_URL_V1}/nft/metadata`;
+        const response = await axios.get(url, {
+          headers: this.headers,
+          params: {
+            collection_address: testCollection,
+            token_id: testTokenId,
+            blockchain: testChain
+          }
+        });
+        
+        const nftData = response.data;
+        
+        if (nftData) {
+          log(`✅ V1 NFT metadata endpoint test SUCCESSFUL`, 'unleash-nfts');
+          log(`Retrieved metadata for: ${nftData.name || 'Unknown NFT'}`, 'unleash-nfts');
+          
+          // Test image URL cleaning
+          if (nftData.image_url) {
+            const cleanedUrl = this.cleanImageUrl(nftData.image_url);
+            log(`Original image URL: ${nftData.image_url}`, 'unleash-nfts');
+            log(`Sanitized image URL: ${cleanedUrl}`, 'unleash-nfts');
+          }
+          
+          return; // Success
+        } else {
+          log(`⚠️ V1 NFT metadata endpoint returned empty data`, 'unleash-nfts');
+          throw new Error('Empty V1 metadata response');
+        }
+      } catch (v1Error: any) {
+        const v1ErrorMsg = v1Error.response?.data?.message || v1Error.message || 'Unknown error';
+        log(`❌ Both V2 and V1 metadata endpoints failed. V1 error: ${v1ErrorMsg}`, 'unleash-nfts');
+        throw v1Error;
       }
     }
   }
