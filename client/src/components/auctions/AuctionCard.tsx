@@ -244,7 +244,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 } else if (mapping.collection === 'madlads') {
                   target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
                 } else if (mapping.collection === 'degods') {
-                  target.src = `/attached_assets/8748.avif`;
+                  target.src = `/attached_assets/8747-dead.png`;
                 } else if (mapping.collection === 'azuki') {
                   target.src = `/attached_assets/8993.avif`;
                 } else if (mapping.collection === 'milady') {
