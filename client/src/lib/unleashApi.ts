@@ -808,10 +808,46 @@ export const getCollectionsByBlockchain = async (
     if (response?.collections) {
       return response.collections;
     }
+    
+    // If no collections were returned, fall back to the old endpoint
+    console.log('[unleash-nfts] No collections found with native currency support, falling back to standard endpoint');
+    const fallbackResponse = await getCollectionsByChain(blockchain, page, limit);
+    
+    // Enhance the fallback collections with native currency information
+    if (fallbackResponse && fallbackResponse.length > 0) {
+      // Map blockchain names to currency symbols
+      const chainCurrencyMap: Record<string, string> = {
+        'ethereum': 'ETH',
+        'polygon': 'MATIC',
+        'arbitrum': 'ETH',
+        'optimism': 'ETH',
+        'base': 'ETH',
+        'solana': 'SOL',
+        'binance': 'BNB',
+        'avalanche': 'AVAX'
+      };
+      
+      // Add native currency info to each collection
+      return fallbackResponse.map(collection => ({
+        ...collection,
+        currency_symbol: chainCurrencyMap[blockchain.toLowerCase()] || 'ETH',
+        floor_price_native: collection.floor_price,
+        floor_price_usd: collection.floor_price // As a fallback, use the same value
+      }));
+    }
+    
     return [];
   } catch (error) {
     console.error('[unleash-nfts] Failed to get collections by blockchain:', error);
-    return [];
+    
+    // If the new endpoint fails, try the old one
+    try {
+      console.log('[unleash-nfts] Falling back to standard collections endpoint');
+      return await getCollectionsByChain(blockchain, page, limit);
+    } catch (fallbackError) {
+      console.error('[unleash-nfts] Fallback also failed:', fallbackError);
+      return [];
+    }
   }
 };
 

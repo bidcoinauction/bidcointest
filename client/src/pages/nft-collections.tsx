@@ -244,6 +244,17 @@ export default function NFTCollectionsPage() {
               <SelectItem value="base">Base</SelectItem>
             </SelectContent>
           </Select>
+          
+          {/* Currency display toggle */}
+          <Select value={currencyDisplay} onValueChange={(value) => setCurrencyDisplay(value as 'native' | 'usd')}>
+            <SelectTrigger className="w-[140px] bg-[#1f2937] border-[#374151]">
+              <SelectValue placeholder="Currency" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="native">Native Currency</SelectItem>
+              <SelectItem value="usd">USD</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="relative w-full md:w-60">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
             <Input 
@@ -308,7 +319,16 @@ export default function NFTCollectionsPage() {
                               {collection.floor_price && (
                                 <>
                                   <span className="mx-1">•</span>
-                                  <span>Floor: {formatPriceUSD(collection.floor_price)}</span>
+                                  <span>
+                                    Floor: {
+                                      currencyDisplay === 'native' && collection.currency_symbol
+                                        ? formatPriceNative(
+                                            collection.floor_price_native || collection.floor_price, 
+                                            collection.currency_symbol
+                                          )
+                                        : formatPriceUSD(collection.floor_price_usd || collection.floor_price)
+                                    }
+                                  </span>
                                 </>
                               )}
                             </div>
@@ -522,7 +542,15 @@ export default function NFTCollectionsPage() {
                             </CardDescription>
                           </CardHeader>
                           <CardContent>
-                            <div className="text-2xl font-bold text-white">{formatPriceUSD(collectionMetrics.floor_price)}</div>
+                            <div className="text-2xl font-bold text-white">
+                              {currencyDisplay === 'native' && selectedCollection?.currency_symbol
+                                ? formatPriceNative(
+                                    collectionMetrics.floor_price, 
+                                    selectedCollection.currency_symbol
+                                  )
+                                : formatPriceUSD(collectionMetrics.floor_price)
+                              }
+                            </div>
                             <div className="text-sm text-gray-400 mt-1">
                               {collectionMetrics.price_change_24h > 0 ? (
                                 <span className="text-green-500">+{collectionMetrics.price_change_24h.toFixed(2)}%</span>
