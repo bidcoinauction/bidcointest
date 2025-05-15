@@ -1048,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 }
               } catch (nftError) {
-                console.log('Unable to fetch specific NFT data from UnleashNFTs:', nftError);
+                // Unable to fetch specific NFT data from UnleashNFTs, continuing with fallback
               }
             }
           }
