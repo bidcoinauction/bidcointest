@@ -97,7 +97,7 @@ export class UnleashNftsService {
    * @param metrics Type of metrics to include (volume, floor_price, etc.)
    * @param sortBy Field to sort by (volume, market_cap, etc.)
    */
-  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume', sortBy: string = 'volume'): Promise<NFTCollection[]> {
+  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume,marketcap,price_floor,holders,sales', sortBy: string = 'volume'): Promise<NFTCollection[]> {
     try {
       const chainId = this.normalizeChainId(chain);
       log(`Fetching collections for chain ${chainId}...`, 'unleash-nfts');
@@ -105,6 +105,8 @@ export class UnleashNftsService {
       // Prepare metrics array (split if comma-separated)
       const metrics = metricsParam.includes(',') ? metricsParam.split(',') : [metricsParam];
       
+      // Based on documentation, we should add more useful metrics
+      // Adding marketcap, price_floor, holders, and sales metrics
       const response = await axios.get(`${BASE_URL_V1}/collections`, {
         headers: this.headers,
         params: {
@@ -161,7 +163,7 @@ export class UnleashNftsService {
         
         return collection;
       } catch (v2Error: any) {
-        log(`[unleash-nfts] Failed with v2 API format collection/${chainId}/${contractAddress}:`, 'unleash-nfts', v2Error.message);
+        log(`[unleash-nfts] Failed with v2 API format collection/${chainId}/${contractAddress}: ${v2Error.message}`, 'unleash-nfts');
         
         // Fall back to V1 endpoint
         try {
