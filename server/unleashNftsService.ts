@@ -159,7 +159,7 @@ export class UnleashNftsService {
       try {
         log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/collection/${chainId}/${contractAddress}`, 'unleash-nfts');
         const response = await axios.get(`${BASE_URL_V2}/collection/${chainId}/${contractAddress}`, {
-          headers: this.headersV1
+          headers: this.headersV2
         });
         
         const collection = response.data;
@@ -503,7 +503,7 @@ export class UnleashNftsService {
         log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
         
         const response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-          headers: this.headersV1
+          headers: this.headersV2
         });
         
         const nftData = response.data;
@@ -609,7 +609,7 @@ export class UnleashNftsService {
         if (contractAddress) {
           log(`[unleash-nfts] Trying direct path: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
           response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-            headers: this.headersV1
+            headers: this.headersV2
           });
           
           nftData = response.data;
@@ -617,7 +617,7 @@ export class UnleashNftsService {
           // For slug-based lookup, we still need to use params
           log(`[unleash-nfts] Using params with slug: ${BASE_URL_V2}/nft/metadata`, 'unleash-nfts');
           response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
-            headers: this.headersV1,
+            headers: this.headersV2,
             params
           });
           
