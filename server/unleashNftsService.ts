@@ -7,7 +7,10 @@ const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2'; // Note: v2 uses /api/
 // Access the API key directly from the environment variable
 // In server-side code, we need to access process.env directly, not import.meta.env
 // Using fallback to hardcoded value for consistent API access
-const API_KEY = process.env.VITE_BITCRUNCH_API_KEY || '0c4b62cce16246d181310c3b57512529';
+const API_KEY = process.env.VITE_BITCRUNCH_API_KEY;
+if (!API_KEY) {
+  throw new Error('VITE_BITCRUNCH_API_KEY environment variable is not set');
+}
 
 // Type definitions based on the UnleashNFTs API
 export interface NFTCollection {
