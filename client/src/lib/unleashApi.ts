@@ -211,12 +211,15 @@ export const getNFTDetailedMetadata = async (
       };
     }
     
-    // According to docs, the format should be collection/blockchain/contract_address
-    // The correct format for chain_id is a number in the path, not a parameter
+    // According to the updated documentation, we need to use different endpoint formats
+    // The correct format for NFT detail is: nft/{blockchain_id}/{contract_address}/{token_id}
+    const chainId = chainNameToId[chain] || 1; // Default to Ethereum (1)
+    
     const endpoints = [
-      // Based on the API docs, this is the correct format
-      `collection/1/${contractAddress}`,
-      `nft/1/${contractAddress}/${tokenId}`
+      // Direct NFT endpoint - primary method
+      `nft/${chainId}/${contractAddress}/${tokenId}`,
+      // Collection endpoint as fallback
+      `collection/${chainId}/${contractAddress}`
     ];
     
     // Iterate through endpoint formats to find one that works
@@ -538,8 +541,8 @@ export const getCollectionsByChain = async (
     // Convert chain name to chain ID
     const chainId = chainNameToId[chain] || 1; // Default to Ethereum (1)
     
-    // Format according to docs: metrics, currency, blockchain, sort_by
-    const endpoint = `collections?metrics=volume&currency=usd&blockchain=${chainId}&sort_by=volume&sort_order=desc&offset=${(page-1)*limit}&limit=${limit}&time_range=24h&include_washtrade=true`;
+    // Format according to docs with REQUIRED parameters (metrics, sort_by)
+    const endpoint = `collections?metrics=volume,transactions,royalty_revenue&currency=usd&sort_by=volume&sort_order=desc&offset=${(page-1)*limit}&limit=${limit}&time_range=24h&include_washtrade=true`;
     
     // Make direct axios call based on documentation
     try {

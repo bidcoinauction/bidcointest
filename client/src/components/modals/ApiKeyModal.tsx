@@ -15,7 +15,9 @@ interface ApiKeyModalProps {
 export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
   const [apiKey, setApiKey] = useState('');
   const [isTestingConnection, setIsTestingConnection] = useState(false);
+  const [isFetchingNFT, setIsFetchingNFT] = useState(false);
   const [testResult, setTestResult] = useState<{success: boolean, message: string} | null>(null);
+  const [nftResult, setNftResult] = useState<any>(null);
   const { toast } = useToast();
 
   // Initialize with current API key, but mask it

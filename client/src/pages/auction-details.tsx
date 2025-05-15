@@ -81,6 +81,12 @@ export default function AuctionDetailsPage() {
         }
         
         // Call the UnleashNFTs API to get the detailed metadata
+        console.log('Attempting to fetch NFT metadata for:', {
+          contractAddress,
+          tokenId,
+          blockchain: blockchain || 'ethereum'
+        });
+        
         const metadata = await getNFTDetailedMetadata(
           contractAddress, 
           tokenId, 
@@ -88,10 +94,11 @@ export default function AuctionDetailsPage() {
         );
         
         if (metadata) {
-          console.log('Detailed metadata loaded:', metadata);
+          console.log('✅ Detailed metadata loaded:', metadata);
+          console.log('Properties:', metadata.traits);
           setDetailedMetadata(metadata);
         } else {
-          console.log('No detailed metadata available from UnleashNFTs API');
+          console.log('❌ No detailed metadata available from UnleashNFTs API');
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);

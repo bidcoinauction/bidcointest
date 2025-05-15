@@ -1,0 +1,149 @@
+ollections by Chain
+get
+https://api.unleashnfts.com/api/v1/collections
+Get a paginated, sorted list of collections and its metrics by chain id
+
+Log in to see full request history
+time	status	user agent	
+Make a request to see history.
+0 Requests This Month
+
+Query Params
+currency
+string
+Defaults to usd
+The value of an NFT in a particular currency
+
+
+usd
+blockchain
+integer
+To filter or get an aggregate NFT data of blockchains
+
+metrics
+array of strings
+required
+Which metric values to return in result set
+
+
+ADD string
+marketplace
+string
+Select the specific marketplace, currently supported metrics - volume, transactions, royalty_revenue
+
+
+opensea
+sort_by
+string
+required
+Metric or property to sort result set by
+
+
+holders
+contract_age
+string
+get result set based on contract_age
+
+
+current_week
+sort_order
+string
+Defaults to desc
+In what order to sort the result set in
+
+
+desc
+offset
+integer
+≥ 0
+Defaults to 0
+Index of the page to return
+
+0
+limit
+integer
+1 to 100
+Defaults to 30
+Number of items to return in the result set
+
+30
+time_range
+string
+Defaults to 24h
+Time range to filter result set on
+
+15m: 15 minutes
+30m: 30 minutes
+24h: 24 hours
+7d: 7 days
+30d: 30 days
+90d: 90 days
+all: all time
+
+24h
+include_washtrade
+boolean
+Defaults to true
+Include or exclude transactions that are suspected of washtrade in requested (metric) data
+
+
+true
+category
+array of strings
+To sort the list of NFT collections with shared characteristics
+
+
+ADD string
+Responses
+
+200
+Paginated, sorted list of collections and metric data
+
+
+400
+Request invalid
+
+
+404
+Not found
+
+
+422
+Request validation error
+
+
+500
+Internal server error
+
+Updated 4 months ago
+
+Supported Blockchains
+Collection metadata by contract
+Did this page help you?
+Language
+
+Shell
+
+Node
+
+Ruby
+
+PHP
+
+Python
+Credentials
+Header
+x-api-key
+
+1
+curl --request GET \
+2
+     --url 'https://api.unleashnfts.com/api/v1/collections?currency=usd&sort_by=holders&sort_order=desc&offset=0&limit=30&time_range=24h&include_washtrade=true' \
+3
+     --header 'accept: application/json'
+
+Try It!
+RESPONSE
+Click Try It! to start a request and see the response here! Or choose an example:
+application/json
+
