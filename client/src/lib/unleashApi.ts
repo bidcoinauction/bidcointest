@@ -641,30 +641,50 @@ export const getCollectionMetrics = async (
   chain: string = 'ethereum'
 ): Promise<NFTCollectionMetrics | null> => {
   try {
-    const endpoint = `collection/${address}/metrics?chain=${chain}`;
+    // Convert chain name to chain ID
+    const chainId = chainNameToId[chain] || 1; // Default to Ethereum (1)
     
-    // First try V2 API
+    // Format according to docs: collection/blockchain/address/metrics
+    const endpoint = `collection/${chainId}/${address}/metrics`;
+    
     try {
-      const metricsData = await fetchFromAPI<any>(endpoint, undefined, 'v2');
+      console.log(`[unleash-nfts] Fetching collection metrics: https://api.unleashnfts.com/api/v1/${endpoint}`);
       
-      if (metricsData?.result) {
-        return metricsData.result;
+      const apiKey = getSavedApiKey();
+      const url = `https://api.unleashnfts.com/api/v1/${endpoint}`;
+      
+      const response = await axios.get(url, {
+        headers: {
+          'x-api-key': apiKey,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.data) {
+        // Transform the response to match our expected format
+        return {
+          total_volume: response.data.total_volume || 0,
+          floor_price: response.data.floor_price || 0,
+          market_cap: response.data.market_cap || 0,
+          holders_count: response.data.holders_count || 0,
+          items_count: response.data.items_count || 0,
+          sales_count: response.data.sales_count || 0,
+          volume_24h: response.data.volume_24h || 0,
+          price_change_24h: response.data.price_change_24h || 0,
+          volume_7d: response.data.volume_7d || 0,
+          price_change_7d: response.data.price_change_7d || 0,
+          volume_30d: response.data.volume_30d || 0,
+          price_change_30d: response.data.price_change_30d || 0
+        };
       }
-    } catch (v2Error) {
-      console.log('Falling back to V1 collection metrics API');
-      
-      // Try V1 API as fallback
-      const metricsDataV1 = await fetchFromAPI<any>(endpoint, undefined, 'v1');
-      
-      if (metricsDataV1?.result) {
-        return metricsDataV1.result;
-      }
+    } catch (error) {
+      console.error('[unleash-nfts] Failed to get collection metrics:', error);
     }
     
     return null;
   } catch (error) {
     console.error('[unleash-nfts] Failed to get collection metrics:', error);
-    throw error;
+    return null;
   }
 };
 
@@ -707,30 +727,45 @@ export const getCollectionNFTs = async (
   limit: number = 10
 ): Promise<NFTMetadata[]> => {
   try {
-    const endpoint = `collection/${address}/nfts?chain=${chain}&page=${page}&limit=${limit}`;
+    // Convert chain name to chain ID
+    const chainId = chainNameToId[chain] || 1; // Default to Ethereum (1)
     
-    // First try V2 API
+    // Format according to docs: collection/blockchain/address/nfts
+    const endpoint = `collection/${chainId}/${address}/nfts?offset=${(page-1)*limit}&limit=${limit}`;
+    
     try {
-      const nftsData = await fetchFromAPI<any>(endpoint, undefined, 'v2');
+      console.log(`[unleash-nfts] Fetching collection NFTs: https://api.unleashnfts.com/api/v1/${endpoint}`);
       
-      if (nftsData?.result?.length) {
-        return nftsData.result;
+      const apiKey = getSavedApiKey();
+      const url = `https://api.unleashnfts.com/api/v1/${endpoint}`;
+      
+      const response = await axios.get(url, {
+        headers: {
+          'x-api-key': apiKey,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.data && Array.isArray(response.data.nfts)) {
+        // Transform the response to match our expected format
+        return response.data.nfts.map((nft: any) => ({
+          token_id: nft.token_id,
+          name: nft.name || `Token #${nft.token_id}`,
+          description: nft.description || '',
+          image_url: nft.image_url || '',
+          traits: nft.traits || [],
+          last_sale_price: nft.last_sale_price || 0,
+          estimated_price: nft.estimated_price || 0
+        }));
       }
-    } catch (v2Error) {
-      console.log('Falling back to V1 collection NFTs API');
-      
-      // Try V1 API as fallback
-      const nftsDataV1 = await fetchFromAPI<any>(endpoint, undefined, 'v1');
-      
-      if (nftsDataV1?.result?.length) {
-        return nftsDataV1.result;
-      }
+    } catch (error) {
+      console.error('[unleash-nfts] Failed to get collection NFTs:', error);
     }
     
     return [];
   } catch (error) {
     console.error('[unleash-nfts] Failed to get collection NFTs:', error);
-    throw error;
+    return [];
   }
 };
 
@@ -741,30 +776,44 @@ export const getNFTsWithValuation = async (
   limit: number = 10
 ): Promise<NFTValuation[]> => {
   try {
-    const endpoint = `valuation/collection/${collection}/nfts?chain=${chain}&page=${page}&limit=${limit}`;
+    // Convert chain name to chain ID
+    const chainId = chainNameToId[chain] || 1; // Default to Ethereum (1)
     
-    // First try V2 API
+    // Format according to docs: valuation/collection/blockchain/address/nfts
+    const endpoint = `valuation/collection/${chainId}/${collection}/nfts?offset=${(page-1)*limit}&limit=${limit}`;
+    
     try {
-      const valuationData = await fetchFromAPI<any>(endpoint, undefined, 'v2');
+      console.log(`[unleash-nfts] Fetching NFT valuations: https://api.unleashnfts.com/api/v1/${endpoint}`);
       
-      if (valuationData?.result?.length) {
-        return valuationData.result;
+      const apiKey = getSavedApiKey();
+      const url = `https://api.unleashnfts.com/api/v1/${endpoint}`;
+      
+      const response = await axios.get(url, {
+        headers: {
+          'x-api-key': apiKey,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.data && Array.isArray(response.data.valuations)) {
+        // Transform the response to match our expected format
+        return response.data.valuations.map((valuation: any) => ({
+          token_id: valuation.token_id,
+          collection_address: collection,
+          estimated_price: valuation.estimated_price || 0,
+          confidence_score: valuation.confidence_score || 0,
+          last_sale_price: valuation.last_sale_price || 0,
+          last_sale_date: valuation.last_sale_date || null
+        }));
       }
-    } catch (v2Error) {
-      console.log('Falling back to V1 valuation API');
-      
-      // Try V1 API as fallback
-      const valuationDataV1 = await fetchFromAPI<any>(endpoint, undefined, 'v1');
-      
-      if (valuationDataV1?.result?.length) {
-        return valuationDataV1.result;
-      }
+    } catch (error) {
+      console.error('[unleash-nfts] Failed to get NFTs with valuation:', error);
     }
     
     return [];
   } catch (error) {
     console.error('[unleash-nfts] Failed to get NFTs with valuation:', error);
-    throw error;
+    return [];
   }
 };
 
@@ -774,29 +823,43 @@ export const getNFTValuation = async (
   chain: string = 'ethereum'
 ): Promise<NFTValuation | null> => {
   try {
-    const endpoint = `valuation/nft/${collection}/${tokenId}?chain=${chain}`;
+    // Convert chain name to chain ID
+    const chainId = chainNameToId[chain] || 1; // Default to Ethereum (1)
     
-    // First try V2 API
+    // Format according to docs: valuation/nft/blockchain/address/token_id
+    const endpoint = `valuation/nft/${chainId}/${collection}/${tokenId}`;
+    
     try {
-      const valuationData = await fetchFromAPI<any>(endpoint, undefined, 'v2');
+      console.log(`[unleash-nfts] Fetching NFT valuation: https://api.unleashnfts.com/api/v1/${endpoint}`);
       
-      if (valuationData?.result) {
-        return valuationData.result;
+      const apiKey = getSavedApiKey();
+      const url = `https://api.unleashnfts.com/api/v1/${endpoint}`;
+      
+      const response = await axios.get(url, {
+        headers: {
+          'x-api-key': apiKey,
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.data) {
+        // Transform the response to match our expected format
+        return {
+          token_id: tokenId,
+          collection_address: collection,
+          estimated_price: response.data.estimated_price || 0,
+          confidence_score: response.data.confidence_score || 0,
+          last_sale_price: response.data.last_sale_price || 0,
+          last_sale_date: response.data.last_sale_date || null
+        };
       }
-    } catch (v2Error) {
-      console.log('Falling back to V1 NFT valuation API');
-      
-      // Try V1 API as fallback
-      const valuationDataV1 = await fetchFromAPI<any>(endpoint, undefined, 'v1');
-      
-      if (valuationDataV1?.result) {
-        return valuationDataV1.result;
-      }
+    } catch (error) {
+      console.error('[unleash-nfts] Failed to get NFT valuation:', error);
     }
     
     return null;
   } catch (error) {
     console.error('[unleash-nfts] Failed to get NFT valuation:', error);
-    throw error;
+    return null;
   }
 };

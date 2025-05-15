@@ -604,9 +604,7 @@ export default function AuctionDetailsPage() {
                     <p className="text-gray-400 text-xs mb-1">Retail Price</p>
                     <p className="text-white font-medium">
                       {auction.nft.retailPrice 
-                        ? (typeof auction.nft.retailPrice === 'number'
-                            ? `$${auction.nft.retailPrice.toFixed(2)}`
-                            : `$${parseFloat(String(auction.nft.retailPrice)).toFixed(2)}`)
+                        ? `$${formatPriceUSD(auction.nft.retailPrice)}`
                         : "N/A"}
                     </p>
                   </div>
@@ -614,9 +612,7 @@ export default function AuctionDetailsPage() {
                     <p className="text-gray-400 text-xs mb-1">Floor Price</p>
                     <p className="text-white font-medium">
                       {auction.nft.floorPrice 
-                        ? (typeof auction.nft.floorPrice === 'number'
-                            ? `$${auction.nft.floorPrice.toFixed(2)}`
-                            : `$${parseFloat(String(auction.nft.floorPrice)).toFixed(2)}`)
+                        ? `$${formatPriceUSD(auction.nft.floorPrice)}`
                         : "N/A"}
                     </p>
                   </div>
@@ -624,9 +620,7 @@ export default function AuctionDetailsPage() {
                     <p className="text-gray-400 text-xs mb-1">Volume (24h)</p>
                     <p className="text-white font-medium">
                       {auction.nft.volume24h 
-                        ? (typeof auction.nft.volume24h === 'number'
-                            ? `$${auction.nft.volume24h.toFixed(2)}`
-                            : `$${parseFloat(String(auction.nft.volume24h)).toFixed(2)}`)
+                        ? `$${formatPriceUSD(auction.nft.volume24h)}` 
                         : "N/A"}
                     </p>
                   </div>
