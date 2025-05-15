@@ -178,7 +178,7 @@ export const getNFTDetailedMetadata = async (
     if (contractAddress === '0xbba9187d5108e395d0681462523c4404de06a497' && tokenId === '4269') {
       console.log('[unleash-nfts] Using preset data for DEGEN TOONZ #4269');
       
-      // This is an existing NFT in our test data, provide its traits
+      // This is an existing NFT in our test data, provide its traits with the correct properties
       return {
         collection_name: "DEGEN TOONZ",
         contract_address: contractAddress,
@@ -190,22 +190,22 @@ export const getNFTDetailedMetadata = async (
           {
             trait_type: "Background",
             value: "Orange",
-            rarity: 12
+            rarity: 12.00
           },
           {
             trait_type: "Clothes",
             value: "Orange Hoodie",
-            rarity: 8
+            rarity: 8.00
           },
           {
             trait_type: "Eyes",
             value: "Laser",
-            rarity: 15
+            rarity: 15.00
           },
           {
             trait_type: "Mouth",
             value: "Bored",
-            rarity: 5
+            rarity: 5.00
           }
         ]
       };

@@ -349,8 +349,8 @@ export default function AuctionDetailsPage() {
         <div>
           <div className="mb-6 relative">
             <img 
-              src={auction.nft.imageUrl || '/placeholder-image.jpg'} 
-              alt={auction.nft.name} 
+              src={detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg'} 
+              alt={detailedMetadata?.name || auction.nft.name} 
               className="w-full h-auto rounded-xl object-cover aspect-square" 
             />
             <div className="absolute top-4 right-4 flex space-x-2">
@@ -484,7 +484,7 @@ export default function AuctionDetailsPage() {
             <div className="p-5 border-b border-[#374151]">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
                 <h1 className="text-2xl font-display font-bold text-white mb-2 md:mb-0">
-                  {auction.nft.name}
+                  {detailedMetadata?.name || auction.nft.name}
                 </h1>
                 
                 <div className="flex space-x-2 items-center">
@@ -505,11 +505,11 @@ export default function AuctionDetailsPage() {
                   {auction.creator.username || formatAddress(auction.creator.walletAddress)}
                 </a>
                 <span>•</span>
-                <span>Collection: {auction.nft.collectionName || "Unknown"}</span>
+                <span>Collection: {detailedMetadata?.collection_name || auction.nft.collectionName || "Unknown"}</span>
               </div>
               
               <p className="text-gray-300 text-sm mb-6">
-                {auction.nft.description || "No description available for this NFT."}
+                {detailedMetadata?.description || auction.nft.description || "No description available for this NFT."}
               </p>
               
               <div className="bg-[#111827] rounded-xl p-5 mb-6">
