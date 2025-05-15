@@ -83,7 +83,7 @@ export class UnleashNftsService {
     try {
       // This is a v1 API endpoint
       const response = await axios.get(`${BASE_URL_V1}/blockchains`, {
-        headers: this.headersV1V1,
+        headers: this.headersV1,
         params: {
           sort_by: sortBy,
           offset: (page - 1) * limit,
