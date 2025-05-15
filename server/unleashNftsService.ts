@@ -772,6 +772,84 @@ export class UnleashNftsService {
       }
     }
   }
+  
+  /**
+   * Get collections by blockchain with metrics and native currency
+   * @param blockchain Blockchain ID (1 for Ethereum, 137 for Polygon, etc.)
+   * @param metrics Array of metrics to include
+   * @param sort_by Field to sort by
+   * @param limit Number of collections to return
+   */
+  async getCollectionsByBlockchain(params: {
+    blockchain?: number | string,
+    currency?: string,
+    metrics?: string[],
+    sort_by?: string,
+    limit?: number,
+    offset?: number,
+    time_range?: string,
+    include_washtrade?: boolean,
+    category?: string[]
+  }): Promise<any> {
+    try {
+      // Use v1 API endpoint for collections
+      const url = `${BASE_URL_V1}/collections`;
+      
+      // Get blockchain ID if provided
+      const blockchainId = params.blockchain ? this.normalizeChainId(params.blockchain.toString()) : undefined;
+      
+      // Default parameters
+      const defaultParams = {
+        metrics: ['floor_price', 'volume', 'holders', 'sales'],
+        sort_by: 'volume',
+        sort_order: 'desc',
+        limit: 20,
+        offset: 0,
+        time_range: '24h',
+        include_washtrade: true
+      };
+      
+      // Merge with user-provided parameters
+      const queryParams: any = { ...defaultParams };
+      
+      // Add all valid params from the input
+      if (blockchainId) queryParams.blockchain = blockchainId;
+      if (params.currency) queryParams.currency = params.currency;
+      if (params.metrics) queryParams.metrics = params.metrics;
+      if (params.sort_by) queryParams.sort_by = params.sort_by;
+      if (params.limit) queryParams.limit = params.limit;
+      if (params.offset) queryParams.offset = params.offset;
+      if (params.time_range) queryParams.time_range = params.time_range;
+      if (params.include_washtrade !== undefined) queryParams.include_washtrade = params.include_washtrade;
+      if (params.category) queryParams.category = params.category;
+      
+      // Log the API call
+      log(`Fetching collections with params: ${JSON.stringify(queryParams)}`, 'unleash-nfts');
+      
+      // Send the request
+      const response = await axios.get(url, {
+        headers: this.headersV1,
+        params: queryParams
+      });
+      
+      log(`Successfully fetched collections for blockchain: ${blockchainId || 'all blockchains'}`, 'unleash-nfts');
+      
+      // Clean image URLs in collections
+      if (response.data?.collections) {
+        response.data.collections = response.data.collections.map((collection: any) => {
+          if (collection.image_url) {
+            collection.image_url = this.cleanImageUrl(collection.image_url);
+          }
+          return collection;
+        });
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      this.handleError('getCollectionsByBlockchain', error);
+      return null;
+    }
+  }
 }
 
 export const unleashNftsService = new UnleashNftsService();
