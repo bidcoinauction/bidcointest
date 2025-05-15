@@ -822,7 +822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') && 
               nft.tokenId === '8993')
           ) {
-            console.log('[nft-details] Using premium data for:', nft.contractAddress, nft.tokenId);
+            // Apply premium data for selected NFTs
             
             // Set consistent floor prices based on premium data
             if (nft.contractAddress === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
@@ -898,7 +898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') && 
           nft.tokenId === '8993')
       ) {
-        console.log('[nft-details] Using premium data for:', nft.contractAddress, nft.tokenId);
+        // Apply premium data for selected NFTs
         
         // Set consistent floor prices based on premium data
         if (nft.contractAddress === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
