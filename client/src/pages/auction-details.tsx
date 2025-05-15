@@ -638,7 +638,16 @@ export default function AuctionDetailsPage() {
                           </span>
                         )
                         : auction.nft.floorPrice 
-                        ? `$${formatPriceUSD(auction.nft.floorPrice)}`
+                        ? (
+                          <span className="flex flex-col items-center">
+                            <span className="font-bold text-primary">
+                              {parseFloat(auction.nft.floorPrice.toString()).toFixed(2)} ETH
+                            </span>
+                            <span className="text-gray-400 text-xs">
+                              (${formatPriceUSD(auction.nft.floorPrice)})
+                            </span>
+                          </span>
+                        )
                         : "N/A"}
                     </p>
                   </div>
