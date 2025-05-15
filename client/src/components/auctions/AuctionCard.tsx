@@ -8,6 +8,7 @@ import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl, get
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import useTokenURI from "@/hooks/useTokenURI";
 
 interface AuctionCardProps {
   auction: Auction;
@@ -23,6 +24,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [localCurrentBid, setLocalCurrentBid] = useState<number>(initialBid);
   
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
+  
+  // Get tokenURI data - only if we have contract address and token ID
+  const { imageUrl: tokenImageUrl, isLoading: tokenURILoading } = useTokenURI(
+    auction.nft.contractAddress,
+    auction.nft.tokenId
+  );
   
   // Get real-time auction data via WebSocket
   const { subscribe } = useWebSocket();
@@ -151,15 +158,23 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </Badge>
         
         <img 
-          src={getOptimalNFTImageSource(auction.nft)}
+          src={tokenImageUrl || getOptimalNFTImageSource(auction.nft)}
           alt={auction.nft.name}
           className="w-full h-44 object-cover cursor-pointer"
           onError={(e) => {
-            // Staged fallback system based on collection
+            // Multi-stage fallback system with tokenURI prioritization
             const target = e.target as HTMLImageElement;
             const auctionId = auction.id;
             
-            // Map NFT collections based on screenshots
+            // First try to use tokenURI if available but failed to load
+            if (tokenImageUrl && target.src === tokenImageUrl) {
+              console.log(`TokenURI image failed to load, trying optimized sources for auction #${auctionId}`);
+              // Move to the next fallback
+              target.src = getOptimalNFTImageSource(auction.nft);
+              return;
+            }
+
+            // Map NFT collections based on screenshots as fallback
             const collectionMapping: Record<number, {collection: string, id: string}> = {
               1: {collection: 'azuki', id: '9605'},
               2: {collection: 'degods', id: '8748'},
@@ -172,23 +187,26 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             
             const mapping = collectionMapping[auctionId];
             
+            // Second fallback: Use collection-specific sources
             if (mapping) {
-              if (mapping.collection === 'madlads') {
+              console.log(`Using collection-specific source for ${mapping.collection} #${mapping.id}`);
+              
+              if (mapping.collection === 'degentoonz') {
+                target.src = `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
+              } else if (mapping.collection === 'madlads') {
                 target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
               } else if (mapping.collection === 'degods') {
-                target.src = 'https://animation-url.degods.com/?tokenId=8747';
-              } else if (mapping.collection === 'degentoonz') {
-                target.src = `/attached_assets/Screenshot 2025-05-15 at 13.25.53.png`;
-              } else if (mapping.collection === 'milady') {
-                target.src = `/attached_assets/8993.avif`;
-              } else if (mapping.collection === 'claynosaurz') {
-                target.src = `/attached_assets/8993.avif`;
-              } else if (mapping.collection === 'azuki') {
-                target.src = `/attached_assets/8993.avif`;
-              } else {
-                target.src = `/placeholder-nft.png`;
+                target.src = `https://animation-url.degods.com/?tokenId=${mapping.id}`;
+              } else if (target.src !== `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`) {
+                // For all other collections, try our attached assets
+                target.src = `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`;
               }
-            } else {
+              return;
+            }
+            
+            // Final fallback: use placeholder
+            if (target.src !== `/placeholder-nft.png`) {
+              console.log(`Using placeholder for auction #${auctionId}`);
               target.src = `/placeholder-nft.png`;
             }
           }}

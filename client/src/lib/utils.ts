@@ -282,58 +282,76 @@ export function getBlockchainExplorerUrl(
 }
 
 /**
- * Get the optimal image source for an NFT with integrated fallback systems
+ * Get the optimal image source for an NFT with blockchain integration
  * Uses a multi-tiered approach: 
- * 1. Try direct local asset if available
- * 2. Try API-provided URL with sanitization
- * 3. Fall back to placeholder
+ * 1. Try to get tokenURI from blockchain data
+ * 2. Try collection-specific premium URLs
+ * 3. Try attached assets
+ * 4. Fall back to placeholder
  * 
  * @param nft The NFT object
  * @returns The optimal image URL
  */
 export function getOptimalNFTImageSource(nft: any): string {
-  // First priority: Collection-specific premium URLs by NFT ID
-  const nftId = nft.id;
+  if (!nft) return '/placeholder-nft.png';
   
-  // Premium NFT collection URLs (direct from verified sources)
-  const premiumNFTUrls: Record<number, string> = {
-    1: 'https://cdn.degentoonz.io/public/toonz/viewer/index.html#4269', // DegenToonz #4269
-    2: 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000', // MadLads #8993
-    3: 'https://animation-url.degods.com/?tokenId=8747', // DeGods #8747
-    // Map additional premium NFTs here
-    6: 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000',
-    7: 'https://cdn.degentoonz.io/public/toonz/viewer/index.html#4269',
-    8: 'https://animation-url.degods.com/?tokenId=8747'
-  };
-  
-  // Known local assets for fallback
-  const knownLocalAssets: Record<number, string> = {
-    1: '7218.avif',
-    2: '8993.avif',
-    7: '7218.avif',
-    8: '8993.avif'
-  };
-  
-  // First check if we have a premium URL for this NFT ID
-  if (premiumNFTUrls[nftId]) {
-    console.log(`Using premium NFT image source for NFT #${nftId}`);
-    return premiumNFTUrls[nftId];
+  // First priority: Use tokenURI data if we have contractAddress and tokenId
+  if (nft.contractAddress && nft.tokenId) {
+    // If we have the token_uri with image data already, use it directly
+    if (nft.token_uri?.image) {
+      return sanitizeNFTImageUrl(nft.token_uri.image);
+    }
+    
+    // If we have token_image_url, use it (from UnleashNFTs API)
+    if (nft.token_image_url && nft.token_image_url !== 'NA') {
+      return sanitizeNFTImageUrl(nft.token_image_url);
+    }
   }
   
-  // Second check if we have a local asset
+  // Second priority: Collection-specific premium URLs by NFT ID or collection
+  const nftId = nft.id;
+  
+  // Collection mappings by NFT ID
+  const collectionMapping: Record<number, {collection: string, id: string}> = {
+    1: {collection: 'azuki', id: '9605'},
+    2: {collection: 'degods', id: '8748'},
+    3: {collection: 'claynosaurz', id: '7221'},
+    4: {collection: 'milady', id: '8697'},
+    5: {collection: 'degentoonz', id: '4269'},
+    6: {collection: 'milady', id: '7218'},
+    7: {collection: 'madlads', id: '8993'}
+  };
+  
+  const mapping = collectionMapping[nftId];
+  
+  if (mapping) {
+    if (mapping.collection === 'degentoonz') {
+      return `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
+    } else if (mapping.collection === 'madlads') {
+      return 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
+    } else if (mapping.collection === 'degods') {
+      return `https://animation-url.degods.com/?tokenId=${mapping.id}`;
+    }
+  }
+  
+  // Third priority: Known local assets for fallback
+  const knownLocalAssets: Record<number, string> = {
+    1: 'Screenshot 2025-05-15 at 13.25.53.png',
+    2: 'Screenshot 2025-05-15 at 13.27.19.png',
+    3: 'Screenshot 2025-05-15 at 13.28.23.png',
+    4: 'Screenshot 2025-05-15 at 13.39.34.png',
+    5: 'Screenshot 2025-05-15 at 13.39.51.png',
+    7: '8993.avif',
+    8: '7218.avif'
+  };
+  
   if (knownLocalAssets[nftId]) {
-    console.log(`Using direct attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
+    console.log(`Using attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
     return `/attached_assets/${knownLocalAssets[nftId]}`;
   }
   
-  // Third priority: If token_image_url is available from UnleashNFTs API
-  if (nft.token_image_url && nft.token_image_url !== 'NA') {
-    console.log(`Using token_image_url from API for NFT #${nftId}`);
-    return nft.token_image_url;
-  }
-  
-  // Fourth priority: Use the API-provided URL with sanitization
-  return sanitizeNFTImageUrl(nft.imageUrl);
+  // Last resort: Use the API-provided URL with sanitization or placeholder
+  return nft.imageUrl ? sanitizeNFTImageUrl(nft.imageUrl) : '/placeholder-nft.png';
 }
 
 /**

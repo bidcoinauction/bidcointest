@@ -78,6 +78,10 @@ export async function getNFT(id: number): Promise<NFT> {
   return fetchFromAPI<NFT>(`/nfts/${id}`);
 }
 
+export async function getTokenURI(tokenAddress: string, tokenId: string, chain: string = 'ethereum'): Promise<any> {
+  return fetchFromAPI<any>(`/moralis/nft/${tokenAddress}/${tokenId}?chain=${chain}`);
+}
+
 export async function getPopularCollections(): Promise<any[]> {
   return fetchFromAPI<any[]>("/collections/popular");
 }
