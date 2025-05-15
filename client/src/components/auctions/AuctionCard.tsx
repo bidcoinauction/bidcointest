@@ -5,11 +5,13 @@ import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
 import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl, getOptimalNFTImageSource } from "@/lib/utils";
+import { formatPriceNative } from "@/lib/api";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import useTokenURI from "@/hooks/useTokenURI";
 import { getNFTDetailedMetadata, type NFTDetailedMetadata } from "@/lib/unleashApi";
+import { useCurrencyPreference } from "@/contexts/CurrencyContext";
 
 interface AuctionCardProps {
   auction: Auction;
@@ -21,6 +23,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
   const [detailedMetadata, setDetailedMetadata] = useState<NFTDetailedMetadata | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  
+  // Get currency display preference from global context
+  const { currencyDisplay } = useCurrencyPreference();
   
   // Calculate proper current bid based on bid count (each bid = $0.03)
   const initialBid = parseFloat(((auction.bidCount || 0) * 0.03).toFixed(2));
@@ -295,7 +300,21 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           <p className="text-gray-400">{tokenDisplay}</p>
           <p className="text-gray-400 font-medium">
             Floor<br/>
-            {detailedMetadata?.floor_price_usd ? (
+            {currencyDisplay === 'native' && detailedMetadata?.floor_price && detailedMetadata?.collection_name ? (
+              <span className="text-primary font-bold">
+                {formatPriceNative(
+                  detailedMetadata.floor_price,
+                  auction.nft.currency || 'ETH'
+                )}
+              </span>
+            ) : currencyDisplay === 'native' && auction.nft.floorPrice && auction.nft.currency ? (
+              <span className="text-primary font-bold">
+                {formatPriceNative(
+                  auction.nft.floorPrice,
+                  auction.nft.currency
+                )}
+              </span>
+            ) : detailedMetadata?.floor_price_usd ? (
               <span className="text-primary font-bold">
                 ${formatPriceUSD(detailedMetadata.floor_price_usd)}
               </span>

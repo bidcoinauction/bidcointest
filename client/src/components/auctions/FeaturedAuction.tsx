@@ -2,12 +2,13 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Heart, Share2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getFeaturedAuctions } from "@/lib/api";
+import { getFeaturedAuctions, formatPriceNative } from "@/lib/api";
 import useCountdown from "@/hooks/useCountdown";
 import BidModal from "@/components/modals/BidModal";
 import { useCallback, useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPriceUSD, formatCurrency, formatAddress, sanitizeNFTImageUrl, getOptimalNFTImageSource } from "@/lib/utils";
+import { useCurrencyPreference } from "@/contexts/CurrencyContext";
 
 export default function FeaturedAuction() {
   const [showBidModal, setShowBidModal] = useState(false);
@@ -17,6 +18,9 @@ export default function FeaturedAuction() {
   const [localPrice, setLocalPrice] = useState<number>(initialPrice);
   const [localEndTime, setLocalEndTime] = useState<Date>(new Date(Date.now() + 60 * 1000));
   const [localLeader, setLocalLeader] = useState<string>("");
+  
+  // Get currency display preference from global context
+  const { currencyDisplay } = useCurrencyPreference();
   
   const { data: featuredAuctions, isLoading, error } = useQuery({
     queryKey: ["/api/auctions/featured"],
