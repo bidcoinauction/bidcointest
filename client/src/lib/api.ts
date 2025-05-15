@@ -148,16 +148,34 @@ export async function getTokenURI(tokenAddress: string, tokenId: string, chain: 
         sessionStorage.setItem(unleashLogKey, 'true');
       }
       
-      // Cache the failure so we don't keep trying
+      // If UnleashNFTs fails, try to get from Alchemy as a last resort
       try {
-        sessionStorage.setItem(cacheKey, JSON.stringify({ 
-          success: false, 
-          error: error instanceof Error ? error.message : String(error)
-        }));
-      } catch (e) {/* ignore storage errors */}
-      
-      // Re-throw the original error if both sources fail
-      throw error;
+        console.log(`Trying Alchemy API as final fallback for ${tokenAddress}/${tokenId}`);
+        const data = await fetchFromAPI<any>(`/alchemy/nft/${tokenAddress}/${tokenId}`);
+        // Cache the successful result
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({ success: true, data }));
+        } catch (e) {/* ignore storage errors */}
+        return data;
+      } catch (alchemyError) {
+        // Only log once to avoid spam
+        const alchemyLogKey = `alchemy_log:${tokenAddress}:${tokenId}`;
+        if (!sessionStorage.getItem(alchemyLogKey)) {
+          console.warn(`All API sources failed for this NFT`);
+          sessionStorage.setItem(alchemyLogKey, 'true');
+        }
+        
+        // Cache the failure so we don't keep trying
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({ 
+            success: false, 
+            error: error instanceof Error ? error.message : String(error)
+          }));
+        } catch (e) {/* ignore storage errors */}
+        
+        // Re-throw the original error if all sources fail
+        throw error;
+      }
     }
   }
 }
