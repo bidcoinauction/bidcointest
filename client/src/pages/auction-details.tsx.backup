@@ -397,6 +397,7 @@ export default function AuctionDetailsPage() {
             /* Fallback to original attributes if detailed metadata is not available */
             !loading && auction.nft.attributes && auction.nft.attributes.length > 0 ? (
               <div className="grid grid-cols-3 gap-3">
+
                 {auction.nft.attributes.map((attr, index) => (
                   <div key={index} className="bg-[#111827] rounded-lg p-3 text-center">
                     <p className="text-gray-400 text-xs mb-1">{attr.trait_type}</p>
@@ -426,315 +427,327 @@ export default function AuctionDetailsPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Token Standard</span>
-                  <span className="text-white">{auction.nft.tokenStandard || "ERC-721"}</span>
+                  <span className="text-white">{auction.nft.tokenStandard}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Blockchain</span>
-                  <span className="text-white">{auction.nft.blockchain || "Ethereum"}</span>
+                  <span className="text-white">{auction.nft.blockchain}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-400">Token ID</span>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-white truncate max-w-[150px]">{auction.nft.tokenId || "Unknown"}</span>
-                    {auction.nft.tokenId && auction.nft.contractAddress && (
-                      <a 
-                        href={getBlockchainExplorerUrl(auction.nft.contractAddress, auction.nft.tokenId, auction.nft.blockchain || "ethereum")} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary-dark"
+                  <span className="text-white">{auction.nft.tokenId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Contract Address</span>
+                  <span className="text-white truncate max-w-[180px]">{formatAddress(auction.nft.contractAddress)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Collection</span>
+                  <span className="text-white">{auction.nft.collection || "Unknown Collection"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">UnleashNFTs API</span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`h-2 w-2 rounded-full ${detailedMetadata ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    <span className="text-white">{detailedMetadata ? 'Connected' : 'Not connected'}</span>
+                    {!detailedMetadata && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="ml-2 text-xs py-0 h-6" 
+                        onClick={navigateToApiSettings}
                       >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
+                        Fix
+                      </Button>
                     )}
                   </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Contract</span>
-                  <div className="flex items-center space-x-1">
-                    <span className="text-white truncate max-w-[150px]">
-                      {auction.nft.contractAddress ? 
-                        formatAddress(auction.nft.contractAddress) : 
-                        "Unknown"
-                      }
-                    </span>
-                    {auction.nft.contractAddress && (
-                      <a 
-                        href={`https://etherscan.io/address/${auction.nft.contractAddress}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary-dark"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    )}
+                {auction.nft.royalty && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Creator Royalty</span>
+                    <span className="text-white">{auction.nft.royalty}%</span>
                   </div>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Creator Royalty</span>
-                  <span className="text-white">{auction.nft.royalty || "2.5%"}</span>
-                </div>
+                )}
+                {auction.nft.floorPrice && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Floor Price</span>
+                    <span className="text-white">{auction.nft.floorPrice} ETH</span>
+                  </div>
+                )}
+                {auction.nft.items && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Collection Size</span>
+                    <span className="text-white">{auction.nft.items.toLocaleString()} items</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="border-t border-[#374151] p-5">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">View on Explorer</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-primary hover:text-primary-light"
+                  onClick={() => {
+                    let explorerUrl;
+                    if (auction.nft.blockchain === 'ethereum') {
+                      explorerUrl = `https://etherscan.io/token/${auction.nft.contractAddress}?a=${auction.nft.tokenId}`;
+                    } else if (auction.nft.blockchain === 'polygon') {
+                      explorerUrl = `https://polygonscan.com/token/${auction.nft.contractAddress}?a=${auction.nft.tokenId}`;
+                    } else if (auction.nft.blockchain === 'solana') {
+                      explorerUrl = `https://solscan.io/token/${auction.nft.tokenId}`;
+                    } else {
+                      explorerUrl = `https://explorer.blockchain.com`;
+                    }
+                    window.open(explorerUrl, '_blank');
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4 mr-1" /> Explorer
+                </Button>
               </div>
             </div>
           </div>
         </div>
         
         <div>
-          <div className="bg-[#1f2937] rounded-xl border border-[#374151] mb-6">
-            <div className="p-5 border-b border-[#374151]">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                <h1 className="text-2xl font-display font-bold text-white mb-2 md:mb-0">
-                  {auction.nft.name}
-                </h1>
-                
-                <div className="flex space-x-2 items-center">
-                  <span className="text-sm px-2 py-1 bg-[#111827] rounded-full text-gray-300">
-                    {formatRelativeTime(auction.createdAt)}
-                  </span>
-                  
-                  <span className="text-sm px-2 py-1 bg-[#111827] rounded-full text-gray-300">
-                    <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-                    {isActive ? "Live" : "Ended"}
-                  </span>
-                </div>
+          <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6 mb-6">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h1 className="text-2xl font-display font-bold text-white mb-1">{auction.nft.name}</h1>
+                <p className="text-gray-400">{auction.nft.collection}</p>
               </div>
               
-              <div className="flex items-center space-x-1 text-gray-400 text-sm mb-4">
-                <span>Created by</span>
-                <a href={`/profile/${auction.creator.id}`} className="text-primary hover:text-primary-dark font-medium">
-                  {auction.creator.username || formatAddress(auction.creator.walletAddress)}
-                </a>
-                <span>•</span>
-                <span>Collection: {auction.nft.collectionName || "Unknown"}</span>
+              <div className="bg-primary/20 text-primary text-xs px-2 py-1 rounded-full">
+                {auction.nft.category}
               </div>
-              
-              <p className="text-gray-300 text-sm mb-6">
-                {auction.nft.description || "No description available for this NFT."}
-              </p>
-              
-              <div className="bg-[#111827] rounded-xl p-5 mb-6">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                  <div>
-                    <h2 className="text-white text-lg font-display font-bold">Current Bid</h2>
-                    <p className="text-3xl font-bold text-white mt-1">
-                      ${typeof localCurrentBid === 'number' ? localCurrentBid.toFixed(2) : '0.00'}
-                    </p>
-                  </div>
-                  
-                  <div className="mt-4 md:mt-0">
-                    <div className="text-center">
-                      <p className="text-gray-400 text-sm mb-1">Time Remaining</p>
-                      <div className="bg-[#1f2937] rounded-lg p-2 inline-block min-w-36">
-                        {isActive ? (
-                          <div className="flex items-center justify-center space-x-1">
-                            {days > 0 && (
-                              <div className="text-center">
-                                <span className="text-2xl font-bold text-white">{days}</span>
-                                <span className="text-gray-400 text-xs block">days</span>
-                              </div>
-                            )}
-                            <div className="text-center px-1">
-                              <span className="text-2xl font-bold text-white">{hoursLeft.toString().padStart(2, '0')}</span>
-                              <span className="text-gray-400 text-xs block">hours</span>
-                            </div>
-                            <span className="text-white font-bold mt-1">:</span>
-                            <div className="text-center px-1">
-                              <span className="text-2xl font-bold text-white">{minutes.toString().padStart(2, '0')}</span>
-                              <span className="text-gray-400 text-xs block">mins</span>
-                            </div>
-                            <span className="text-white font-bold mt-1">:</span>
-                            <div className="text-center px-1">
-                              <span className="text-2xl font-bold text-white">{seconds.toString().padStart(2, '0')}</span>
-                              <span className="text-gray-400 text-xs block">secs</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-white text-lg font-medium">Auction Ended</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                  <div className="flex items-center text-gray-400 mb-4 md:mb-0">
-                    <div className="flex items-center space-x-1 mr-4">
-                      <Trophy className="h-4 w-4 text-yellow-500" />
-                      <span>{localBidCount} {localBidCount === 1 ? 'bid' : 'bids'}</span>
-                    </div>
-                    {localLeader && (
-                      <div className="flex items-center space-x-1">
-                        <span>Highest bidder:</span>
-                        <span className="text-primary">{formatAddress(localLeader)}</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex space-x-3">
-                    {isHighestBidder && (
-                      <div className="bg-green-950 text-green-400 px-3 py-1 rounded-md text-sm flex items-center">
-                        <Trophy className="h-4 w-4 mr-1 text-green-400" />
-                        Current Leader
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex space-x-4">
-                  <Button 
-                    className="flex-1 bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg transition-all shadow-glow"
-                    onClick={handleOpenBidModal}
-                    disabled={!isActive}
-                  >
-                    {isActive ? "Place Bid" : "Auction Ended"}
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    className="bg-transparent border border-[#374151] text-white hover:bg-[#374151]/50 py-3 px-4 rounded-lg transition-colors"
-                  >
-                    Buy Now
-                  </Button>
-                </div>
+            </div>
+            
+            <div className="flex items-center space-x-3 mb-8">
+              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-primary">
+                <img src={auction.creator.avatar || '/placeholder-avatar.jpg'} alt={`${auction.creator.username} avatar`} className="w-full h-full object-cover" />
               </div>
-              
-              <div className="mb-4">
-                <div className="flex space-x-4 mb-4">
-                  <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
-                    <p className="text-gray-400 text-xs mb-1">Retail Price</p>
-                    <p className="text-white font-medium">${auction.nft.retailPrice?.toFixed(2) || "N/A"}</p>
-                  </div>
-                  <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
-                    <p className="text-gray-400 text-xs mb-1">Floor Price</p>
-                    <p className="text-white font-medium">${auction.nft.floorPrice?.toFixed(2) || "N/A"}</p>
-                  </div>
-                  <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
-                    <p className="text-gray-400 text-xs mb-1">Volume (24h)</p>
-                    <p className="text-white font-medium">${auction.nft.volume24h?.toFixed(2) || "N/A"}</p>
-                  </div>
-                </div>
-                
-                <div className="bg-[#111827] rounded-lg p-3">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Bid fee:</span>
-                    <span className="text-white text-sm">$0.24</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Bid increment:</span>
-                    <span className="text-white text-sm">$0.03</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400 text-sm">Timer reset:</span>
-                    <span className="text-white text-sm">60 seconds</span>
-                  </div>
-                </div>
+              <div>
+                <p className="text-xs text-gray-400">Created by</p>
+                <p className="text-md font-medium text-white">{auction.creator.username}</p>
               </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    <h3 className="text-lg font-display font-bold text-white">Auction Stats</h3>
-                  </div>
+            </div>
+            
+            <div className="mb-8">
+              <p className="text-gray-400 mb-2">Current Bid</p>
+              <div className="flex items-baseline">
+                <span className="text-3xl font-display font-bold text-white mr-2">${typeof localCurrentBid === 'number' ? localCurrentBid.toFixed(2) : '0.00'}</span>
+                <span className="text-gray-400">USD</span>
+              </div>
+            </div>
+            
+            <div className="mb-8">
+              <p className="text-gray-400 mb-2">Auction Ends In</p>
+              <div className="grid grid-cols-4 gap-2">
+                <div className="bg-[#111827] p-3 rounded-lg text-center">
+                  <span className="text-2xl font-display font-bold text-white">{days}</span>
+                  <p className="text-xs text-gray-400 mt-1">Days</p>
                 </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-[#111827] rounded-lg p-3 text-center">
-                    <p className="text-gray-400 text-xs mb-1">Discount</p>
-                    <p className="text-green-400 font-medium">
-                      {auction.nft.retailPrice && localCurrentBid
-                        ? `${Math.max(0, Math.round((1 - localCurrentBid / auction.nft.retailPrice) * 100))}% off`
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-[#111827] rounded-lg p-3 text-center">
-                    <p className="text-gray-400 text-xs mb-1">You Save</p>
-                    <p className="text-green-400 font-medium">
-                      {auction.nft.retailPrice && localCurrentBid
-                        ? `$${(auction.nft.retailPrice - localCurrentBid).toFixed(2)}`
-                        : "N/A"}
-                    </p>
-                  </div>
-                  <div className="bg-[#111827] rounded-lg p-3 text-center">
-                    <p className="text-gray-400 text-xs mb-1">Total Bids</p>
-                    <p className="text-white font-medium">{localBidCount}</p>
-                  </div>
-                  <div className="bg-[#111827] rounded-lg p-3 text-center">
-                    <p className="text-gray-400 text-xs mb-1">Bid Value</p>
-                    <p className="text-white font-medium">${(localBidCount * 0.24).toFixed(2)}</p>
-                  </div>
+                <div className="bg-[#111827] p-3 rounded-lg text-center">
+                  <span className="text-2xl font-display font-bold text-white">{hoursLeft}</span>
+                  <p className="text-xs text-gray-400 mt-1">Hours</p>
+                </div>
+                <div className="bg-[#111827] p-3 rounded-lg text-center">
+                  <span className="text-2xl font-display font-bold text-white">{minutes}</span>
+                  <p className="text-xs text-gray-400 mt-1">Minutes</p>
+                </div>
+                <div className="bg-[#111827] p-3 rounded-lg text-center">
+                  <span className="text-2xl font-display font-bold text-white">{seconds}</span>
+                  <p className="text-xs text-gray-400 mt-1">Seconds</p>
                 </div>
               </div>
             </div>
             
-            <div className="p-5">
-              <Tabs defaultValue="activity" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 bg-[#111827]/50">
-                  <TabsTrigger value="activity">Activity</TabsTrigger>
-                  <TabsTrigger value="history">Auction History</TabsTrigger>
-                </TabsList>
-                <TabsContent value="activity" className="mt-4">
-                  <BidActivity auctionId={auction.id} />
-                </TabsContent>
-                <TabsContent value="history" className="mt-4">
-                  <div className="text-center py-8 text-gray-400">
-                    <p>Auction history will be available after the auction ends</p>
+            <div className="mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-400">Total Bids</span>
+                <span className="text-white">{localBidCount}</span>
+              </div>
+              <div className="h-2 bg-[#111827] rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(100, (localBidCount / 100) * 100)}%` }}></div>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <div className="flex justify-between mb-2">
+                <span className="text-gray-400">Highest Bidder</span>
+                <span className="text-white">{formatAddress(localLeader)}</span>
+              </div>
+              <div className="h-2 bg-[#111827] rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: isHighestBidder ? "100%" : "0%" }}></div>
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button 
+                className="flex-1 text-white bg-primary hover:bg-primary/90 font-medium text-base" 
+                onClick={handleOpenBidModal}
+                disabled={!isActive}
+              >
+                {isActive ? (
+                  <>Place Bid</>
+                ) : (
+                  <>Auction Ended</>
+                )}
+              </Button>
+              
+              {isActive && (
+                <Button variant="outline" className="bg-transparent border-[#374151] text-white hover:bg-[#374151]">
+                  Add to Watchlist
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6 mb-6">
+            <Tabs defaultValue="about" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-[#111827]">
+                <TabsTrigger value="about">About</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="history">Price History</TabsTrigger>
+              </TabsList>
+              <TabsContent value="about" className="mt-6">
+                {/* NFT Description */}
+                <div className="mb-6">
+                  <h4 className="text-white font-semibold mb-3">NFT Description</h4>
+                  <div className="text-gray-300 prose prose-invert max-w-none">
+                    <p>{auction.nft.description || "No description available for this NFT."}</p>
                   </div>
-                </TabsContent>
-              </Tabs>
+                </div>
+                
+                {/* Collection Info */}
+                {auction.nft.collection && (
+                  <div className="pt-4 border-t border-[#374151]">
+                    <h4 className="text-white font-semibold mb-3">Collection Information</h4>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden mr-3">
+                          {auction.nft.collectionImage ? (
+                            <img 
+                              src={auction.nft.collectionImage} 
+                              alt={auction.nft.collection} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-700 flex items-center justify-center text-gray-400">
+                              <span className="text-2xl font-bold">{auction.nft.collection.charAt(0)}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">{auction.nft.collection}</h5>
+                          {auction.nft.items && (
+                            <p className="text-sm text-gray-400">{auction.nft.items.toLocaleString()} items</p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {auction.nft.floorPrice && (
+                        <div className="flex items-center gap-4 mt-2">
+                          <div className="bg-[#111827] p-2 rounded flex-1">
+                            <p className="text-xs text-gray-400">Floor Price</p>
+                            <p className="text-sm text-white font-medium">{auction.nft.floorPrice} ETH</p>
+                          </div>
+                          
+                          {auction.nft.volume24h && (
+                            <div className="bg-[#111827] p-2 rounded flex-1">
+                              <p className="text-xs text-gray-400">24h Volume</p>
+                              <p className="text-sm text-white font-medium">{auction.nft.volume24h} ETH</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="activity" className="mt-6">
+                <BidActivity auctionId={auctionId} />
+              </TabsContent>
+              <TabsContent value="history" className="mt-6">
+                <div className="text-center py-6">
+                  <TrendingUp className="h-12 w-12 text-gray-500 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-white mb-2">Price History</h3>
+                  <p className="text-gray-400">Price history will be available after more bids are placed.</p>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6">
+            <div className="flex items-center mb-4">
+              <Trophy className="h-5 w-5 text-primary mr-2" />
+              <h3 className="text-lg font-display font-bold text-white">Bidcoin Auction Rules</h3>
+            </div>
+            <div className="space-y-4">
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">1</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Penny Auction Format</p>
+                  <p className="text-gray-400 text-sm">Each bid costs only $0.24 and increases the auction price by $0.03.</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">2</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Time Extension</p>
+                  <p className="text-gray-400 text-sm">Each bid in the last minute resets the timer to 1 minute.</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">3</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Winner Takes All</p>
+                  <p className="text-gray-400 text-sm">The highest bidder when the timer reaches zero wins the NFT.</p>
+                </div>
+              </div>
+              
+              <div className="flex">
+                <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center mr-3">
+                  <span className="text-primary font-medium">4</span>
+                </div>
+                <div>
+                  <p className="text-white font-medium mb-1">Transparent Bidding</p>
+                  <p className="text-gray-400 text-sm">All bids are recorded on blockchain for full transparency and fairness.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="bg-[#1f2937] rounded-xl p-5 border border-[#374151]">
-        <div className="flex items-center mb-6">
-          <Award className="h-6 w-6 text-primary mr-2" />
-          <h2 className="text-xl font-display font-bold text-white">Related NFTs</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-[#111827] rounded-xl overflow-hidden border border-[#374151] hover:shadow-lg transition-all hover:-translate-y-1">
-              <div className="aspect-square overflow-hidden">
-                <img 
-                  src={`/placeholder-nft-${(i % 4) + 1}.jpg`} 
-                  alt="Related NFT" 
-                  className="w-full h-full object-cover" 
-                />
-              </div>
-              <div className="p-4">
-                <h3 className="text-white font-medium mb-1 truncate">Collection #{1000 + i}</h3>
-                <p className="text-gray-400 text-sm mb-2">Floor: $0.32</p>
-                <Button 
-                  variant="outline" 
-                  className="w-full text-primary border-primary hover:bg-primary/10"
-                >
-                  View Auctions
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      
-      {/* Bid Modal */}
       {showBidModal && (
-        <BidModal
-          isOpen={true}
+        <BidModal 
+          isOpen={showBidModal} 
           onClose={handleCloseBidModal}
-          auction={auction}
-          onPlaceBid={handlePlaceBid}
+          onBid={handlePlaceBid}
           minimumBid={minimumBid}
+          currentBid={localCurrentBid}
+          bidIncrement={bidIncrement}
+          auction={auction}
         />
       )}
       
-      {/* Payment Method Selection Modal */}
       {showPaymentModal && (
         <PaymentMethodModal
-          isOpen={true}
+          isOpen={showPaymentModal}
           onClose={handleClosePaymentModal}
+          onSelectMethod={handleSelectPaymentMethod}
           auction={auction}
-          onSelectPaymentMethod={handleSelectPaymentMethod}
+          finalPrice={typeof localCurrentBid === 'number' ? localCurrentBid.toFixed(2) : '0.00'}
         />
       )}
     </div>

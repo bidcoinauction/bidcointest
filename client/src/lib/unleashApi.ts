@@ -643,14 +643,32 @@ export const getNFTDetailedMetadata = async (
 ): Promise<NFTDetailedMetadata | null> => {
   try {
     const endpoint = `nft/${contractAddress}/${tokenId}?chain=${chain}`;
-    const apiVersion = apiStatus.useFallbackEndpoints ? 'v1' : 'v2';
     
-    const response = await fetchFromAPI<any>(endpoint, undefined, apiVersion);
-    
-    if (response && response.result) {
-      return response.result;
+    // First try v2 API
+    try {
+      console.log(`[unleash-nfts] Fetching from https://api.unleashnfts.com/api/v2/${endpoint}`);
+      const response = await fetchFromAPI<any>(endpoint, undefined, 'v2');
+      
+      if (response && response.result) {
+        return response.result;
+      }
+    } catch (v2Error) {
+      console.log('Falling back to v1 API endpoint');
     }
     
+    // Fall back to v1 API if v2 fails
+    try {
+      console.log(`[unleash-nfts] Fetching from https://api.unleashnfts.com/api/v1/${endpoint}`);
+      const fallbackResponse = await fetchFromAPI<any>(endpoint, undefined, 'v1');
+      
+      if (fallbackResponse && fallbackResponse.result) {
+        return fallbackResponse.result;
+      }
+    } catch (v1Error) {
+      console.error(`[unleash-nfts] V1 API fallback also failed:`, v1Error);
+    }
+    
+    console.log('No detailed metadata available from UnleashNFTs API');
     return null;
   } catch (error) {
     console.error(`[unleash-nfts] Failed to get detailed NFT metadata:`, error);
