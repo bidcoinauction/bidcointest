@@ -97,17 +97,65 @@ export async function getNFT(id: number): Promise<NFT> {
 }
 
 export async function getTokenURI(tokenAddress: string, tokenId: string, chain: string = 'ethereum'): Promise<any> {
+  // Create a cache key for this NFT
+  const cacheKey = `tokenURI:${tokenAddress}:${tokenId}:${chain}`;
+  
+  // Check if this request is cached - either as success or known failure
+  const cachedResult = sessionStorage.getItem(cacheKey);
+  if (cachedResult) {
+    try {
+      const parsed = JSON.parse(cachedResult);
+      if (parsed.success) {
+        return parsed.data;
+      } else {
+        // If it's a known failure, throw the cached error
+        throw new Error(parsed.error || "Cached failure");
+      }
+    } catch (e) {
+      // If parsing fails, continue with the request
+    }
+  }
+  
   try {
     // Try to get from Moralis first
-    return await fetchFromAPI<any>(`/moralis/nft/${tokenAddress}/${tokenId}?chain=${chain}`);
+    const data = await fetchFromAPI<any>(`/moralis/nft/${tokenAddress}/${tokenId}?chain=${chain}`);
+    // Cache the successful result
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify({ success: true, data }));
+    } catch (e) {/* ignore storage errors */}
+    return data;
   } catch (error) {
-    console.warn(`Failed to fetch tokenURI for ${tokenAddress}/${tokenId} from Moralis:`, error);
+    // Only log once to avoid spam
+    const moralisLogKey = `moralis_log:${tokenAddress}:${tokenId}`;
+    if (!sessionStorage.getItem(moralisLogKey)) {
+      console.warn(`Failed to fetch tokenURI from Moralis`);
+      sessionStorage.setItem(moralisLogKey, 'true');
+    }
     
     // If Moralis fails, try to get from UnleashNFTs as fallback
     try {
-      return await fetchFromAPI<any>(`/unleash/nft/metadata?contract_address=${tokenAddress}&token_id=${tokenId}&chain_id=1`);
+      const data = await fetchFromAPI<any>(`/unleash/nft/metadata?contract_address=${tokenAddress}&token_id=${tokenId}&chain_id=1`);
+      // Cache the successful result
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({ success: true, data }));
+      } catch (e) {/* ignore storage errors */}
+      return data;
     } catch (unleashError) {
-      console.warn(`Also failed to fetch from UnleashNFTs:`, unleashError);
+      // Only log once to avoid spam
+      const unleashLogKey = `unleash_log:${tokenAddress}:${tokenId}`;
+      if (!sessionStorage.getItem(unleashLogKey)) {
+        console.warn(`Also failed to fetch from UnleashNFTs`);
+        sessionStorage.setItem(unleashLogKey, 'true');
+      }
+      
+      // Cache the failure so we don't keep trying
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify({ 
+          success: false, 
+          error: error instanceof Error ? error.message : String(error)
+        }));
+      } catch (e) {/* ignore storage errors */}
+      
       // Re-throw the original error if both sources fail
       throw error;
     }

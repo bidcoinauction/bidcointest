@@ -17,6 +17,24 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
 
   // Use local state to track error count for enhanced retry behavior
   const [errorCount, setErrorCount] = useState(0);
+  
+  // Create a cache key for this NFT to check if we've tried it before
+  const cacheKey = `${contractAddress}:${tokenId}:${chain}`;
+  
+  // Check if we've previously failed and should avoid retrying
+  const [shouldSkipFetch, setShouldSkipFetch] = useState(() => {
+    // Check localStorage for previously failed lookups
+    const failedLookups = localStorage.getItem('failedTokenURILookups');
+    if (failedLookups) {
+      try {
+        const failedList = JSON.parse(failedLookups);
+        return failedList.includes(cacheKey);
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  });
 
   const {
     data: tokenData,
@@ -32,14 +50,31 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
         setErrorCount(0); // Reset error count on success
         return data;
       } catch (err) {
-        setErrorCount(prev => prev + 1);
+        setErrorCount(prev => {
+          const newCount = prev + 1;
+          // If we've failed 3 times, add to localStorage to avoid future retries
+          if (newCount >= 3) {
+            try {
+              const failedLookups = localStorage.getItem('failedTokenURILookups');
+              const failedList = failedLookups ? JSON.parse(failedLookups) : [];
+              if (!failedList.includes(cacheKey)) {
+                failedList.push(cacheKey);
+                localStorage.setItem('failedTokenURILookups', JSON.stringify(failedList));
+                setShouldSkipFetch(true);
+              }
+            } catch (e) {
+              // If storage fails, continue
+            }
+          }
+          return newCount;
+        });
         throw err;
       }
     },
-    enabled: shouldFetch,
-    staleTime: 1000 * 60 * 60, // Cache for 1 hour since NFT metadata rarely changes
-    retry: 2, // Retry twice for network issues
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000) // Exponential backoff with 30s max
+    enabled: shouldFetch && !shouldSkipFetch, // Don't fetch if we know it will fail
+    staleTime: 1000 * 60 * 60 * 24, // Cache for 24 hours since NFT metadata rarely changes
+    retry: 1, // Only retry once to avoid excessive requests
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000) // Shorter max retry delay
   });
 
   // Extract the most likely image URL from the token data
@@ -96,9 +131,17 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
         return tokenData.animation_url;
       }
       
-      console.warn('Could not find image URL in tokenURI data', tokenData);
+      // Only log once per session to avoid console spam
+      if (!sessionStorage.getItem(`logged_${cacheKey}`)) {
+        console.warn('Could not find image URL in tokenURI data', {message: "No metadata found"});
+        sessionStorage.setItem(`logged_${cacheKey}`, 'true');
+      }
     } catch (e) {
-      console.error('Error extracting image from token data', e);
+      // Only log once per session to avoid console spam
+      if (!sessionStorage.getItem(`error_${cacheKey}`)) {
+        console.error('Error extracting image from token data');
+        sessionStorage.setItem(`error_${cacheKey}`, 'true');
+      }
     }
 
     return null;
