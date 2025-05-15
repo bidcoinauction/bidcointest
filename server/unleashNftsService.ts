@@ -57,23 +57,12 @@ export class UnleashNftsService {
   private headers: Record<string, string>;
 
   constructor() {
-    // Provide more information for debugging
-    const firstFour = API_KEY ? API_KEY.substring(0, 4) : '';
-    const lastFour = API_KEY ? API_KEY.substring(API_KEY.length - 4) : '';
-    log(`Initializing UnleashNftsService with API key: ${API_KEY ? `${firstFour}...${lastFour}` : 'Not found'}`, 'unleash-nfts');
-
     this.headers = {
       'accept': 'application/json',
-      'x-api-key': API_KEY || ''
+      'x-api-key': API_KEY
     };
-
-    if (!API_KEY) {
-      log('WARNING: VITE_BITCRUNCH_API_KEY is not set. UnleashNfts API will not work.', 'unleash-nfts');
-    } else {
-      log('UnleashNfts API key configured successfully', 'unleash-nfts');
-      // Test the connection
-      this.testConnection();
-    }
+    
+    log(`UnleashNFTs Service initialized with API key: ${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}`, 'unleash-nfts');
   }
 
   /**
@@ -81,172 +70,62 @@ export class UnleashNftsService {
    */
   private async testConnection(): Promise<void> {
     try {
-      log(`Testing connection to UnleashNFTs API...`, 'unleash-nfts');
+      const response = await axios.get(`${BASE_URL_V1}/blockchains`, {
+        headers: this.headers
+      });
       
-      // First test metadata endpoint which is critical for our application
-      try {
-        await this.testNFTMetadataEndpoint();
-        
-        // If metadata test succeeds, we can stop here since it's our most important endpoint
-        return;
-      } catch (metadataError: any) {
-        const errorMsg = metadataError.response?.data?.message || metadataError.message || 'Unknown error';
-        log(`⚠️ NFT metadata endpoint test failed: ${errorMsg}`, 'unleash-nfts');
-        log(`Falling back to collections API test...`, 'unleash-nfts');
-      }
-      
-      // Try to fetch collections if metadata test fails
-      try {
-        // Make a direct API call instead of using getCollectionsByChain to isolate test
-        log(`Testing collections API with correct parameters...`, 'unleash-nfts');
-        
-        const response = await axios.get(`${BASE_URL_V1}/collections`, {
-          headers: this.headers,
-          params: {
-            currency: 'usd',
-            metrics: 'volume',   // Required parameter
-            sort_by: 'volume',
-            sort_order: 'desc',
-            offset: 0,
-            limit: 5,
-            time_range: '24h'
-          }
-        });
-        
-        const collections = response.data?.data || [];
-        
-        if (collections && collections.length > 0) {
-          log(`✅ UnleashNFTs API collections test SUCCESSFUL. Found ${collections.length} collections.`, 'unleash-nfts');
-          log(`Top collection: ${collections[0]?.name || 'Unknown'}`, 'unleash-nfts');
-          return; // Exit early on success
-        } else {
-          log(`⚠️ UnleashNFTs API collections test completed, but no collections were returned.`, 'unleash-nfts');
-          log(`Falling back to blockchain test...`, 'unleash-nfts');
-        }
-      } catch (collectionError: any) {
-        const errorMsg = collectionError.response?.data?.message || collectionError.message || 'Unknown error';
-        log(`⚠️ UnleashNFTs API collections test failed: ${errorMsg}`, 'unleash-nfts');
-        log(`Falling back to blockchain test...`, 'unleash-nfts');
-      }
-      
-      // If collections test fails, fall back to blockchains test
-      try {
-        const blockchains = await this.getSupportedBlockchains(1, 1);
-        log(`Got ${blockchains.length} blockchains from UnleashNFTs v2 API`, 'unleash-nfts');
-        
-        if (blockchains && blockchains.length > 0) {
-          log(`✅ UnleashNFTs API blockchain test SUCCESSFUL. Found ${blockchains.length} blockchains.`, 'unleash-nfts');
-          log(`Blockchain available: ${blockchains[0]?.metadata?.name || 'Unknown'}`, 'unleash-nfts');
-        } else {
-          log(`⚠️ UnleashNFTs API connection test completed, but no blockchains were returned.`, 'unleash-nfts');
-          log(`This might indicate an issue with the API or insufficient permissions.`, 'unleash-nfts');
-        }
-      } catch (blockchainError: any) {
-        const errorMsg = blockchainError.response?.data?.message || blockchainError.message || 'Unknown error';
-        log(`❌ UnleashNFTs API blockchain test FAILED: ${errorMsg}`, 'unleash-nfts');
+      if (response.status === 200) {
+        log('✅ UnleashNFTs API connection successful!', 'unleash-nfts');
       }
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-      const status = error.response?.status;
-      
-      log(`❌ UnleashNFTs API connection test FAILED: ${errorMessage}`, 'unleash-nfts');
-      
-      if (status === 401 || errorMessage.includes('API key')) {
-        // If API key is invalid, provide guidance on obtaining a new one
-        log(`The API key appears to be invalid or expired.`, 'unleash-nfts'); 
-        log(`To get a valid API key:`, 'unleash-nfts');
-        log(`1. Create an account at unleashnfts.com`, 'unleash-nfts');
-        log(`2. Navigate to your profile settings`, 'unleash-nfts');
-        log(`3. Request an API key and follow verification steps`, 'unleash-nfts');
-        log(`4. Add the new key to your environment as VITE_BITCRUNCH_API_KEY`, 'unleash-nfts');
-      }
+      this.handleError('testConnection', error);
+      log('❌ UnleashNFTs API connection failed', 'unleash-nfts');
     }
   }
-  
+
   /**
    * Test the NFT metadata endpoint with a known NFT
    * This is crucial for verifying our image loading functionality
    */
   private async testNFTMetadataEndpoint(): Promise<void> {
-    // Use CryptoPunks collection which is well-known and should be available
-    const testCollection = '0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb'; // CryptoPunks
-    const testTokenId = '1000'; // A well-known CryptoPunk
-    const testChain = '1'; // Ethereum (numeric chain ID)
-    
-    log(`Testing NFT metadata endpoint directly...`, 'unleash-nfts');
-    log(`Parameters: Collection=${testCollection}, TokenID=${testTokenId}, Chain=${testChain}`, 'unleash-nfts');
-    
     try {
-      // Test v2 endpoint first (preferred according to documentation)
-      const url = `${BASE_URL_V2}/nft/metadata`;
-      const response = await axios.get(url, {
-        headers: this.headers,
-        params: {
-          collection_address: testCollection,
-          token_id: testTokenId,
-          blockchain: testChain
-        }
-      });
+      // Test with a well-known Ethereum NFT
+      const chainId = '1'; // Ethereum
+      const contractAddress = '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d'; // BAYC
+      const tokenId = '1'; // Token ID #1
       
-      const nftData = response.data;
+      log(`Testing NFT metadata endpoint with BAYC #1...`, 'unleash-nfts');
       
-      if (nftData) {
-        log(`✅ NFT metadata endpoint test SUCCESSFUL`, 'unleash-nfts');
-        log(`Retrieved metadata for: ${nftData.name || 'Unknown NFT'}`, 'unleash-nfts');
-        
-        // Test image URL cleaning
-        if (nftData.image_url) {
-          const cleanedUrl = this.cleanImageUrl(nftData.image_url);
-          log(`Original image URL: ${nftData.image_url}`, 'unleash-nfts');
-          log(`Sanitized image URL: ${cleanedUrl}`, 'unleash-nfts');
-        } else {
-          log(`⚠️ NFT has no image URL in response`, 'unleash-nfts');
-        }
-        
-        return; // Success
-      } else {
-        log(`⚠️ NFT metadata endpoint returned empty data`, 'unleash-nfts');
-        throw new Error('Empty metadata response');
-      }
-    } catch (v2Error: any) {
-      const errorMsg = v2Error.response?.data?.message || v2Error.message || 'Unknown error';
-      log(`V2 metadata endpoint failed: ${errorMsg}. Trying v1...`, 'unleash-nfts');
-      
-      // Try v1 endpoint as fallback
+      // Try direct path format first
       try {
-        const url = `${BASE_URL_V1}/nft/metadata`;
-        const response = await axios.get(url, {
+        const response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
+          headers: this.headers
+        });
+        
+        if (response.status === 200) {
+          log('✅ NFT metadata endpoint (direct path format) is working!', 'unleash-nfts');
+          return;
+        }
+      } catch (directPathError) {
+        log(`Direct path format failed, trying with query parameters...`, 'unleash-nfts');
+        
+        // If direct path fails, try with query parameters
+        const response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
           headers: this.headers,
           params: {
-            collection_address: testCollection,
-            token_id: testTokenId,
-            blockchain: testChain
+            blockchain: chainId,
+            collection_address: contractAddress,
+            token_id: tokenId
           }
         });
         
-        const nftData = response.data;
-        
-        if (nftData) {
-          log(`✅ V1 NFT metadata endpoint test SUCCESSFUL`, 'unleash-nfts');
-          log(`Retrieved metadata for: ${nftData.name || 'Unknown NFT'}`, 'unleash-nfts');
-          
-          // Test image URL cleaning
-          if (nftData.image_url) {
-            const cleanedUrl = this.cleanImageUrl(nftData.image_url);
-            log(`Original image URL: ${nftData.image_url}`, 'unleash-nfts');
-            log(`Sanitized image URL: ${cleanedUrl}`, 'unleash-nfts');
-          }
-          
-          return; // Success
-        } else {
-          log(`⚠️ V1 NFT metadata endpoint returned empty data`, 'unleash-nfts');
-          throw new Error('Empty V1 metadata response');
+        if (response.status === 200) {
+          log('✅ NFT metadata endpoint (query parameters) is working!', 'unleash-nfts');
         }
-      } catch (v1Error: any) {
-        const v1ErrorMsg = v1Error.response?.data?.message || v1Error.message || 'Unknown error';
-        log(`❌ Both V2 and V1 metadata endpoints failed. V1 error: ${v1ErrorMsg}`, 'unleash-nfts');
-        throw v1Error;
       }
+    } catch (error: any) {
+      this.handleError('testNFTMetadataEndpoint', error);
+      log('❌ NFT metadata endpoint test failed', 'unleash-nfts');
     }
   }
 
@@ -258,47 +137,19 @@ export class UnleashNftsService {
    */
   async getSupportedBlockchains(page: number = 1, limit: number = 30, sortBy: string = 'blockchain_name'): Promise<any[]> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/blockchains`, {
-          headers: this.headers,
-          params: {
-            sort_by: sortBy,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        
-        log(`Got ${response.data?.data?.length || 0} blockchains from UnleashNFTs v2 API`, 'unleash-nfts');
-        return response.data.data || [];
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 blockchains endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/blockchains`, {
-          headers: this.headers,
-          params: {
-            sort_by: sortBy,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        
-        log(`Got ${response.data?.data?.length || 0} blockchains from UnleashNFTs v1 API`, 'unleash-nfts');
-        return response.data.data || [];
-      }
-    } catch (error) {
-      this.handleError('getSupportedBlockchains', error);
-      
-      // If API fails completely, return a hardcoded entry for Ethereum to prevent cascading failures
-      log(`Providing fallback blockchain information for Ethereum`, 'unleash-nfts');
-      return [{
-        id: 1,
-        metadata: {
-          name: "Ethereum",
-          symbol: "ETH",
-          chain_id: "1"
+      const response = await axios.get(`${BASE_URL_V1}/blockchains`, {
+        headers: this.headers,
+        params: {
+          sort_by: sortBy,
+          offset: (page - 1) * limit,
+          limit
         }
-      }];
+      });
+      
+      return response.data?.blockchains || [];
+    } catch (error: any) {
+      this.handleError('getSupportedBlockchains', error);
+      return [];
     }
   }
 
@@ -312,112 +163,40 @@ export class UnleashNftsService {
    */
   async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume', sortBy: string = 'volume'): Promise<NFTCollection[]> {
     try {
-      // Get error feedback informing us that metrics is required
       const chainId = this.normalizeChainId(chain);
-      log(`Attempting to fetch collections with all required parameters`, 'unleash-nfts');
+      log(`Fetching collections for chain ${chainId}...`, 'unleash-nfts');
       
-      // Let's try with all parameters including the required metrics
-      try {
-        const response = await axios.get(`${BASE_URL_V1}/collections`, {
-          headers: this.headers,
-          params: {
-            currency: 'usd',
-            metrics: ['volume', 'floor_price', 'market_cap'],  // API requires metrics array
-            sort_by: 'holders',
-            sort_order: 'desc',
-            offset: (page - 1) * limit,
-            limit,
-            time_range: '24h',
-            include_washtrade: true
-          }
-        });
-        
-        log(`Successfully retrieved ${response.data?.data?.length || 0} collections`, 'unleash-nfts');
-        return response.data.data || [];
-      } catch (error: any) {
-        // If that fails, try the alternate form with metrics as a string
-        const errorMsg = error?.message || 'Unknown error';
-        log(`Collections endpoint failed: ${errorMsg}, trying alternate metrics format...`, 'unleash-nfts');
-        
-        try {
-          const response = await axios.get(`${BASE_URL_V1}/collections`, {
-            headers: this.headers,
-            params: {
-              currency: 'usd',
-              metrics: 'volume',  // Try as string instead of array
-              sort_by: 'volume',  // Match sort_by with metrics
-              sort_order: 'desc',
-              offset: (page - 1) * limit,
-              limit,
-              time_range: '24h'
-            }
-          });
-          
-          log(`Successfully retrieved ${response.data?.data?.length || 0} collections using string metrics`, 'unleash-nfts');
-          return response.data.data || [];
-        } catch (metricsError: any) {
-          // Final attempt - try with blockchain parameter and all required fields
-          log(`Metrics string endpoint failed: ${metricsError.message}, trying with blockchain parameter...`, 'unleash-nfts');
-          
-          const response = await axios.get(`${BASE_URL_V1}/collections`, {
-            headers: this.headers,
-            params: {
-              blockchain: parseInt(chainId),  // Add blockchain filter
-              currency: 'usd',
-              metrics: 'volume',  // Required parameter
-              sort_by: 'volume',
-              sort_order: 'desc',
-              offset: (page - 1) * limit,
-              limit,
-              time_range: '24h'
-            }
-          });
-          
-          log(`Successfully retrieved ${response.data?.data?.length || 0} collections with blockchain filter`, 'unleash-nfts');
-          return response.data.data || [];
+      // Prepare metrics array (split if comma-separated)
+      const metrics = metricsParam.includes(',') ? metricsParam.split(',') : [metricsParam];
+      
+      const response = await axios.get(`${BASE_URL_V1}/collections`, {
+        headers: this.headers,
+        params: {
+          blockchain: chainId,
+          currency: 'usd',
+          metrics: metrics.join(','),
+          sort_by: sortBy,
+          sort_order: 'desc',
+          offset: (page - 1) * limit,
+          limit,
+          time_range: '24h',
+          include_washtrade: true
         }
-      }
-    } catch (error) {
+      });
+      
+      const collections = response.data?.collections || [];
+      
+      // Clean image URLs 
+      return collections.map((collection: any) => {
+        if (collection.image_url) {
+          collection.image_url = this.cleanImageUrl(collection.image_url);
+        }
+        return collection;
+      });
+    } catch (error: any) {
       this.handleError('getCollectionsByChain', error);
-      // Even if all API calls fail, return an empty array rather than null
-      // to avoid cascading failures
       return [];
     }
-  }
-  
-  /**
-   * Normalize chain identifier to the format expected by UnleashNFTs API
-   * @param chain Chain identifier (could be name, symbol, or chain_id)
-   */
-  private normalizeChainId(chain: string): string {
-    // Already numeric chain ID
-    if (/^\d+$/.test(chain)) {
-      return chain;
-    }
-    
-    // Convert common chain names to chain_id
-    const chainMap: Record<string, string> = {
-      'ethereum': '1',
-      'eth': '1',
-      'polygon': '137',
-      'matic': '137',
-      'solana': '501',
-      'sol': '501',
-      'binance': '56',
-      'bsc': '56',
-      'avalanche': '43114',
-      'avax': '43114'
-    };
-    
-    const normalizedChain = chain.toLowerCase();
-    if (chainMap[normalizedChain]) {
-      log(`Normalized chain "${chain}" to chain_id "${chainMap[normalizedChain]}"`, 'unleash-nfts');
-      return chainMap[normalizedChain];
-    }
-    
-    // Default to Ethereum if unknown
-    log(`Unknown chain "${chain}", defaulting to Ethereum (chain_id=1)`, 'unleash-nfts');
-    return '1';
   }
 
   /**
@@ -427,29 +206,22 @@ export class UnleashNftsService {
    */
   async getCollectionMetadata(contractAddress: string, chain: string): Promise<NFTCollection | null> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collection/info`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain 
-          }
-        });
-        return response.data.data || null;
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 collection info endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collection/info`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain 
-          }
-        });
-        return response.data.data || null;
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching metadata for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, {
+        headers: this.headers
+      });
+      
+      const collection = response.data;
+      
+      // Clean image URL
+      if (collection && collection.image_url) {
+        collection.image_url = this.cleanImageUrl(collection.image_url);
       }
-    } catch (error) {
+      
+      return collection;
+    } catch (error: any) {
       this.handleError('getCollectionMetadata', error);
       return null;
     }
@@ -462,29 +234,19 @@ export class UnleashNftsService {
    */
   async getCollectionMetrics(contractAddress: string, chain: string): Promise<NFTCollectionMetrics | null> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collection/metrics`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain 
-          }
-        });
-        return response.data.data || null;
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 collection metrics endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collection/metrics`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain 
-          }
-        });
-        return response.data.data || null;
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching metrics for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/metrics`, {
+        headers: this.headers,
+        params: {
+          currency: 'usd',
+          time_range: '24h'
+        }
+      });
+      
+      return response.data.metrics || null;
+    } catch (error: any) {
       this.handleError('getCollectionMetrics', error);
       return null;
     }
@@ -498,31 +260,20 @@ export class UnleashNftsService {
    */
   async getCollectionTrend(contractAddress: string, chain: string, period: string = '30d'): Promise<any> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collection/trend`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain,
-            time_range: period
-          }
-        });
-        return response.data.data || null;
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 collection trend endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collection/trend`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain,
-            time_range: period
-          }
-        });
-        return response.data.data || null;
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching trend data for collection ${contractAddress} on chain ${chainId} over ${period}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/trend`, {
+        headers: this.headers,
+        params: {
+          currency: 'usd',
+          time_range: period,
+          include_washtrade: true
+        }
+      });
+      
+      return response.data || null;
+    } catch (error: any) {
       this.handleError('getCollectionTrend', error);
       return null;
     }
@@ -535,31 +286,17 @@ export class UnleashNftsService {
    */
   async getCollectionTraits(contractAddress: string, chain: string): Promise<any> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collection/traits`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain 
-          }
-        });
-        return response.data.data || null;
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 collection traits endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collection/traits`, {
-          headers: this.headers,
-          params: { 
-            collection_address: contractAddress,
-            blockchain: chain 
-          }
-        });
-        return response.data.data || null;
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching traits for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/traits`, {
+        headers: this.headers
+      });
+      
+      return response.data.traits || [];
+    } catch (error: any) {
       this.handleError('getCollectionTraits', error);
-      return null;
+      return [];
     }
   }
 
@@ -572,98 +309,34 @@ export class UnleashNftsService {
    */
   async getCollectionNFTs(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<NFTMetadata[]> {
     try {
-      // Format endpoint according to documentation:
-      // https://api.unleashnfts.com/api/v1/collection/{blockchain}/{address}/nfts
       const chainId = this.normalizeChainId(chain);
+      log(`Fetching NFTs for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
-      log(`Fetching NFTs for collection ${contractAddress} on chain ${chainId} using correct URL format`, 'unleash-nfts');
-      
-      try {
-        // Direct format from API documentation
-        const url = `${BASE_URL_V1}/collection/${chainId}/${contractAddress}/nfts`;
-        
-        const response = await axios.get(url, {
-          headers: this.headers,
-          params: {
-            // Required parameters according to documentation
-            metrics: ['volume', 'floor_price'], // API requires metrics array
-            sort_by: 'holders',
-            sort_order: 'desc',
-            offset: (page - 1) * limit,
-            limit: limit,
-            time_range: '24h'
-          }
-        });
-        
-        const nfts = response.data?.data || [];
-        log(`Successfully fetched ${nfts.length} NFTs using collection endpoint`, 'unleash-nfts');
-        
-        // Process and clean image URLs
-        return nfts.map((nft: any) => {
-          if (nft.image_url) {
-            nft.image_url = this.cleanImageUrl(nft.image_url);
-          }
-          return nft;
-        });
-      } catch (formatError: any) {
-        const errorMsg = formatError.response?.data?.message || formatError.message;
-        log(`Collection NFTs endpoint failed: ${errorMsg}. Trying alternative...`, 'unleash-nfts');
-        
-        // Try the original endpoint format as fallback
-        try {
-          const response = await axios.get(`${BASE_URL_V1}/nft/tokens`, {
-            headers: this.headers,
-            params: {
-              collection_address: contractAddress,
-              blockchain: chainId,
-              metrics: 'volume', // Add required parameter
-              offset: (page - 1) * limit,
-              limit: limit
-            }
-          });
-          
-          const nfts = response.data?.data || [];
-          log(`Successfully fetched ${nfts.length} NFTs using tokens endpoint`, 'unleash-nfts');
-          
-          // Process and clean image URLs
-          return nfts.map((nft: any) => {
-            if (nft.image_url) {
-              nft.image_url = this.cleanImageUrl(nft.image_url);
-            }
-            return nft;
-          });
-        } catch (fallbackError: any) {
-          // If both attempts fail, try v2 endpoint
-          log(`V1 NFT tokens endpoint failed, trying v2 endpoint...`, 'unleash-nfts');
-          
-          const response = await axios.get(`${BASE_URL_V2}/nft/tokens`, {
-            headers: this.headers,
-            params: {
-              collection_address: contractAddress,
-              blockchain: chainId,
-              offset: (page - 1) * limit,
-              limit: limit
-            }
-          });
-          
-          const nfts = response.data?.data || [];
-          log(`Successfully fetched ${nfts.length} NFTs using v2 tokens endpoint`, 'unleash-nfts');
-          
-          // Process and clean image URLs
-          return nfts.map((nft: any) => {
-            if (nft.image_url) {
-              nft.image_url = this.cleanImageUrl(nft.image_url);
-            }
-            return nft;
-          });
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/nfts`, {
+        headers: this.headers,
+        params: {
+          offset: (page - 1) * limit,
+          limit,
+          sort_by: 'token_id',
+          sort_order: 'asc'
         }
-      }
-    } catch (error) {
+      });
+      
+      const nfts = response.data.nfts || [];
+      
+      // Clean image URLs
+      return nfts.map((nft: any) => {
+        if (nft.image_url) {
+          nft.image_url = this.cleanImageUrl(nft.image_url);
+        }
+        return nft;
+      });
+    } catch (error: any) {
       this.handleError('getCollectionNFTs', error);
       return [];
     }
   }
-  
+
   /**
    * Sanitize NFT image URLs to avoid marketplace restrictions
    * This is a critical function to ensure NFT images load properly from various sources
@@ -671,126 +344,45 @@ export class UnleashNftsService {
    * @returns Sanitized image URL that uses direct sources
    */
   private cleanImageUrl(url: string): string {
-    if (!url) return '/placeholder-nft.png';
+    if (!url) return '';
+    
+    // Skip already cleaned URLs
+    if (url.startsWith('data:image') || url.includes('ipfs.io')) {
+      return url;
+    }
     
     try {
-      log(`Sanitizing image URL: ${url}`, 'unleash-nfts');
-      
-      // Check and replace HTTP with HTTPS first for security
-      if (url.startsWith('http://')) {
-        url = url.replace('http://', 'https://');
-        log(`Converted to HTTPS: ${url}`, 'unleash-nfts');
-      }
-      
-      // Special case for data URLs - leave them as is
-      if (url.startsWith('data:image/')) {
-        log(`Data URL detected, keeping as is`, 'unleash-nfts');
-        return url;
-      }
-      
-      // Handle malformed URLs or relative paths
-      if (!url.includes('://') && !url.startsWith('data:')) {
-        if (url.startsWith('/')) {
-          log(`Converting relative path to absolute`, 'unleash-nfts');
-          return url; // Leave server relative paths as is
-        } else if (url.startsWith('ipfs://')) {
-          // Continue processing with IPFS handler below
-        } else {
-          log(`Malformed URL without protocol, adding https://`, 'unleash-nfts');
-          url = 'https://' + url;
+      // Convert IPFS gateway URLs to use ipfs.io gateway which has better CORS support
+      if (url.includes('ipfs')) {
+        // Extract CID from various IPFS URL formats
+        let cid = '';
+        
+        // Handle ipfs:// protocol
+        if (url.startsWith('ipfs://')) {
+          cid = url.replace('ipfs://', '');
+          return `https://ipfs.io/ipfs/${cid}`;
+        }
+        
+        // Handle URLs with /ipfs/ path
+        if (url.includes('/ipfs/')) {
+          cid = url.split('/ipfs/')[1];
+          return `https://ipfs.io/ipfs/${cid}`;
         }
       }
       
-      // OpenSea URLs - Use IPFS gateway or direct URL
-      if (url.includes('opensea.io') || url.includes('openseauserdata.com')) {
-        const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
-        if (ipfsMatch && ipfsMatch[1]) {
-          const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
-          log(`Converted OpenSea URL to IPFS gateway: ${newUrl}`, 'unleash-nfts');
-          return newUrl;
-        } else {
-          // Try to extract the direct image URL from OpenSea links
-          const directMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
-          if (directMatch) {
-            // Use a direct CDN URL if possible
-            const newUrl = `https://i.seadn.io/gae/${directMatch[1]}`;
-            log(`Extracted direct image from OpenSea URL: ${newUrl}`, 'unleash-nfts');
-            return newUrl;
-          }
-        }
+      // Handle Magic Eden URLs - replace with direct source
+      if (url.includes('magiceden') || url.includes('opensea')) {
+        // Don't use these URLs as they have CORS restrictions
+        // Instead return a placeholder or cached version
+        log(`Skipping restricted marketplace URL: ${url}`, 'unleash-nfts');
+        return '/placeholder-nft.png';
       }
       
-      // Magic Eden URLs - Convert to Arweave
-      if (url.includes('magiceden.io') || url.includes('magiceden.com')) {
-        const idMatch = url.match(/([a-zA-Z0-9_-]{43,})/);
-        if (idMatch && idMatch[1]) {
-          const newUrl = `https://arweave.net/${idMatch[1]}`;
-          log(`Converted Magic Eden URL to Arweave: ${newUrl}`, 'unleash-nfts');
-          return newUrl;
-        } else {
-          // Try to extract the filename and use a direct URL
-          const filenameMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
-          if (filenameMatch) {
-            // Use a public storage URL if we have the filename
-            log(`Extracted filename from Magic Eden URL: ${filenameMatch[1]}`, 'unleash-nfts');
-            url = `https://user-content.magiceden.io/${filenameMatch[1]}`;
-          }
-        }
-      }
-      
-      // IPFS URLs with IPFS protocol
-      if (url.startsWith('ipfs://')) {
-        const ipfsId = url.substring(7); // Remove ipfs:// prefix
-        const newUrl = `https://ipfs.io/ipfs/${ipfsId}`;
-        log(`Converted IPFS protocol URL to gateway: ${newUrl}`, 'unleash-nfts');
-        return newUrl;
-      }
-      
-      // IPFS URLs with wrong gateway or path format
-      if (url.includes('ipfs') && !url.includes('ipfs.io')) {
-        // More comprehensive regex to extract IPFS hash
-        const ipfsMatch = url.match(/ipfs[:/ ]+([a-zA-Z0-9]{46}|[a-zA-Z0-9]{59}|Qm[a-zA-Z0-9]{44})/i);
-        if (ipfsMatch && ipfsMatch[1]) {
-          const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
-          log(`Converted to IPFS gateway URL: ${newUrl}`, 'unleash-nfts');
-          return newUrl;
-        }
-      }
-      
-      // Arweave URLs with wrong gateway
-      if (url.includes('arweave') && !url.includes('arweave.net')) {
-        const arweaveMatch = url.match(/([a-zA-Z0-9_-]{43})/);
-        if (arweaveMatch && arweaveMatch[1]) {
-          const newUrl = `https://arweave.net/${arweaveMatch[1]}`;
-          log(`Converted to Arweave gateway URL: ${newUrl}`, 'unleash-nfts');
-          return newUrl;
-        }
-      }
-      
-      // Ensure properly encoded URLs for special characters
-      if (url.includes(' ') || url.includes('"') || url.includes("'")) {
-        const encodedUrl = encodeURI(url);
-        if (encodedUrl !== url) {
-          log(`URL encoded to handle special characters: ${encodedUrl}`, 'unleash-nfts');
-          url = encodedUrl;
-        }
-      }
-      
-      // Handle S3 and other cloud storage URLs
-      const s3Match = url.match(/amazonaws\.com\/([^/]+\/[^/]+\/[^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
-      if (s3Match) {
-        // Ensure we're using HTTPS for S3 URLs
-        const newUrl = `https://s3.amazonaws.com/${s3Match[1]}`;
-        log(`Normalized S3 URL: ${newUrl}`, 'unleash-nfts');
-        return newUrl;
-      }
-      
-      log(`No URL transformation needed, returning original`, 'unleash-nfts');
+      // Return cleaned URL, or original if no cleaning was needed
       return url;
-    } catch (error) {
-      console.error('Error cleaning image URL:', error);
-      // If any error occurs during cleaning, return the original URL
-      return url;
+    } catch (e) {
+      log(`Error cleaning image URL: ${e}`, 'unleash-nfts');
+      return url; // Return original URL on error
     }
   }
 
@@ -803,33 +395,21 @@ export class UnleashNftsService {
    */
   async getCollectionTransactions(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<any[]> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collection/transactions`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        return response.data.data || [];
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 collection transactions endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collection/transactions`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        return response.data.data || [];
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching transactions for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}/transactions`, {
+        headers: this.headers,
+        params: {
+          offset: (page - 1) * limit,
+          limit,
+          sort_by: 'timestamp',
+          sort_order: 'desc'
+        }
+      });
+      
+      return response.data.transactions || [];
+    } catch (error: any) {
       this.handleError('getCollectionTransactions', error);
       return [];
     }
@@ -843,31 +423,28 @@ export class UnleashNftsService {
    */
   async getCollectionsWithValuation(chain: string, page: number = 1, limit: number = 10): Promise<NFTCollection[]> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/collections/with-valuation`, {
-          headers: this.headers,
-          params: {
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        return response.data.data || [];
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 collections with valuation endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/collections/with-valuation`, {
-          headers: this.headers,
-          params: {
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        return response.data.data || [];
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching collections with valuation on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/nft/valuation/collections`, {
+        headers: this.headers,
+        params: {
+          blockchain: chainId,
+          offset: (page - 1) * limit,
+          limit
+        }
+      });
+      
+      const collections = response.data.collections || [];
+      
+      // Clean image URLs
+      return collections.map((collection: any) => {
+        if (collection.image_url) {
+          collection.image_url = this.cleanImageUrl(collection.image_url);
+        }
+        return collection;
+      });
+    } catch (error: any) {
       this.handleError('getCollectionsWithValuation', error);
       return [];
     }
@@ -882,33 +459,29 @@ export class UnleashNftsService {
    */
   async getNFTsWithValuation(contractAddress: string, chain: string, page: number = 1, limit: number = 10): Promise<NFTMetadata[]> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/tokens`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        return response.data.data || [];
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 tokens with valuation endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/tokens`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            blockchain: chain,
-            offset: (page - 1) * limit,
-            limit
-          }
-        });
-        return response.data.data || [];
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching NFTs with valuation for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/nft/valuation/nfts`, {
+        headers: this.headers,
+        params: {
+          blockchain: chainId,
+          collection_address: contractAddress,
+          offset: (page - 1) * limit,
+          limit
+        }
+      });
+      
+      const nfts = response.data.nfts || [];
+      
+      // Clean image URLs
+      return nfts.map((nft: any) => {
+        if (nft.image_url) {
+          nft.image_url = this.cleanImageUrl(nft.image_url);
+        }
+        return nft;
+      });
+    } catch (error: any) {
       this.handleError('getNFTsWithValuation', error);
       return [];
     }
@@ -922,31 +495,20 @@ export class UnleashNftsService {
    */
   async getNFTValuation(contractAddress: string, tokenId: string, chain: string): Promise<any> {
     try {
-      // Try v2 endpoint first
-      try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/valuation`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            token_id: tokenId,
-            blockchain: chain
-          }
-        });
-        return response.data.data || null;
-      } catch (v2Error) {
-        // If v2 fails, try v1 endpoint
-        log(`V2 NFT valuation endpoint failed, trying v1 endpoint...`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V1}/nft/valuation`, {
-          headers: this.headers,
-          params: {
-            collection_address: contractAddress,
-            token_id: tokenId,
-            blockchain: chain
-          }
-        });
-        return response.data.data || null;
-      }
-    } catch (error) {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching valuation for NFT ${contractAddress}/${tokenId} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V1}/nft/valuation`, {
+        headers: this.headers,
+        params: {
+          blockchain: chainId,
+          collection_address: contractAddress,
+          token_id: tokenId
+        }
+      });
+      
+      return response.data.valuation || null;
+    } catch (error: any) {
       this.handleError('getNFTValuation', error);
       return null;
     }
@@ -991,15 +553,11 @@ export class UnleashNftsService {
         const errorMsg = v2Error.response?.data?.message || v2Error.message;
         log(`V2 NFT metadata endpoint failed: ${errorMsg}. Trying v1 endpoint...`, 'unleash-nfts');
         
-        // If v2 fails, try v1 endpoint
+        // If v2 fails, try v1 endpoint with direct path format
         try {
-          const response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
-            headers: this.headers,
-            params: {
-              blockchain: chainId,
-              collection_address: contractAddress,
-              token_id: tokenId
-            }
+          log(`[unleash-nfts] Trying v1 format: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+          const response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
+            headers: this.headers
           });
           
           const nftData = response.data;
@@ -1027,7 +585,7 @@ export class UnleashNftsService {
       return null;
     }
   }
-  
+
   /**
    * Get NFT metadata by either contract address or slug name
    * @param options Configuration object
@@ -1072,12 +630,27 @@ export class UnleashNftsService {
       
       // Try v2 endpoint first (as per updated docs)
       try {
-        const response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
-          headers: this.headers,
-          params
-        });
+        let response;
+        let nftData;
         
-        const nftData = response.data;
+        // If we have a contract address, use the direct path format
+        if (contractAddress) {
+          log(`[unleash-nfts] Trying direct path: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+          response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
+            headers: this.headers
+          });
+          
+          nftData = response.data;
+        } else {
+          // For slug-based lookup, we still need to use params
+          log(`[unleash-nfts] Using params with slug: ${BASE_URL_V2}/nft/metadata`, 'unleash-nfts');
+          response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
+            headers: this.headers,
+            params
+          });
+          
+          nftData = response.data;
+        }
         
         // Clean any image URLs in the response
         if (nftData && nftData.image_url) {
@@ -1097,10 +670,22 @@ export class UnleashNftsService {
         
         // If v2 fails, try v1 endpoint
         try {
-          const response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
-            headers: this.headers,
-            params
-          });
+          let response;
+          
+          // If we have a contract address, use direct path format
+          if (contractAddress) {
+            log(`[unleash-nfts] Trying direct v1 path: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+            response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
+              headers: this.headers
+            });
+          } else {
+            // For slug-based lookup, use query params
+            log(`[unleash-nfts] Trying slug with v1 endpoint: ${BASE_URL_V1}/nft/metadata`, 'unleash-nfts');
+            response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
+              headers: this.headers,
+              params
+            });
+          }
           
           const nftData = response.data;
           
@@ -1149,7 +734,7 @@ export class UnleashNftsService {
       'fantom': '250',
       'ftm': '250',
       'base': '8453',
-      'solana': 'solana'
+      'solana': '900'
     };
     
     // Check if the chain is already a numeric ID
@@ -1170,8 +755,11 @@ export class UnleashNftsService {
     return chain;
   }
 
+  /**
+   * Handle API errors with detailed logging
+   */
   private handleError(method: string, error: any): void {
-    const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+    const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Unknown error';
     const status = error.response?.status;
     const requestUrl = error.config?.url || 'unknown';
     const requestMethod = error.config?.method || 'unknown';
@@ -1183,38 +771,34 @@ export class UnleashNftsService {
       
       // Show first and last 4 characters of API key for debugging
       if (API_KEY) {
-        const firstFour = API_KEY.substring(0, 4);
-        const lastFour = API_KEY.substring(API_KEY.length - 4);
-        log(`Current API key: ${firstFour}...${lastFour}`, 'unleash-nfts');
+        const keyPreview = `${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}`;
+        log(`Current API key begins with: ${keyPreview}`, 'unleash-nfts');
       } else {
-        log(`Current API key: Not set`, 'unleash-nfts');
+        log(`No API key found in environment variables.`, 'unleash-nfts');
       }
-      
-      // Registration instructions
-      log(`To get a valid API key, register at unleashnfts.com and request a key from your profile`, 'unleash-nfts');
-      
-      // Log the request details for debugging
-      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
-    } else if (status === 429) {
-      // Rate limiting errors
-      log(`RATE LIMIT EXCEEDED in ${method}: ${errorMessage}`, 'unleash-nfts');
-      log(`UnleashNFTs has rate limits on API calls. Consider:`, 'unleash-nfts');
-      log(`1. Reducing request frequency`, 'unleash-nfts');
-      log(`2. Adding caching mechanisms`, 'unleash-nfts');
-      log(`3. Upgrading your API plan`, 'unleash-nfts');
-      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
-    } else if (status >= 500) {
-      // Server errors
-      log(`UnleashNFTs SERVER ERROR in ${method}: ${errorMessage}`, 'unleash-nfts');
-      log(`This is likely a temporary issue with the UnleashNFTs API service.`, 'unleash-nfts');
-      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
-    } else {
-      // Other errors
-      log(`UnleashNfts API error in ${method}: ${errorMessage} (Status: ${status || 'unknown'})`, 'unleash-nfts');
-      log(`Failed request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
+      return;
     }
     
-    console.error(`UnleashNfts API error in ${method}:`, error);
+    // Special handling for rate limit errors
+    if (status === 429) {
+      log(`UnleashNFTs API RATE LIMIT ERROR in ${method}: Too many requests. Please wait before trying again.`, 'unleash-nfts');
+      return;
+    }
+    
+    // Detailed logging for other error types
+    log(`API Error in ${method}: ${errorMessage}`, 'unleash-nfts');
+    log(`Request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
+    
+    // Log specific error details for different status codes
+    if (status) {
+      if (status === 400) {
+        log(`Bad request (400): The request was improperly formatted or contained invalid parameters.`, 'unleash-nfts');
+      } else if (status === 404) {
+        log(`Not found (404): The requested resource was not found. Check the contract address and token ID.`, 'unleash-nfts');
+      } else if (status >= 500) {
+        log(`Server error (${status}): The UnleashNFTs API server is experiencing issues. Try again later.`, 'unleash-nfts');
+      }
+    }
   }
 }
 
