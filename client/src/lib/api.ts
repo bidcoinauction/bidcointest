@@ -241,11 +241,38 @@ export async function getBlockchainStats(): Promise<BlockchainStats> {
 }
 
 // Format utilities for presenting data
-export function formatPrice(price: string, currency = "USD"): string {
+export function formatPrice(price: string | number, currency = "USD"): string {
+  const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+  
   if (currency === "USD") {
-    return `$${parseFloat(price).toFixed(2)}`;
+    return `$${priceNum.toFixed(2)}`;
   }
-  return `${price} ${currency}`;
+  
+  // Format for cryptocurrencies with appropriate decimals
+  return `${priceNum.toFixed(4)} ${currency}`;
+}
+
+/**
+ * Format a price in USD
+ * @param price The price to format
+ * @returns Formatted price string with $ symbol
+ */
+export function formatPriceUSD(price: string | number | undefined): string {
+  if (price === undefined) return '$0.00';
+  const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+  return `$${priceNum.toFixed(2)}`;
+}
+
+/**
+ * Format a price in native blockchain currency
+ * @param price The price to format
+ * @param symbol The currency symbol (ETH, MATIC, etc.)
+ * @returns Formatted price with currency symbol
+ */
+export function formatPriceNative(price: string | number | undefined, symbol = "ETH"): string {
+  if (price === undefined) return '0.00 ETH';
+  const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+  return `${priceNum.toFixed(4)} ${symbol}`;
 }
 
 export function formatRelativeTime(date: Date | string): string {

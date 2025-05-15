@@ -577,7 +577,10 @@ export interface NFTCollection {
   token_schema: string;
   chain: string;
   description?: string;
-  floor_price?: number;
+  floor_price?: number; // Original floor price (usually in native currency)
+  floor_price_usd?: number; // Floor price in USD
+  floor_price_native?: number; // Floor price in native blockchain currency
+  currency_symbol?: string; // Symbol of the native currency (ETH, MATIC, etc.)
   volume_24h?: number;
   market_cap?: number;
   holders_count?: number;
@@ -781,6 +784,34 @@ export const testApiConnection = async (): Promise<{success: boolean, message: s
         error
       }
     };
+  }
+};
+
+/**
+ * Get collections by blockchain with native currency display
+ * @param blockchain Blockchain name or ID
+ * @param currency Currency to display prices in (native or usd)
+ * @param page Page number
+ * @param limit Items per page
+ * @returns Collections with native currency information
+ */
+export const getCollectionsByBlockchain = async (
+  blockchain: string = 'ethereum',
+  currency: string = 'native',
+  page: number = 1,
+  limit: number = 12
+): Promise<NFTCollection[]> => {
+  try {
+    // Use our new server-side endpoint that handles native currency
+    const response = await baseFetchFromAPI<any>(`/unleash/collections-by-chain?blockchain=${blockchain}&currency=${currency}&limit=${limit}&offset=${(page-1)*limit}`);
+    
+    if (response?.collections) {
+      return response.collections;
+    }
+    return [];
+  } catch (error) {
+    console.error('[unleash-nfts] Failed to get collections by blockchain:', error);
+    return [];
   }
 };
 
