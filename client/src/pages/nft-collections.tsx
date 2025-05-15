@@ -10,6 +10,7 @@ import {
   testApiConnection,
   getApiStatus
 } from '@/lib/unleashApi';
+import { useCurrencyPreference } from '@/contexts/CurrencyContext';
 import { ApiKeyModal } from '@/components/modals/ApiKeyModal';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -64,8 +65,8 @@ export default function NFTCollectionsPage() {
   const limit = 8; // Collections per page
   const { toast } = useToast();
 
-  // State for currency display preference
-  const [currencyDisplay, setCurrencyDisplay] = useState<'native' | 'usd'>('native');
+  // Get currency display preference from global context
+  const { currencyDisplay } = useCurrencyPreference();
   
   // Fetch collections based on chain with native currency support
   const { 
@@ -245,16 +246,6 @@ export default function NFTCollectionsPage() {
             </SelectContent>
           </Select>
           
-          {/* Currency display toggle */}
-          <Select value={currencyDisplay} onValueChange={(value) => setCurrencyDisplay(value as 'native' | 'usd')}>
-            <SelectTrigger className="w-[140px] bg-[#1f2937] border-[#374151]">
-              <SelectValue placeholder="Currency" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="native">Native Currency</SelectItem>
-              <SelectItem value="usd">USD</SelectItem>
-            </SelectContent>
-          </Select>
           <div className="relative w-full md:w-60">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
             <Input 
