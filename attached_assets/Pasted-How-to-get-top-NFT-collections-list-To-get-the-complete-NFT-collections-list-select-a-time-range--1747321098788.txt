@@ -1,0 +1,171 @@
+How to get top NFT collections (list)
+To get the complete NFT collections list, select a time range between 24h, seven days, 30 days, and all. The query parameters are listed below:
+
+metrics required - Metrics are passed, like volume
+
+currency - USD for US Dollar
+
+blockchain - chain id 1 for Ethereum and 137 for Polygon
+
+time_range - The metric data can be obtained for different time range like 24h, 7d, 30d, and all.
+
+include_washtrade - set True or False to include wash trade
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/collections?metrics=marketcap&currency=usd&blockchain=1&sort_by=holders&sort_order=desc&offset=0&limit=3&time_range=24h&include_washtrade=true \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+Response
+
+JSON
+
+{
+  "collections": [
+    {
+      "metadata": {
+        "contract_address": "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
+        "name": "ENS: Ethereum Name Service",
+        "chain_id": 1,
+        "collection_image_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+        "thumbnail_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+        "thumbnail_palette": [
+          "#8C9EFF",
+          "#89C4F9",
+          "#DBBFFF",
+          "#70F7A9"
+        ],
+        "verified": false,
+        "nft_count": 2743269
+      },
+      "metric_values": {
+        "marketcap": {
+          "value": "1323480704.0",
+          "unit": "usd"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "contract_address": "0x495f947276749ce646f68ac8c248420045cb7b5e",
+        "name": "OpenSea Shared Storefront",
+        "chain_id": 1,
+        "collection_image_url": "https://lh3.googleusercontent.com/HMeSm6mM47Wkap8it2rXBbyCIF0wiAXpamQJQidiCmF4wL-zL5sS2UXZuH6jm65kpXy2XwaS1T9gkD7x2UbB34qlwTLMTBHmyqx5qA=s500",
+        "thumbnail_url": "https://lh3.googleusercontent.com/HMeSm6mM47Wkap8it2rXBbyCIF0wiAXpamQJQidiCmF4wL-zL5sS2UXZuH6jm65kpXy2XwaS1T9gkD7x2UbB34qlwTLMTBHmyqx5qA=s500",
+        "thumbnail_palette": [
+          "#0064C2",
+          "#D2D8F9",
+          "#89C4F9",
+          "#8C9EFF"
+        ],
+        "verified": false,
+        "nft_count": 1858690
+      },
+      "metric_values": {
+        "marketcap": {
+          "value": "NA",
+          "unit": "usd"
+        }
+      }
+    },
+    {
+      "metadata": {
+        "contract_address": "0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270",
+        "name": "Art Blocks",
+        "chain_id": 1,
+        "collection_image_url": "https://logo.nftscan.com/logo/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270.png",
+        "thumbnail_url": "https://logo.nftscan.com/logo/0xa7d8d9ef8d8ce8992df33d8b8cf4aebabd5bd270.png",
+        "thumbnail_palette": [
+          "#E03131",
+          "#12B886",
+          "#F7F5C9",
+          "#5050C4"
+        ],
+        "verified": false,
+        "nft_count": 195357
+      },
+      "metric_values": {
+        "marketcap": {
+          "value": "453947360.0",
+          "unit": "usd"
+        }
+      }
+    }
+  ],
+  "metric_ranges": {
+    "marketcap": {
+      "minimum": "0.0",
+      "maximum": "1323480704.0",
+      "total": "9152101610.617188"
+    }
+  },
+  "pagination": {
+    "total_items": 386,
+    "offset": 0,
+    "limit": 3,
+    "has_next": true
+  }
+}
+How to get the collection details:
+To get the collection metadata information, such as thumbnail URL, description, and social media URL, all the API configuration is managed by path parameters. For example, to obtain the list of NFT in a collection for a blockchain, follow the path parameters below:
+
+blockchain required - chain id 1 for Ethereum and 137 for Polygon
+
+address required - collection address
+
+Example:
+
+cURL
+
+curl --request GET \
+     --url 'https://api.unleashnfts.com/api/v1/collection/1/0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85 \
+     --header 'accept: application/json' \
+     --header 'x-api-key: your API key'
+We need to pass the blockchain and address as path parameters, and thereafter, it will fetch the metadata details of that collection. Then, we can use the data to create a dashboard to view the collection details.
+
+Response:
+
+JSON
+
+{
+  "contract_address": "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85",
+  "name": "ENS: Ethereum Name Service",
+  "chain_id": 1,
+  "thumbnail_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+  "collection_image_url": "https://lh3.googleusercontent.com/0cOqWoYA7xL9CkUjGlxsjreSYBdrUBE0c6EO1COG4XE8UeP-Z30ckqUNiL872zHQHQU5MUNMNhfDpyXIP17hRSC5HQ=s500",
+  "verified": false,
+  "nft_count": 2743269,
+  "thumbnail_palette": [
+    "#8C9EFF",
+    "#89C4F9",
+    "#DBBFFF",
+    "#70F7A9"
+  ],
+  "description": "Ethereum Name Service (ENS) domains are secure domain names for the decentralized world. ENS domains provide a way for users to map human readable names to blockchain and non-blockchain resources, like Ethereum addresses, IPFS hashes, or website URLs. ENS domains can be bought and sold on secondary markets.",
+  "start_date": "2020-01-30T00:43:54Z",
+  "social_media": [
+    {
+      "platform": "twitter",
+      "url": "https://www.twitter.com/ensdomains"
+    },
+    {
+      "platform": "discord",
+      "url": "NA"
+    },
+    {
+      "platform": "instagram",
+      "url": "NA"
+    },
+    {
+      "platform": "medium",
+      "url": "https://www.medium.com/@the-ethereum-name-service"
+    },
+    {
+      "platform": "telegram",
+      "url": "NA"
+    }
+  ]
+}
