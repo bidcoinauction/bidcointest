@@ -37,10 +37,39 @@ export const nfts = pgTable("nfts", {
   collection: text("collection"),
   collectionName: text("collection_name"), // Collection name display
   collectionImage: text("collection_image"), // Added for collection image
+  
+  // Price metrics
   floorPrice: decimal("floor_price", { precision: 10, scale: 6 }),
   floorPriceUsd: decimal("floor_price_usd", { precision: 10, scale: 2 }), // Added USD floor price for consistent display
   retailPrice: decimal("retail_price", { precision: 10, scale: 6 }), // Added retail price for discount calculation
+  priceAvg: decimal("price_avg", { precision: 10, scale: 6 }), // Average price at which NFTs are sold
+  priceCeiling: decimal("price_ceiling", { precision: 10, scale: 6 }), // Highest price at which an NFT in the collection was sold
+  
+  // Volume metrics
   volume24h: decimal("volume_24h", { precision: 10, scale: 6 }), // Added for 24h volume
+  volumeChange: decimal("volume_change", { precision: 10, scale: 4 }), // Change in volume as percentage
+  
+  // Collection metrics
+  marketcap: decimal("marketcap", { precision: 14, scale: 2 }), // Total market value of the collection
+  marketcapChange: decimal("marketcap_change", { precision: 10, scale: 4 }), // Change in marketcap as percentage
+  
+  // Holder metrics
+  holders: integer("holders"), // Number of traders currently holding NFTs
+  holdersChange: decimal("holders_change", { precision: 10, scale: 4 }), // Change in holders as percentage
+  holdersDiamondHands: integer("holders_diamond_hands"), // Number of diamond hands holders
+  holdersWhales: integer("holders_whales"), // Number of whales holding NFTs from collection
+  
+  // Activity metrics
+  sales: integer("sales"), // Number of NFTs sold
+  salesChange: decimal("sales_change", { precision: 10, scale: 4 }), // Change in sales as percentage
+  traders: integer("traders"), // Number of traders (buyer and/or seller)
+  tradersChange: decimal("traders_change", { precision: 10, scale: 4 }), // Change in traders as percentage
+  
+  // Rarity metrics
+  rarityScore: decimal("rarity_score", { precision: 10, scale: 2 }), // Rarity score (higher is more rare)
+  rarityRank: integer("rarity_rank"), // Rarity rank within collection (lower is more rare)
+  
+  // Basic metadata
   currency: text("currency").default("ETH"),
   items: integer("items"),
   category: text("category").default("art"),
@@ -61,9 +90,39 @@ export const insertNftSchema = createInsertSchema(nfts).pick({
   collection: true,
   collectionName: true,
   collectionImage: true,
+  
+  // Price metrics
   floorPrice: true,
+  floorPriceUsd: true,
   retailPrice: true,
+  priceAvg: true,
+  priceCeiling: true,
+  
+  // Volume metrics
   volume24h: true,
+  volumeChange: true,
+  
+  // Collection metrics
+  marketcap: true,
+  marketcapChange: true,
+  
+  // Holder metrics
+  holders: true,
+  holdersChange: true,
+  holdersDiamondHands: true,
+  holdersWhales: true,
+  
+  // Activity metrics
+  sales: true,
+  salesChange: true,
+  traders: true,
+  tradersChange: true,
+  
+  // Rarity metrics
+  rarityScore: true,
+  rarityRank: true,
+  
+  // Basic metadata
   currency: true,
   items: true,
   category: true,

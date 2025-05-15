@@ -97,7 +97,7 @@ export class UnleashNftsService {
    * @param metrics Type of metrics to include (volume, floor_price, etc.)
    * @param sortBy Field to sort by (volume, market_cap, etc.)
    */
-  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume,marketcap,price_floor,holders,sales', sortBy: string = 'volume'): Promise<NFTCollection[]> {
+  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume,marketcap,price_floor,price_avg,price_ceiling,holders,sales,traders,holders_diamond_hands,holders_whales,volume_change,marketcap_change,holders_change,sales_change,traders_change', sortBy: string = 'volume'): Promise<NFTCollection[]> {
     try {
       const chainId = this.normalizeChainId(chain);
       log(`Fetching collections for chain ${chainId}...`, 'unleash-nfts');
@@ -105,8 +105,7 @@ export class UnleashNftsService {
       // Prepare metrics array (split if comma-separated)
       const metrics = metricsParam.includes(',') ? metricsParam.split(',') : [metricsParam];
       
-      // Based on documentation, we should add more useful metrics
-      // Adding marketcap, price_floor, holders, and sales metrics
+      // Include comprehensive metrics based on the API documentation
       const response = await axios.get(`${BASE_URL_V1}/collections`, {
         headers: this.headers,
         params: {
@@ -117,7 +116,7 @@ export class UnleashNftsService {
           sort_order: 'desc',
           offset: (page - 1) * limit,
           limit,
-          time_range: '24h',
+          time_range: '24h', // Default to 24h, but we could make this configurable
           include_washtrade: true
         }
       });
