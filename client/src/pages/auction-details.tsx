@@ -233,10 +233,7 @@ export default function AuctionDetailsPage() {
   useEffect(() => {
     // Subscribe to bid updates
     const unsubscribeBids = subscribe("new-bid", (data) => {
-      console.log("Received bid update on auction-details:", data);
-      
       if (data.auction && data.auction.id === auctionId) {
-        console.log("Real-time bid update received for this auction:", data);
         queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auctionId}`] });
         
         // Update local state with new bid information from the auction object

@@ -91,7 +91,7 @@ async function fetchFromAPI<T>(endpoint: string, options?: RequestInit, apiVersi
   connectionAttempts[apiVersion].lastAttempt = Date.now();
   
   // Log the full URL we're calling with chain ID
-  console.log(`[unleash-nfts] Fetching from ${url}`);
+  // Fetch from API silently
   
   try {
     // Use axios for improved error handling and debugging
@@ -531,16 +531,12 @@ export const getNFTDetailedMetadata = async (
       }
     }
     
-    console.log('No detailed metadata available from UnleashNFTs API');
-    
     // Try Alchemy as a fallback if enabled
     if (useAlchemyAsFallback) {
       try {
-        console.log(`⚠️ Trying Alchemy API as fallback for ${contractAddress}/${tokenId}`);
         const alchemyData = await alchemyApi.getNFTMetadata(contractAddress, tokenId);
         
         if (alchemyData) {
-          console.log('✅ Successfully retrieved data from Alchemy API:', alchemyData);
           
           // Convert Alchemy format to our NFTDetailedMetadata format
           const metadata: NFTDetailedMetadata = {

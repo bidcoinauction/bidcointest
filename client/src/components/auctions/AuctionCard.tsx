@@ -191,8 +191,6 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   // Listen for bid events via WebSocket
   useEffect(() => {
     const handleBidUpdate = (data: any) => {
-      console.log("Received bid update:", data);
-      
       // Check if this update is for our auction
       if (data.auction && data.auction.id === auction.id) {
         // Update local state with new bid information
@@ -217,7 +215,6 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         }
         
         setLocalEndTime(resetTime);
-        console.log(`Updated auction #${auction.id} with new bid data`);
       }
     };
     

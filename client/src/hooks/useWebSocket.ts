@@ -38,13 +38,11 @@ export function useWebSocket() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         const wsUrl = `${protocol}//${window.location.host}/ws`;
         
-        console.log('Connecting to WebSocket at', wsUrl);
         const ws = new WebSocket(wsUrl);
         socketRef.current = ws;
 
         ws.onopen = () => {
           if (unmounted) return;
-          console.log('WebSocket connection established');
           setIsConnected(true);
           setError(null);
         };
