@@ -1,4 +1,4 @@
-import { apiRequest } from './queryClient';
+import { fetchFromAPI } from './api';
 
 /**
  * Client-side functions to interact with the Alchemy NFT API
@@ -10,9 +10,7 @@ export const alchemyApi = {
    * @param tokenId Token ID
    */
   getNFTMetadata: async (contractAddress: string, tokenId: string) => {
-    return apiRequest(`/api/alchemy/nft/${contractAddress}/${tokenId}`, {
-      method: 'GET',
-    });
+    return fetchFromAPI(`/alchemy/nft/${contractAddress}/${tokenId}`);
   },
 
   /**
@@ -20,9 +18,7 @@ export const alchemyApi = {
    * @param limit Number of collections to retrieve
    */
   getTrendingCollections: async (limit: number = 10) => {
-    return apiRequest(`/api/alchemy/collections/trending?limit=${limit}`, {
-      method: 'GET',
-    });
+    return fetchFromAPI(`/alchemy/collections/trending?limit=${limit}`);
   },
 
   /**
@@ -30,9 +26,7 @@ export const alchemyApi = {
    * @param address Collection contract address
    */
   getCollectionMetadata: async (address: string) => {
-    return apiRequest(`/api/alchemy/contract/${address}`, {
-      method: 'GET',
-    });
+    return fetchFromAPI(`/alchemy/contract/${address}`);
   },
 
   /**
@@ -42,13 +36,11 @@ export const alchemyApi = {
    * @param pageSize Number of results per page
    */
   getNFTsForContract: async (address: string, pageKey?: string, pageSize: number = 50) => {
-    let url = `/api/alchemy/contract/${address}/nfts?pageSize=${pageSize}`;
+    let url = `/alchemy/contract/${address}/nfts?pageSize=${pageSize}`;
     if (pageKey) {
       url += `&pageKey=${pageKey}`;
     }
-    return apiRequest(url, {
-      method: 'GET',
-    });
+    return fetchFromAPI(url);
   },
 
   /**
@@ -58,13 +50,11 @@ export const alchemyApi = {
    * @param pageSize Number of results per page
    */
   getNFTsForOwner: async (address: string, pageKey?: string, pageSize: number = 50) => {
-    let url = `/api/alchemy/owner/${address}/nfts?pageSize=${pageSize}`;
+    let url = `/alchemy/owner/${address}/nfts?pageSize=${pageSize}`;
     if (pageKey) {
       url += `&pageKey=${pageKey}`;
     }
-    return apiRequest(url, {
-      method: 'GET',
-    });
+    return fetchFromAPI(url);
   },
 
   /**
@@ -73,8 +63,6 @@ export const alchemyApi = {
    * @param marketplace Optional marketplace filter
    */
   getFloorPrice: async (address: string, marketplace: string = 'all') => {
-    return apiRequest(`/api/alchemy/contract/${address}/floor-price?marketplace=${marketplace}`, {
-      method: 'GET',
-    });
+    return fetchFromAPI(`/alchemy/contract/${address}/floor-price?marketplace=${marketplace}`);
   }
 };

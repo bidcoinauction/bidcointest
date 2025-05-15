@@ -532,6 +532,46 @@ export const getNFTDetailedMetadata = async (
     }
     
     console.log('No detailed metadata available from UnleashNFTs API');
+    
+    // Try Alchemy as a fallback if enabled
+    if (useAlchemyAsFallback) {
+      try {
+        console.log(`⚠️ Trying Alchemy API as fallback for ${contractAddress}/${tokenId}`);
+        const alchemyData = await alchemyApi.getNFTMetadata(contractAddress, tokenId);
+        
+        if (alchemyData) {
+          console.log('✅ Successfully retrieved data from Alchemy API:', alchemyData);
+          
+          // Convert Alchemy format to our NFTDetailedMetadata format
+          const metadata: NFTDetailedMetadata = {
+            collection_name: alchemyData.collection_name || '',
+            contract_address: alchemyData.contract_address || contractAddress,
+            token_id: alchemyData.token_id || tokenId,
+            name: alchemyData.name || `NFT #${tokenId}`,
+            description: alchemyData.description || '',
+            image_url: alchemyData.image_url || '',
+            floor_price: alchemyData.floor_price?.toString() || '',
+            floor_price_usd: alchemyData.floor_price_usd?.toString() || '',
+            traits: []
+          };
+          
+          // Add traits if available
+          if (alchemyData.traits && Array.isArray(alchemyData.traits)) {
+            metadata.traits = alchemyData.traits.map((trait: any) => ({
+              trait_type: trait.trait_type,
+              value: trait.value,
+              rarity: typeof trait.rarity === 'number' ? trait.rarity : 
+                     typeof trait.rarity === 'string' ? parseFloat(trait.rarity) : undefined
+            }));
+          }
+          
+          return metadata;
+        }
+      } catch (alchemyError) {
+        console.error('❌ Alchemy API fallback also failed:', alchemyError);
+      }
+    }
+    
     return null;
   } catch (error) {
     console.error(`[unleash-nfts] Failed to get detailed NFT metadata:`, error);
