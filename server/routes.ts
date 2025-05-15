@@ -1235,15 +1235,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chain = EvmChain.AVALANCHE;
       }
       
-      const nftData = await moralisService.getNFTMetadata(tokenAddress, tokenId, chain);
-      
-      if (!nftData) {
+      try {
+        // First try with Moralis
+        const nftData = await moralisService.getNFTMetadata(tokenAddress, tokenId, chain);
+        
+        if (nftData) {
+          return res.json(nftData);
+        }
+        
+        // If Moralis fails, try with Alchemy as fallback
+        const alchemyData = await alchemyNftService.getNFTMetadata(tokenAddress, tokenId);
+        
+        if (alchemyData) {
+          const formattedData = alchemyNftService.formatNFTMetadata(alchemyData);
+          return res.json(formattedData);
+        }
+        
         return res.status(404).json({ message: 'NFT not found' });
+      } catch (apiError) {
+        // Try Alchemy as fallback if Moralis throws an error
+        try {
+          const alchemyData = await alchemyNftService.getNFTMetadata(tokenAddress, tokenId);
+          
+          if (alchemyData) {
+            const formattedData = alchemyNftService.formatNFTMetadata(alchemyData);
+            return res.json(formattedData);
+          }
+          
+          return res.status(404).json({ message: 'NFT not found' });
+        } catch (fallbackError) {
+          return res.status(404).json({ message: 'NFT not found' });
+        }
       }
-      
-      return res.json(nftData);
     } catch (error) {
-      console.error('Error fetching NFT metadata:', error);
       return res.status(500).json({ message: 'Failed to fetch NFT metadata' });
     }
   });
@@ -1398,8 +1422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(201).json(nft);
     } catch (error) {
-      console.error('Error importing NFT from Moralis:', error);
-      return res.status(500).json({ message: 'Failed to import NFT from Moralis' });
+      return res.status(500).json({ message: 'Failed to import NFT' });
     }
   });
 
@@ -1533,7 +1556,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       return res.status(201).json(importedNFTs);
     } catch (error) {
-      console.error('Error importing wallet NFTs:', error);
       return res.status(500).json({ message: 'Failed to import NFTs from wallet' });
     }
   });
