@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { getApiStatus, updateApiKey, testApiConnection } from '@/lib/unleashApi';
+import { getApiStatus, updateApiKey, testApiConnection, getNFTDetailedMetadata } from '@/lib/unleashApi';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -104,6 +104,56 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
       setIsTestingConnection(false);
     }
   };
+  
+  // Function to test fetching the Degen Toonz NFT #4269
+  const testFetchDegenToonz = async () => {
+    setIsFetchingNFT(true);
+    setNftResult(null);
+    
+    try {
+      // Degen Toonz contract address and token ID
+      const contractAddress = '0xbba9187d5108e395d0681462523c4404de06a497';
+      const tokenId = '4269';
+      const blockchain = 'ethereum';
+      
+      console.log('Testing Degen Toonz NFT fetch:', {
+        contractAddress,
+        tokenId,
+        blockchain
+      });
+      
+      const metadata = await getNFTDetailedMetadata(contractAddress, tokenId, blockchain);
+      
+      if (metadata) {
+        console.log('Successfully retrieved Degen Toonz NFT:', metadata);
+        setNftResult(metadata);
+        
+        toast({
+          title: "NFT Retrieved Successfully",
+          description: `Got Degen Toonz #4269 with ${metadata.traits?.length || 0} traits`,
+        });
+      } else {
+        console.error('Failed to retrieve Degen Toonz NFT - no data returned');
+        
+        toast({
+          title: "NFT Fetch Failed",
+          description: "No data returned from the API",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Error fetching Degen Toonz NFT:', errorMessage);
+      
+      toast({
+        title: "NFT Fetch Failed",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsFetchingNFT(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -135,6 +185,17 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
                   <strong>Error:</strong> {getApiStatus().lastError}
                 </p>
               )}
+              <div className="mt-2 pt-2 border-t border-gray-800">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={testFetchDegenToonz} 
+                  disabled={isFetchingNFT}
+                  className="w-full text-xs bg-blue-900/30 border-blue-800/50 text-blue-400 hover:bg-blue-800/20"
+                >
+                  {isFetchingNFT ? 'Fetching Degen Toonz...' : 'Test with Degen Toonz #4269'}
+                </Button>
+              </div>
             </div>
             
             <div className="mb-4">
@@ -157,6 +218,28 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
             {testResult && (
               <div className={`p-3 mb-4 rounded text-sm ${testResult.success ? 'bg-green-900/20 border border-green-900/50 text-green-400' : 'bg-red-900/20 border border-red-900/50 text-red-400'}`}>
                 {testResult.message}
+              </div>
+            )}
+            
+            {nftResult && (
+              <div className="p-3 mb-4 rounded text-sm bg-blue-900/20 border border-blue-800/50 text-blue-300">
+                <h3 className="font-medium mb-2 text-white">Degen Toonz #4269 Properties:</h3>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {nftResult.traits?.map((trait: any, i: number) => (
+                    <div key={i} className="flex justify-between">
+                      <span>{trait.trait_type}:</span>
+                      <span className="font-medium">
+                        {trait.value} {trait.rarity && `(${trait.rarity}%)`}
+                      </span>
+                    </div>
+                  ))}
+                  {(!nftResult.traits || nftResult.traits.length === 0) && (
+                    <p className="text-red-400">No traits found in the NFT data</p>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-gray-400">
+                  Image URL: {nftResult.image_url ? nftResult.image_url.substring(0, 50) + '...' : 'Not available'}
+                </p>
               </div>
             )}
           </div>

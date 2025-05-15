@@ -394,7 +394,15 @@ export default function AuctionDetailsPage() {
                     {attr.rarity !== undefined && (
                       <div className="mt-1 flex items-center justify-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white ${getRarityColor(attr.rarity)}`}>
-                          {getRarityLabel(attr.rarity)} ({formatRarity(attr.rarity)})
+                          {/* Force "Rare" label for specific traits as requested */}
+                          {attr.trait_type === "Background" && attr.value === "Orange" ? 
+                            "Rare" : 
+                            attr.trait_type === "Clothes" && attr.value === "Orange Hoodie" ? 
+                            "Rare" : 
+                            attr.trait_type === "Eyes" && attr.value === "Laser" ? 
+                            "Rare" : 
+                            getRarityLabel(attr.rarity)
+                          } ({formatRarity(attr.rarity)})
                         </span>
                       </div>
                     )}
