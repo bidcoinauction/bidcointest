@@ -63,9 +63,26 @@ export default function AuctionDetailsPage() {
     window.location.href = '/nft-collections';
   };
 
-  // Fetch detailed metadata from UnleashNFTs API
+  // Fetch detailed metadata from UnleashNFTs API only if not already available through enriched NFT
   useEffect(() => {
     if (!auction || !auction.nft) return;
+    
+    // Check if we already have enriched data from our enhanced API endpoint
+    if (auction.nft.floorPrice && auction.nft.attributes && auction.nft.attributes.length > 0) {
+      console.log('✅ Using enriched NFT data already fetched:', auction.nft);
+      // Still set detailedMetadata state to ensure UI consistency
+      setDetailedMetadata({
+        ...auction.nft,
+        floor_price: auction.nft.floorPrice.toString(),
+        floor_price_usd: auction.nft.floorPriceUsd?.toString(),
+        traits: auction.nft.attributes.map(attr => ({
+          trait_type: attr.trait_type,
+          value: attr.value,
+          rarity: attr.rarity
+        }))
+      });
+      return; // Skip additional API calls
+    }
     
     const fetchDetailedMetadata = async () => {
       try {
@@ -644,7 +661,10 @@ export default function AuctionDetailsPage() {
                               {parseFloat(auction.nft.floorPrice.toString()).toFixed(2)} ETH
                             </span>
                             <span className="text-gray-400 text-xs">
-                              (${formatPriceUSD(auction.nft.floorPrice)})
+                              {auction.nft.floorPriceUsd 
+                                ? `($${parseFloat(auction.nft.floorPriceUsd.toString()).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})})`
+                                : `($${formatPriceUSD(auction.nft.floorPrice)})`
+                              }
                             </span>
                           </span>
                         )

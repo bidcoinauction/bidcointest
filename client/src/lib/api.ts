@@ -43,7 +43,25 @@ export async function getAuctions(): Promise<Auction[]> {
 }
 
 export async function getAuction(id: number): Promise<Auction> {
-  return fetchFromAPI<Auction>(`/auctions/${id}`);
+  const data = await fetchFromAPI<Auction>(`/auctions/${id}`);
+  
+  // If we have an NFT in the auction data, fetch detailed NFT metadata
+  if (data && data.nft && data.nft.id) {
+    try {
+      // Fetch enriched NFT data with consistent floor price/metadata from our new endpoint
+      const enrichedNFT = await fetchFromAPI<typeof data.nft>(`/nft-details/${data.nft.id}`);
+      if (enrichedNFT) {
+        // Update the NFT data in the auction with enriched metadata
+        console.log('Enriched NFT data received:', enrichedNFT);
+        data.nft = enrichedNFT;
+      }
+    } catch (error) {
+      console.error('Error fetching enriched NFT details:', error);
+      // Continue with original NFT data if enrichment fails
+    }
+  }
+  
+  return data;
 }
 
 export async function getFeaturedAuctions(): Promise<Auction[]> {

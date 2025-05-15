@@ -38,6 +38,7 @@ export const nfts = pgTable("nfts", {
   collectionName: text("collection_name"), // Collection name display
   collectionImage: text("collection_image"), // Added for collection image
   floorPrice: decimal("floor_price", { precision: 10, scale: 6 }),
+  floorPriceUsd: decimal("floor_price_usd", { precision: 10, scale: 2 }), // Added USD floor price for consistent display
   retailPrice: decimal("retail_price", { precision: 10, scale: 6 }), // Added retail price for discount calculation
   volume24h: decimal("volume_24h", { precision: 10, scale: 6 }), // Added for 24h volume
   currency: text("currency").default("ETH"),
