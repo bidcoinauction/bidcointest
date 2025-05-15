@@ -1,3 +1,7 @@
+The image component in AuctionCard.tsx is updated to use getOptimalNFTImageSource and implement a multi-stage fallback strategy.
+```
+
+```replit_final_file
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
@@ -24,16 +28,16 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   const [localBidCount, setLocalBidCount] = useState(auction.bidCount || 0);
   const [detailedMetadata, setDetailedMetadata] = useState<NFTDetailedMetadata | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   // Get currency display preference from global context
   const { currencyDisplay } = useCurrencyPreference();
-  
+
   // Calculate proper current bid based on bid count (each bid = $0.03)
   const initialBid = parseFloat(((auction.bidCount || 0) * 0.03).toFixed(2));
   const [localCurrentBid, setLocalCurrentBid] = useState<number>(initialBid);
-  
+
   const [localLeader, setLocalLeader] = useState(auction.creator.walletAddress || "");
-  
+
   // Get tokenURI data - only if we have contract address and token ID
   const { 
     imageUrl: tokenImageUrl, 
@@ -43,29 +47,29 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     auction.nft.contractAddress,
     auction.nft.tokenId
   );
-  
+
   // Fetch detailed metadata from UnleashNFTs API
   useEffect(() => {
     const fetchDetailedMetadata = async () => {
       try {
         setLoading(true);
-        
+
         // Get the contract address and token ID from the NFT
         const { contractAddress, tokenId, blockchain } = auction.nft;
-        
+
         if (!contractAddress || !tokenId) {
           console.log('Missing contract address or token ID for detailed metadata');
           setLoading(false);
           return;
         }
-        
+
         // Call the UnleashNFTs API to get the detailed metadata
         console.log('Attempting to fetch NFT metadata for:', {
           contractAddress,
           tokenId,
           blockchain: blockchain || 'ethereum'
         });
-        
+
         try {
           // First try UnleashNFTs API
           const metadata = await getNFTDetailedMetadata(
@@ -73,7 +77,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             tokenId, 
             blockchain || 'ethereum'
           );
-          
+
           if (metadata) {
             console.log('✅ Detailed metadata loaded from UnleashNFTs:', metadata);
             setDetailedMetadata(metadata);
@@ -84,15 +88,15 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         } catch (unleashError) {
           console.error('Error with UnleashNFTs API:', unleashError);
         }
-        
+
         // Try Alchemy API as fallback
         try {
           console.log('⚠️ Trying Alchemy API as fallback...');
           const alchemyData = await alchemyApi.getNFTMetadata(contractAddress, tokenId);
-          
+
           if (alchemyData) {
             console.log('✅ Successfully retrieved data from Alchemy API:', alchemyData);
-            
+
             // Format Alchemy data to match expected format for UI rendering
             const formattedData: NFTDetailedMetadata = {
               collection_name: alchemyData.collection?.name || auction.nft.collectionName || '',
@@ -109,7 +113,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 rarity: attr.rarity
               }))
             };
-            
+
             setDetailedMetadata(formattedData);
             return;
           } else {
@@ -124,18 +128,18 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         setLoading(false);
       }
     };
-    
+
     fetchDetailedMetadata();
   }, [auction.nft]);
-  
+
   // Get real-time auction data via WebSocket
   const { subscribe } = useWebSocket();
-  
+
   // Timer system - always show 1 minute for demo purposes
   const [localEndTime, setLocalEndTime] = useState<Date>(
     new Date(Date.now() + 60 * 1000)
   );
-  
+
   const { formattedTime, isComplete, secondsRemaining } = useCountdown({
     endTime: localEndTime,
     onComplete: () => {
@@ -143,7 +147,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
       console.log("Auction complete!");
     }
   });
-  
+
   // Automatic bid simulation function
   const simulateRandomBid = useCallback(() => {
     // Generate a new random bidder
@@ -156,18 +160,18 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
       "0x6B175474E89094C44Da98b954EedeAC495271d0F"
     ];
     const randomBidder = randomBidders[Math.floor(Math.random() * randomBidders.length)];
-    
+
     // Increment bid count
     setLocalBidCount(prev => prev + 1);
-    
+
     // Add $0.03 to current bid
     // Calculate based on bid count (always $0.03 per bid)
     const newBidCount = localBidCount + 1;
     setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
-    
+
     // Update leader
     setLocalLeader(randomBidder);
-    
+
     // Reset timer (Bidcoin reset mechanism to 1 minute)
     const resetTime = new Date();
     resetTime.setSeconds(resetTime.getSeconds() + 60);
@@ -182,7 +186,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         simulateRandomBid();
       }
     }, Math.random() * 15000 + 5000); // Random interval between 5-20 seconds
-    
+
     return () => {
       clearInterval(simulationInterval);
     };
@@ -196,58 +200,58 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         // Update local state with new bid information
         const bidCount = data.auction.bidCount || 0;
         setLocalBidCount(bidCount);
-        
+
         // Calculate price based on bid count (always $0.03 per bid)
         setLocalCurrentBid(parseFloat((bidCount * 0.03).toFixed(2)));
-        
+
         // Set leader to the bidder address if available
         if (data.bid && data.bid.bidderAddress) {
           setLocalLeader(data.bid.bidderAddress);
         }
-        
+
         // Reset timer (Bidcoin reset mechanism)
         const resetTime = new Date();
         resetTime.setSeconds(resetTime.getSeconds() + 60);
-        
+
         // If bid in last 3 seconds, add +3 seconds (prevent sniping)
         if (secondsRemaining < 3) {
           resetTime.setSeconds(resetTime.getSeconds() + 3);
         }
-        
+
         setLocalEndTime(resetTime);
       }
     };
-    
+
     // Subscribe to auction bid updates
     const unsubscribe = subscribe("new-bid", handleBidUpdate);
-    
+
     return () => {
       // Cleanup subscription
       unsubscribe();
     };
   }, [auction.id, subscribe, secondsRemaining]);
-  
+
   // Format auction leader address
   const leaderDisplay = formatAddress(localLeader);
-  
+
   // Format auction name and ID based on screenshot
   const tokenDisplay = auction.nft.tokenId ? `#${auction.nft.tokenId}` : `#${Math.floor(Math.random() * 100000)}`;
-  
+
   // Format bid value display
   const bidValueDisplay = "+$0.03 per bid";
-  
+
   // Format time left with actual countdown
   const formatTimeLeft = () => {
     const minutes = Math.floor(secondsRemaining / 60);
     const seconds = Math.floor(secondsRemaining % 60);
-    
+
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
-  
+
   const startingPrice = auction.startingBid || 0;
   // Always use USD for penny auctions
   const currency = 'USD';
-  
+
   return (
     <div className="bg-[#0A0B0F] rounded-lg overflow-hidden transition-all border border-[#1A1E2D]">
       <div className="relative">
@@ -257,7 +261,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         >
           {localBidCount || 3} bids
         </Badge>
-        
+
         <img 
           src={tokenURIUnavailable ? getOptimalNFTImageSource(auction.nft) : (tokenImageUrl || getOptimalNFTImageSource(auction.nft))}
           alt={auction.nft.name}
@@ -266,7 +270,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             // Multi-stage fallback system with tokenURI prioritization
             const target = e.target as HTMLImageElement;
             const auctionId = auction.id;
-            
+
             // First try collection-specific assets if we know tokenURI failed 
             // or if tokenURI image failed to load specifically
             if (tokenURIUnavailable || (tokenImageUrl && target.src === tokenImageUrl)) {
@@ -276,7 +280,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 console.log(`TokenURI unavailable for auction #${auctionId}, using premium sources`);
                 sessionStorage.setItem(logKey, 'true');
               }
-              
+
               // Map NFT collections based on auction ID to premium sources
               const collectionMapping: Record<number, {collection: string, id: string}> = {
                 1: {collection: 'azuki', id: '9605'},
@@ -287,9 +291,9 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 6: {collection: 'milady', id: '7218'},
                 7: {collection: 'madlads', id: '8993'}
               };
-              
+
               const mapping = collectionMapping[auctionId];
-              
+
               // Premium sources for high-value collections
               if (mapping) {
                 // Only log once per collection to reduce console spam
@@ -298,7 +302,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                   console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
                   sessionStorage.setItem(sourceLogKey, 'true');
                 }
-                
+
                 if (mapping.collection === 'degentoonz') {
                   target.src = `/attached_assets/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png`;
                 } else if (mapping.collection === 'madlads') {
@@ -318,7 +322,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 return;
               }
             }
-            
+
             // Final fallback: use placeholder
             if (target.src !== `/placeholder-nft.png`) {
               // Only log once per auction ID
@@ -333,7 +337,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           onClick={() => window.location.href = `/auctions/${auction.id}`}
         />
       </div>
-      
+
       {/* Item name and ID */}
       <div className="p-3 pb-1 border-b border-[#1A1E2D]">
         <div className="flex justify-between">
@@ -377,7 +381,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           </p>
         </div>
       </div>
-      
+
       {/* Timer and price */}
       <div className="p-3 flex items-start justify-between">
         <div>
@@ -391,7 +395,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             00:{formatTimeLeft()}
           </div>
         </div>
-        
+
         <div className="text-right">
           <p className="text-gray-400 text-xs">Price</p>
           <p className="text-white font-medium">
@@ -410,7 +414,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             >
               Track
             </Button>
-            
+
             <Button 
               onClick={(e) => {
                 e.preventDefault();
@@ -421,12 +425,12 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                   // Calculate based on bid count (always $0.03 per bid)
                   const newBidCount = localBidCount + 1;
                   setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
-                  
+
                   // Reset timer (Bidcoin reset mechanism)
                   const resetTime = new Date();
                   resetTime.setSeconds(resetTime.getSeconds() + 60);
                   setLocalEndTime(resetTime);
-                  
+
                   // Update random leader
                   const randomBidders = [
                     "0x3aF15EA8b2e986E729E9Aa383EB18bc84A989c5D8",
@@ -445,7 +449,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           </div>
         </div>
       </div>
-      
+
 
 
       {showBidModal && (
@@ -458,7 +462,8 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             bidCount: localBidCount
           }}
           minimumBid={localCurrentBid + 0.03}
-          onPlaceBid={(amount: string) => {
+          onPlaceBid={(amount) => {
+            console.log(`Placed bid: ${amount}`);
             setShowBidModal(false);
           }}
         />
@@ -466,3 +471,4 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     </div>
   );
 }
+`

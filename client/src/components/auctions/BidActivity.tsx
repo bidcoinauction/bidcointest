@@ -26,7 +26,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
     bidRate: 0, // bids per minute
   });
   const { subscribe } = useWebSocket();
-  
+
   // Process initial bids and add strategy insights
   useEffect(() => {
     if (initialBids.length > 0) {
@@ -40,7 +40,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
       setBids(enhancedBids.slice(0, maxItems));
     }
   }, [initialBids, maxItems]);
-  
+
   // Subscribe to bid events
   useEffect(() => {
     const handleNewBid = (data: any) => {
@@ -50,24 +50,24 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
           strategy: getRandomStrategy(),
           intensity: getRandomIntensity(),
         };
-        
+
         setBids(prev => {
           const updated = [newBid, ...prev].slice(0, maxItems);
-          
+
           // Update bid stats
           const now = new Date();
           const oneMinuteAgo = new Date(now.getTime() - 60000);
           const lastMinuteBids = updated.filter(
             b => b.timestamp && new Date(b.timestamp) >= oneMinuteAgo
           ).length;
-          
+
           const bidRatePerMinute = Math.round(lastMinuteBids / 1);
-          
+
           setBidStats({
             lastMinuteBids,
             bidRate: bidRatePerMinute,
           });
-          
+
           // Update bidding intensity status
           if (bidRatePerMinute >= 10) {
             setBidStatus("intense");
@@ -76,20 +76,20 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
           } else {
             setBidStatus("normal");
           }
-          
+
           return updated;
         });
       }
     };
-    
+
     // Subscribe to bid events
     const unsubscribe = subscribe("new-bid", handleNewBid);
-    
+
     return () => {
       unsubscribe();
     };
   }, [auctionId, maxItems, subscribe]);
-  
+
   // Helper function to assign a random strategy for demo purposes
   // In a real app, this would be based on actual user behavior analysis
   const getRandomStrategy = (): BidStrategyType => {
@@ -101,16 +101,16 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
       "feint",
       "early-bird"
     ];
-    
+
     return strategies[Math.floor(Math.random() * strategies.length)];
   };
-  
+
   // Helper function to assign random intensity for demo purposes
   const getRandomIntensity = (): 'low' | 'medium' | 'high' => {
     const intensities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
     return intensities[Math.floor(Math.random() * intensities.length)];
   };
-  
+
   const getIntensityColor = (intensity?: 'low' | 'medium' | 'high') => {
     switch (intensity) {
       case 'high':
@@ -123,7 +123,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
         return 'bg-gray-500/20 text-gray-500';
     }
   };
-  
+
   const getStrategyIcon = (strategy?: BidStrategyType) => {
     switch (strategy) {
       case 'aggressive':
@@ -134,7 +134,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
         return null;
     }
   };
-  
+
   const getStatusColor = () => {
     switch (bidStatus) {
       case "intense":
@@ -145,7 +145,11 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
         return "text-blue-500";
     }
   };
-  
+
+   const getOptimalNFTImageSource = (nft: any) => {
+        return nft.imageUrl || '/placeholder-nft.png';
+   };
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-3">
@@ -157,7 +161,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
           </div>
         )}
       </div>
-      
+
       {bids.length === 0 ? (
         <div className="bg-[#111827] rounded-lg p-4 text-center">
           <p className="text-gray-400">No bidding activity yet</p>
@@ -190,7 +194,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center">
                     {bid.strategy && (
                       <div className={`px-2 py-1 rounded-full text-xs flex items-center mr-2 ${getIntensityColor(bid.intensity)}`}>
@@ -209,7 +213,7 @@ export default function BidActivity({ auctionId, initialBids = [], maxItems = 5 
           </AnimatePresence>
         </div>
       )}
-      
+
       {bidStatus !== "normal" && (
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}

@@ -92,12 +92,12 @@ export default function NFTExplorerPage() {
   const handleImportNFT = async (nft: any) => {
     try {
       setIsImporting(true);
-      
+
       await importNFTFromMoralis(
         nft.token_address,
         nft.token_id
       );
-      
+
       toast({
         title: "Success!",
         description: `NFT ${nft.name || nft.token_id} has been imported.`,
@@ -126,11 +126,11 @@ export default function NFTExplorerPage() {
 
     try {
       setIsImporting(true);
-      
+
       const result = await importWalletNFTs(
         walletAddress
       );
-      
+
       toast({
         title: "Success!",
         description: `${result.length} NFTs have been imported from wallet.`,
@@ -159,7 +159,7 @@ export default function NFTExplorerPage() {
           <TabsTrigger value="wallet">Search by Wallet</TabsTrigger>
           <TabsTrigger value="collection">Search by Collection</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="wallet" className="mt-4">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <Input
@@ -168,7 +168,7 @@ export default function NFTExplorerPage() {
               onChange={(e) => setWalletAddress(e.target.value)}
               className="flex-1"
             />
-            
+
             <Select
               value={selectedChain}
               onValueChange={setSelectedChain}
@@ -183,7 +183,7 @@ export default function NFTExplorerPage() {
                 <SelectItem value="avalanche">Avalanche</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Button onClick={handleSearch} className="gap-2">
               {isLoadingWalletNFTs && <Loader2 className="h-4 w-4 animate-spin" />}
               <Search className="h-4 w-4" />
@@ -206,7 +206,7 @@ export default function NFTExplorerPage() {
               </Button>
             )}
           </div>
-          
+
           {address && walletAddress === "" && (
             <Button 
               variant="outline" 
@@ -217,7 +217,7 @@ export default function NFTExplorerPage() {
             </Button>
           )}
         </TabsContent>
-        
+
         <TabsContent value="collection" className="mt-4">
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <Input
@@ -226,7 +226,7 @@ export default function NFTExplorerPage() {
               onChange={(e) => setCollectionAddress(e.target.value)}
               className="flex-1"
             />
-            
+
             <Select
               value={selectedChain}
               onValueChange={setSelectedChain}
@@ -241,7 +241,7 @@ export default function NFTExplorerPage() {
                 <SelectItem value="avalanche">Avalanche</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <Button onClick={handleSearch} className="gap-2">
               {isLoadingCollectionNFTs && <Loader2 className="h-4 w-4 animate-spin" />}
               <Search className="h-4 w-4" />
@@ -336,7 +336,7 @@ export default function NFTExplorerPage() {
                 Complete information about this NFT
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
               <div className="col-span-1">
                 <img
@@ -348,32 +348,32 @@ export default function NFTExplorerPage() {
                   }}
                 />
               </div>
-              
+
               <div className="col-span-2">
                 <h3 className="text-lg font-semibold">
                   {selectedNFT.name || `NFT #${selectedNFT.token_id}`}
                 </h3>
-                
+
                 <div className="mt-2 space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Token ID:</span>
                     <span className="text-sm font-medium">{selectedNFT.token_id}</span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Contract:</span>
                     <span className="text-sm font-medium truncate max-w-[200px]">
                       {selectedNFT.token_address}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Token Standard:</span>
                     <span className="text-sm font-medium">
                       {selectedNFT.contract_type || "ERC721"}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500">Blockchain:</span>
                     <span className="text-sm font-medium capitalize">
@@ -381,16 +381,16 @@ export default function NFTExplorerPage() {
                     </span>
                   </div>
                 </div>
-                
+
                 <Separator className="my-4" />
-                
+
                 <div className="mt-4">
                   <h4 className="text-sm font-semibold mb-2">Description</h4>
                   <p className="text-sm text-gray-600">
                     {getDescription(selectedNFT) || "No description available"}
                   </p>
                 </div>
-                
+
                 {getAttributes(selectedNFT).length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-semibold mb-2">Attributes</h4>
@@ -410,7 +410,7 @@ export default function NFTExplorerPage() {
                 )}
               </div>
             </div>
-            
+
             <DialogFooter>
               <Button 
                 variant="outline"
@@ -425,7 +425,7 @@ export default function NFTExplorerPage() {
                 <ExternalLink className="h-4 w-4" />
                 View on OpenSea
               </Button>
-              
+
               <Button 
                 onClick={() => {
                   handleImportNFT(selectedNFT);
@@ -475,7 +475,7 @@ function NFTCard({
           />
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-4">
         <CardTitle className="text-lg mb-1 truncate">
           {nft.name || `NFT #${nft.token_id}`}
@@ -484,13 +484,13 @@ function NFTCard({
           Token ID: {nft.token_id}
         </CardDescription>
       </CardContent>
-      
+
       <CardFooter className="flex justify-between">
         <Button variant="outline" size="sm" onClick={onViewDetails}>
           <Info className="h-4 w-4 mr-2" />
           Details
         </Button>
-        
+
         <Button 
           size="sm" 
           onClick={() => onImport(nft)}
@@ -511,7 +511,7 @@ function NFTCard({
 // Helper functions to parse NFT data
 function getImageUrl(nft: any): string {
   if (!nft) return '/assets/nft_images/default_nft.png';
-  
+
   let metadata: any = {};
   try {
     if (nft.metadata) {
@@ -522,23 +522,23 @@ function getImageUrl(nft: any): string {
   } catch (e) {
     console.error("Failed to parse NFT metadata:", e);
   }
-  
+
   // Check various possible image fields
   if (metadata?.image) {
     let imageUrl = metadata.image;
-    
+
     // Handle IPFS URLs
     if (imageUrl.startsWith('ipfs://')) {
       return imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
     }
-    
+
     return imageUrl;
   }
-  
+
   if (metadata?.image_url) {
     return metadata.image_url;
   }
-  
+
   // Check if NFT has a token URI that might be an image
   if (nft.token_uri && (
     nft.token_uri.endsWith('.png') || 
@@ -549,13 +549,13 @@ function getImageUrl(nft: any): string {
   )) {
     return nft.token_uri;
   }
-  
+
   return '/assets/nft_images/default_nft.png';
 }
 
 function getDescription(nft: any): string {
   if (!nft) return '';
-  
+
   let metadata: any = {};
   try {
     if (nft.metadata) {
@@ -566,13 +566,13 @@ function getDescription(nft: any): string {
   } catch (e) {
     console.error("Failed to parse NFT metadata:", e);
   }
-  
+
   return metadata?.description || '';
 }
 
 function getAttributes(nft: any): any[] {
   if (!nft) return [];
-  
+
   let metadata: any = {};
   try {
     if (nft.metadata) {
@@ -583,6 +583,50 @@ function getAttributes(nft: any): any[] {
   } catch (e) {
     console.error("Failed to parse NFT metadata:", e);
   }
-  
+
   return metadata?.attributes || [];
+}
+
+function getOptimalNFTImageSource(nft: any): string {
+  if (!nft) return '/assets/nft_images/default_nft.png';
+
+  let metadata: any = {};
+  try {
+    if (nft.metadata) {
+      metadata = typeof nft.metadata === 'string'
+        ? JSON.parse(nft.metadata)
+        : nft.metadata;
+    }
+  } catch (e) {
+    console.error("Failed to parse NFT metadata:", e);
+  }
+
+  // Check various possible image fields
+  if (metadata?.image) {
+    let imageUrl = metadata.image;
+
+    // Handle IPFS URLs
+    if (imageUrl.startsWith('ipfs://')) {
+      return imageUrl.replace('ipfs://', 'https://ipfs.io/ipfs/');
+    }
+
+    return imageUrl;
+  }
+
+  if (metadata?.image_url) {
+    return metadata.image_url;
+  }
+
+  // Check if NFT has a token URI that might be an image
+  if (nft.token_uri && (
+    nft.token_uri.endsWith('.png') ||
+    nft.token_uri.endsWith('.jpg') ||
+    nft.token_uri.endsWith('.jpeg') ||
+    nft.token_uri.endsWith('.gif') ||
+    nft.token_uri.endsWith('.svg')
+  )) {
+    return nft.token_uri;
+  }
+
+  return '/assets/nft_images/default_nft.png';
 }
