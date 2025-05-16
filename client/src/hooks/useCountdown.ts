@@ -55,9 +55,9 @@ export function useCountdown({ endTime, onComplete }: UseCountdownProps) {
     }
   };
 
-  // Get the seconds part for Bidcoin timer reset mechanism
+  // Get the seconds part for AuctionBlock timer reset mechanism
   const getSecondsRemaining = (): number => {
-    // Calculate seconds for the Bidcoin timer reset (we need actual seconds, not just formatted time)
+    // Calculate seconds for the AuctionBlock timer reset (we need actual seconds, not just formatted time)
     return Math.floor(timeRemaining % 60);
   };
 

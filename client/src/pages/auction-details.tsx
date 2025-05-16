@@ -209,7 +209,7 @@ export default function AuctionDetailsPage() {
     // Update leader
     setLocalLeader(randomBidder);
     
-    // Reset timer (Bidcoin reset mechanism to 1 minute)
+    // Reset timer (AuctionBlock reset mechanism to 1 minute)
     const resetTime = new Date();
     resetTime.setSeconds(resetTime.getSeconds() + 60);
     setLocalEndTime(resetTime);
