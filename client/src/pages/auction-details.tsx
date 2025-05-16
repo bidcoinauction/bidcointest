@@ -730,10 +730,6 @@ export default function AuctionDetailsPage() {
                 
                 <div className="bg-[#111827] rounded-lg p-3">
                   <div className="flex justify-between mb-2">
-                    <span className="text-gray-400 text-sm">Bid fee:</span>
-                    <span className="text-white text-sm">$0.24</span>
-                  </div>
-                  <div className="flex justify-between mb-2">
                     <span className="text-gray-400 text-sm">Bid increment:</span>
                     <span className="text-white text-sm">$0.03</span>
                   </div>
