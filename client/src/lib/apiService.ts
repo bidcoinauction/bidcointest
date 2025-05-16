@@ -21,6 +21,16 @@ export const nftApi = {
   },
 
   /**
+   * Get tokenURI data for an NFT
+   * @param contractAddress Contract address of the NFT
+   * @param tokenId Token ID of the NFT
+   * @param chain Blockchain network (default: ethereum)
+   */
+  getTokenURI: (contractAddress: string, tokenId: string, chain: string = 'ethereum') => {
+    return fetchFromAPI(`/nft/token-uri/${contractAddress}/${tokenId}?chain=${chain}`);
+  },
+
+  /**
    * Get trending collections
    * @param limit Number of collections to retrieve
    */
@@ -213,5 +223,26 @@ export const userService = {
   getUserByWalletAddress: (walletAddress: string) => {
     if (!walletAddress) return Promise.resolve(null);
     return fetchFromAPI<any>(`/users/by-wallet/${walletAddress}`);
+  }
+};
+
+/**
+ * Achievement API functions
+ */
+export const achievementService = {
+  /**
+   * Get user achievements
+   * @param userId User ID
+   */
+  getUserAchievements: (userId: number) => {
+    return fetchFromAPI<any[]>(`/users/${userId}/achievements`);
+  },
+
+  /**
+   * Get user achievement stats
+   * @param userId User ID
+   */
+  getUserAchievementStats: (userId: number) => {
+    return fetchFromAPI<any>(`/users/${userId}/achievement-stats`);
   }
 };

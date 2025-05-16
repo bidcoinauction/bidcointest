@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTokenURI } from '@/lib/api';
+import { nftApi } from '@/lib/apiService';
 import { useQuery } from '@tanstack/react-query';
 import { sanitizeNFTImageUrl } from '@/lib/utils';
 
@@ -46,7 +46,7 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
     queryKey: ['tokenURI', contractAddress, tokenId, chain],
     queryFn: async () => {
       try {
-        const data = await getTokenURI(contractAddress as string, tokenId as string, chain);
+        const data = await nftApi.getTokenURI(contractAddress as string, tokenId as string, chain);
         setErrorCount(0); // Reset error count on success
         return data;
       } catch (err) {

@@ -8,7 +8,7 @@ import {
   Flame, Heart, Coins, Medal, Gift, Crown
 } from "lucide-react";
 import useWallet from "@/hooks/useWallet";
-import { getUserByWalletAddress } from "@/lib/api";
+import { userService, achievementService } from "@/lib/apiService";
 
 // Achievement types
 interface Achievement {
@@ -48,11 +48,7 @@ export default function UserAchievements() {
     queryKey: ["/api/users/by-wallet", address],
     queryFn: async () => {
       if (!address) return null;
-      const response = await fetch(`/api/users/by-wallet/${address}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user: ${response.statusText}`);
-      }
-      return response.json();
+      return userService.getUserByWalletAddress(address);
     },
     enabled: !!address,
   });
@@ -68,11 +64,8 @@ export default function UserAchievements() {
   const { data: userAchievements, isLoading: isAchievementsLoading, error: achievementsError } = useQuery({
     queryKey: ["/api/users", userId, "achievements"],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${userId}/achievements`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch achievements: ${response.statusText}`);
-      }
-      return response.json();
+      if (!userId) return [];
+      return achievementService.getUserAchievements(userId);
     },
     enabled: !!userId,
     retry: 1,
@@ -82,11 +75,8 @@ export default function UserAchievements() {
   const { data: achievementStats, isLoading: isStatsLoading, error: statsError } = useQuery({
     queryKey: ["/api/users", userId, "achievement-stats"],
     queryFn: async () => {
-      const response = await fetch(`/api/users/${userId}/achievement-stats`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch achievement stats: ${response.statusText}`);
-      }
-      return response.json();
+      if (!userId) return null;
+      return achievementService.getUserAchievementStats(userId);
     },
     enabled: !!userId,
     retry: 1,

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { auctionService, bidPackService, nftApi } from "@/lib/apiService";
+import { auctionService, bidPackService, userService, activityService } from "@/lib/apiService";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -28,12 +28,12 @@ export default function DashboardPage() {
   
   const { data: bidPacks, isLoading: isBidPacksLoading } = useQuery({
     queryKey: ["/api/bidpacks"],
-    queryFn: getBidPacks,
+    queryFn: bidPackService.getBidPacks,
   });
   
   const { data: auctions, isLoading: isAuctionsLoading } = useQuery({
     queryKey: ["/api/auctions"],
-    queryFn: getAuctions,
+    queryFn: auctionService.getAuctions,
   });
   
   // Mock user bid balance
@@ -48,9 +48,9 @@ export default function DashboardPage() {
     if (!auctions || !address) return [];
     
     // Get auctions where the user has placed bids
-    return auctions.filter(auction => 
+    return auctions.filter((auction: any) => 
       auction.bids && 
-      auction.bids.some(bid => bid.bidder.walletAddress === address)
+      auction.bids.some((bid: any) => bid.bidder?.walletAddress === address)
     );
   };
   
@@ -371,11 +371,15 @@ export default function DashboardPage() {
             </TabsContent>
             
             <TabsContent value="buy-bids" className="mt-0">
-              {bidPacks && (
+              {bidPacks ? (
                 <BuyBids 
-                  availableBidPacks={bidPacks} 
+                  availableBidPacks={bidPacks as any[]} 
                   onPurchaseComplete={handlePurchaseComplete}
                 />
+              ) : (
+                <div className="p-4 text-center">
+                  <p className="text-gray-400">Loading bid packs...</p>
+                </div>
               )}
             </TabsContent>
             
