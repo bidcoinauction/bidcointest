@@ -101,7 +101,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-[#374151] mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2025 AuctionBlock. All rights reserved.</p>
+          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2025 Bidcoin. All rights reserved.</p>
           <div className="flex space-x-6 text-sm text-gray-400">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
             <a href="#" className="hover:text-white transition-colors">Terms</a>

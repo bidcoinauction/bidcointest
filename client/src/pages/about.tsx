@@ -6,9 +6,9 @@ export default function AboutPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <section className="mb-12">
-        <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">About AuctionBlock</h1>
+        <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">About Bidcoin</h1>
         <p className="text-gray-300 max-w-3xl mb-8">
-          AuctionBlock is a premier Web3 auction platform that combines the excitement of bidding with the power of blockchain technology, 
+          Bidcoin is a premier Web3 auction platform that combines the excitement of bidding with the power of blockchain technology, 
           offering a secure and transparent marketplace for NFTs, Ordinals, and digital collectibles.
         </p>
         
@@ -25,7 +25,7 @@ export default function AboutPage() {
           </div>
           
           <div className="bg-[#1f2937] rounded-xl p-6 border border-[#374151]">
-            <h2 className="text-xl font-display font-bold text-white mb-4">Why Choose AuctionBlock</h2>
+            <h2 className="text-xl font-display font-bold text-white mb-4">Why Choose Bidcoin</h2>
             <ul className="space-y-3 text-gray-300">
               <li className="flex items-start">
                 <i className="fa-solid fa-check text-primary mt-1 mr-3"></i>
@@ -54,9 +54,9 @@ export default function AboutPage() {
         <div className="bg-gradient-to-r from-[#374151] to-[#1f2937] rounded-xl overflow-hidden mb-12">
           <div className="md:flex">
             <div className="md:w-2/3 p-8">
-              <h2 className="text-2xl font-display font-bold text-white mb-4">How AuctionBlock Works</h2>
+              <h2 className="text-2xl font-display font-bold text-white mb-4">How Bidcoin Works</h2>
               <p className="text-gray-300 mb-6">
-                AuctionBlock combines the excitement of traditional auctions with the security and transparency of blockchain technology.
+                Bidcoin combines the excitement of traditional auctions with the security and transparency of blockchain technology.
               </p>
               
               <div className="space-y-6 mb-6">
