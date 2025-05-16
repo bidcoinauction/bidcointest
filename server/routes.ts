@@ -697,22 +697,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (contract_address === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
           metadata.floor_price = "11.73";
           metadata.floor_price_usd = "25560.94";
-        } else if (contract_address === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6') { // DeGods
-          metadata.floor_price = "4.58";
-          metadata.floor_price_usd = "9945.10";
+        } else if (contract_address === '0x2e175f748976cd5cdb98f12d1abc5d137d6c9379') { // Lil Z's Adventure
+          metadata.floor_price = "0.74";
+          metadata.floor_price_usd = "1610.58";
         } else if (contract_address === '0x4aeb52db83daa33a31673599e892d9247b0449ca') { // Claynosaurz
           metadata.floor_price = "3.85";
           metadata.floor_price_usd = "8398.75";
-        } else if (contract_address === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
-          metadata.floor_price = "2.35";
-          metadata.floor_price_usd = "5129.75";
+        } else if (contract_address === '0x8a90cab2b38dba80c64b7734e58ee1db38b8992e') { // Doodles
+          metadata.floor_price = "2.12";
+          metadata.floor_price_usd = "4611.16";
         } else if (contract_address === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
-          metadata.floor_price = "5.72";
-          metadata.floor_price_usd = "12435.67";
-        } else if (contract_address === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
-                  contract_address === '0x8ec79a75be1bf1394e8d657ee006da730d003789') { // MadLads
-          metadata.floor_price = "181.83";
-          metadata.floor_price_usd = "12890.56";
+          metadata.floor_price = "45.72";
+          metadata.floor_price_usd = "99466.56";
+        } else if (contract_address === '0x60e4d786628fea6478f785a6d7e704777c86a7c6') { // Mutant Ape Yacht Club
+          metadata.floor_price = "2.248";
+          metadata.floor_price_usd = "4894.21";
+        } else if (contract_address === '0x6e5dc5405baefb8c0166bcc78d2692777f2cbffb') { // BEEPLE: EVERYDAYS
+          metadata.floor_price = "15.99";
+          metadata.floor_price_usd = "34818.22";
         }
         
         return metadata;
@@ -720,14 +722,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if we're dealing with a premium NFT that needs special handling
       const isPremiumNFT = (
-        (contract_address === '0xed5af388653567af2f388e6224dc7c4b3241c544' && token_id === '9605') ||
-        (contract_address === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6' && token_id === '8748') ||
-        (contract_address === '0x4aeb52db83daa33a31673599e892d9247b0449ca' && token_id === '7221') ||
-        (contract_address === '0x5af0d9827e0c53e4799bb226655a1de152a425a5' && token_id === '7218') ||
-        (contract_address === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB' && token_id === '7804') ||
-        ((contract_address === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
-          contract_address === '0x8ec79a75be1bf1394e8d657ee006da730d003789') && 
-          token_id === '8993')
+        (contract_address === '0xed5af388653567af2f388e6224dc7c4b3241c544' && token_id === '9605') ||  // Azuki
+        (contract_address === '0x2e175f748976cd5cdb98f12d1abc5d137d6c9379' && token_id === '245') ||   // Lil Z's Adventure
+        (contract_address === '0x4aeb52db83daa33a31673599e892d9247b0449ca' && token_id === '7221') ||  // Claynosaurz
+        (contract_address === '0x8a90cab2b38dba80c64b7734e58ee1db38b8992e' && token_id === '1234') ||  // Doodles
+        (contract_address === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB' && token_id === '7804') ||  // CryptoPunks
+        (contract_address === '0x60e4d786628fea6478f785a6d7e704777c86a7c6' && token_id === '3652') ||  // Mutant Ape Yacht Club
+        (contract_address === '0x6e5dc5405baefb8c0166bcc78d2692777f2cbffb' && token_id === '187')      // BEEPLE: EVERYDAYS
       );
       
       // Try UnleashNFTs API first
