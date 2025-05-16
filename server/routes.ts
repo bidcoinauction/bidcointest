@@ -1100,12 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Merge the metadata with our NFT object
           enrichedNFT = {
             ...enrichedNFT,
-            floorPrice: metadata.floor_price 
-              ? metadata.floor_price.toString()
-              : enrichedNFT.floorPrice,
-            floorPriceUsd: metadata.floor_price_usd 
-              ? metadata.floor_price_usd.toString()
-              : null,
+            // Floor price data removed per requirements
             attributes: metadata.traits && metadata.traits.length > 0
               ? metadata.traits.map((trait: any) => ({
                   trait_type: trait.trait_type,
@@ -1147,12 +1142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Merge the Alchemy data with our NFT object
               enrichedNFT = {
                 ...enrichedNFT,
-                floorPrice: formattedData.floor_price 
-                  ? formattedData.floor_price.toString()
-                  : enrichedNFT.floorPrice,
-                floorPriceUsd: formattedData.floor_price_usd 
-                  ? formattedData.floor_price_usd.toString()
-                  : null,
+                // Floor price data removed per requirements
                 attributes: formattedData.traits && formattedData.traits.length > 0
                   ? formattedData.traits.map((trait: any) => ({
                       trait_type: trait.trait_type,
@@ -1181,29 +1171,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') && 
           nft.tokenId === '8993')
       ) {
-        // Apply premium data for selected NFTs
-        
-        // Set consistent floor prices based on premium data
-        if (nft.contractAddress === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
-          enrichedNFT.floorPrice = '11.73';
-          enrichedNFT.floorPriceUsd = '25560.94';
-        } else if (nft.contractAddress === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6') { // DeGods
-          enrichedNFT.floorPrice = '4.58';
-          enrichedNFT.floorPriceUsd = '9945.10';
-        } else if (nft.contractAddress === '0x4aeb52db83daa33a31673599e892d9247b0449ca') { // Claynosaurz
-          enrichedNFT.floorPrice = '3.85';
-          enrichedNFT.floorPriceUsd = '8398.75';
-        } else if (nft.contractAddress === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
-          enrichedNFT.floorPrice = '2.35';
-          enrichedNFT.floorPriceUsd = '5129.75';
-        } else if (nft.contractAddress === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
-          enrichedNFT.floorPrice = '5.72';
-          enrichedNFT.floorPriceUsd = '12435.67';
-        } else if (nft.contractAddress === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
-                  nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') { // MadLads
-          enrichedNFT.floorPrice = '5.91';
-          enrichedNFT.floorPriceUsd = '12890.56';
-        }
+        // Apply premium data for selected NFTs if needed
+        // Floor price information removed per requirements
       }
       
       return res.json(enrichedNFT);
