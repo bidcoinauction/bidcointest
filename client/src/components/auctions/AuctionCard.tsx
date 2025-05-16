@@ -278,11 +278,11 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
               // Map NFT collections based on auction ID to premium sources
               const collectionMapping: Record<number, {collection: string, id: string}> = {
                 1: {collection: 'azuki', id: '9605'},
-                2: {collection: 'degods', id: '8748'},
+                2: {collection: 'milady', id: '7218'},
                 3: {collection: 'lilzadventure', id: '7221'},
-                4: {collection: 'milady', id: '8697'},
+                4: {collection: 'degods', id: '8748'},
                 5: {collection: 'cryptopunks', id: '7804'},
-                6: {collection: 'milady', id: '7218'},
+                6: {collection: 'doodles', id: '1234'},
                 7: {collection: 'madlads', id: '8993'}
               };
 
