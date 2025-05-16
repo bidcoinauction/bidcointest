@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getBidPacks, purchaseBidPack } from "@/lib/api";
+import { bidPackService } from "@/lib/apiService";
 import { purchaseBidPack as web3PurchaseBidPack } from "@/lib/web3";
 import useWallet from "@/hooks/useWallet";
 import { useToast } from "@/hooks/use-toast";
@@ -20,7 +20,7 @@ export function useBidPacks() {
     error
   } = useQuery({
     queryKey: ["/api/bidpacks"],
-    queryFn: getBidPacks,
+    queryFn: bidPackService.getBidPacks,
   });
 
   // Mutation for purchasing a bid pack
@@ -45,7 +45,7 @@ export function useBidPacks() {
       // For now, we call purchaseBidPack multiple times based on quantity
       const purchases = [];
       for (let i = 0; i < quantity; i++) {
-        purchases.push(purchaseBidPack(packId, address));
+        purchases.push(bidPackService.purchaseBidPack(packId, address));
       }
       
       return Promise.all(purchases);

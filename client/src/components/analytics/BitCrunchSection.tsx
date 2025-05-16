@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getBlockchainStats } from "@/lib/api";
+import { blockchainService } from "@/lib/apiService";
 import { 
   Bitcoin, 
   Brackets, 
@@ -25,7 +25,7 @@ function CryptoIcon({ name }: { name: string }) {
 export default function BitCrunchSection() {
   const { data: stats, isLoading, error } = useQuery({
     queryKey: ["/api/blockchain/stats"],
-    queryFn: getBlockchainStats,
+    queryFn: blockchainService.getBlockchainStats,
   });
 
   if (isLoading) {
