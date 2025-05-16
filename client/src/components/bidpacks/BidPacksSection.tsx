@@ -10,7 +10,7 @@ import {
   Crown,
   Gem
 } from "lucide-react";
-import { BidPack } from "@shared/schema";
+import { BidPack } from "@shared/schema"; // TODO: Rename to AuctionPack in schema
 
 const PackIcon = ({ type }: { type: string }) => {
   switch (type) {
@@ -72,7 +72,7 @@ function getPackButtonColor(type: string) {
   }
 }
 
-function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: BidPack, quantity: number) => void }) {
+function AuctionPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: BidPack, quantity: number) => void }) {
   const [quantity, setQuantity] = useState(1);
   
   // Calculate total price based on quantity
@@ -150,7 +150,7 @@ function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: B
   );
 }
 
-export default function BidPacksSection() {
+export default function AuctionPacksSection() {
   const { purchasePack, isPurchasing } = useBidPacks();
   
   const { data: bidPacks, isLoading, error } = useQuery({
@@ -225,7 +225,7 @@ export default function BidPacksSection() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {bidPacks.map((pack) => (
-          <BidPackCard 
+          <AuctionPackCard 
             key={pack.id} 
             pack={pack} 
             onPurchase={purchasePack}
