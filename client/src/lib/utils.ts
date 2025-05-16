@@ -45,24 +45,14 @@ export function getTimeRemaining(endTime: Date | string | number | null): number
  * @param seconds Total seconds remaining
  * @returns Formatted time string
  */
-export function formatCountdown(seconds: number): string {
-  if (seconds <= 0) return "Ended";
-  
-  const days = Math.floor(seconds / (24 * 60 * 60));
-  const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
-  const minutes = Math.floor((seconds % (60 * 60)) / 60);
-  const remainingSeconds = seconds % 60;
-  
-  // Different formats based on time remaining
-  if (days > 0) {
-    return `${days}d ${hours}h`;
-  } else if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  } else if (minutes > 0) {
-    return `${minutes}m ${remainingSeconds}s`;
-  } else {
-    return `${remainingSeconds}s`;
-  }
+export function formatCountdown(timeLeft: number): string {
+  if (timeLeft <= 0) return "Ended";
+
+  const hours = Math.floor(timeLeft / 3600);
+  const minutes = Math.floor((timeLeft % 3600) / 60);
+  const seconds = timeLeft % 60;
+
+  return `${hours}h ${minutes}m ${seconds}s`;
 }
 
 /**
