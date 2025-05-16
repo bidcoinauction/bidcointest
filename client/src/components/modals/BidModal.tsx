@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
-import { placeBid } from "@/lib/api";
+import { auctionService } from "@/lib/apiService";
 import { Auction } from "@shared/schema";
 import { useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -181,7 +181,7 @@ export default function BidModal({ isOpen, onClose, auction, minimumBid, onPlace
       }
       
       // Call API to place bid
-      await placeBid(auction.id, bidAmount, address);
+      await auctionService.placeBid(auction.id, bidAmount, address);
       
       // Invalidate queries to refresh auction data
       queryClient.invalidateQueries({ queryKey: ["/api/auctions"] });

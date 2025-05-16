@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAuctions } from "@/lib/api";
+import { auctionService } from "@/lib/apiService";
 import FeaturedAuction from "@/components/auctions/FeaturedAuction";
 import AuctionFilters, { AuctionFilters as Filters } from "@/components/auctions/AuctionFilters";
 import AuctionCard from "@/components/auctions/AuctionCard";
@@ -16,7 +16,7 @@ export default function AuctionsPage() {
   
   const { data: auctions, isLoading, error } = useQuery({
     queryKey: ["/api/auctions"],
-    queryFn: getAuctions,
+    queryFn: auctionService.getAuctions,
   });
 
   // Apply filters to auctions

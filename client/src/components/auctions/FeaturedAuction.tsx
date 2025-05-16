@@ -2,7 +2,8 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Heart, Share2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getFeaturedAuctions, formatPriceNative } from "@/lib/api";
+import { auctionService } from "@/lib/apiService";
+import { formatPriceNative } from "@/lib/utils";
 import useCountdown from "@/hooks/useCountdown";
 import BidModal from "@/components/modals/BidModal";
 import { useCallback, useEffect, useState } from "react";
@@ -24,7 +25,7 @@ export default function FeaturedAuction() {
 
   const { data: featuredAuctions, isLoading, error } = useQuery({
     queryKey: ["/api/auctions/featured"],
-    queryFn: getFeaturedAuctions,
+    queryFn: auctionService.getFeaturedAuctions,
   });
 
   const featuredAuction = featuredAuctions?.[0];
