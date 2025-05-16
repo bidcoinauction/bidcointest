@@ -3,8 +3,12 @@
  * Consolidates all API interactions in one place
  */
 
+import axios from 'axios';
 import { Auction, NFT, BidPack, Activity, BlockchainStats } from "@shared/schema";
-import { fetchFromAPI } from './api';
+
+const api = axios.create({
+  baseURL: '/api'
+});
 
 /**
  * NFT API functions - using Alchemy as the primary data source
@@ -13,69 +17,41 @@ import { fetchFromAPI } from './api';
 export const nftApi = {
   /**
    * Get NFT metadata by contract address and token ID
-   * @param contractAddress Contract address
-   * @param tokenId Token ID
    */
   getNFTMetadata: (contractAddress: string, tokenId: string) => {
-    return fetchFromAPI(`/alchemy/nft/${contractAddress}/${tokenId}`);
+    return api.get(`/alchemy/nft/${contractAddress}/${tokenId}`).then(res => res.data);
   },
 
   /**
    * Get tokenURI data for an NFT
-   * @param contractAddress Contract address of the NFT
-   * @param tokenId Token ID of the NFT
-   * @param chain Blockchain network (default: ethereum)
    */
   getTokenURI: (contractAddress: string, tokenId: string, chain: string = 'ethereum') => {
-    return fetchFromAPI(`/nft/token-uri/${contractAddress}/${tokenId}?chain=${chain}`);
+    return api.get(`/nft/token-uri/${contractAddress}/${tokenId}?chain=${chain}`).then(res => res.data);
   },
 
   /**
    * Get trending collections
-   * @param limit Number of collections to retrieve
    */
   getTrendingCollections: (limit: number = 10) => {
-    return fetchFromAPI(`/alchemy/collections/trending?limit=${limit}`);
+    return api.get(`/alchemy/collections/trending?limit=${limit}`).then(res => res.data);
   },
 
   /**
    * Get collection metadata
-   * @param address Collection contract address
    */
   getCollectionMetadata: (address: string) => {
-    return fetchFromAPI(`/alchemy/contract/${address}`);
+    return api.get(`/alchemy/contract/${address}`).then(res => res.data);
   },
 
   /**
    * Get NFTs owned by an address
-   * @param ownerAddress Owner's wallet address
-   * @param pageKey Pagination key
-   * @param pageSize Results per page
    */
   getOwnedNFTs: (ownerAddress: string, pageKey?: string, pageSize: number = 50) => {
     let url = `/alchemy/owner/${ownerAddress}/nfts?pageSize=${pageSize}`;
     if (pageKey) {
       url += `&pageKey=${pageKey}`;
     }
-    return fetchFromAPI(url);
-  },
-
-  /**
-   * Get hosted image URL for NFT
-   * @param nftName NFT name for mapping
-   */
-  getHostedImageUrl: (nftName: string): string | null => {
-    const hostedImages: Record<string, string> = {
-      "Doodles #1234": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
-      "Mutant Ape Yacht Club #3652": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/ebebf8da2543032f469b1a436d848822.png",
-      "CryptoPunk #7804": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png",
-      "BAYC #4269": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/4269.jpg",
-      "Milady #7218": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7218.avif",
-      "DeGods #8747": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png",
-      "Mad Lads #8993": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif"
-    };
-    
-    return hostedImages[nftName] || null;
+    return api.get(url).then(res => res.data);
   }
 };
 
@@ -87,30 +63,26 @@ export const auctionService = {
    * Get all auctions
    */
   getAuctions: () => {
-    return fetchFromAPI<Auction[]>("/auctions");
+    return api.get<Auction[]>("/auctions").then(res => res.data);
   },
 
   /**
    * Get auction by ID
-   * @param id Auction ID
    */
   getAuction: async (id: number): Promise<Auction> => {
-    const data = await fetchFromAPI<Auction>(`/auctions/${id}`);
-    
-    // If we have an NFT in the auction data, fetch detailed NFT metadata
+    const { data } = await api.get<Auction>(`/auctions/${id}`);
+
     if (data && data.nft && data.nft.id) {
       try {
-        // Fetch enriched NFT data with consistent metadata
-        const enrichedNFT = await fetchFromAPI<typeof data.nft>(`/nft-details/${data.nft.id}`);
+        const { data: enrichedNFT } = await api.get(`/nft-details/${data.nft.id}`);
         if (enrichedNFT) {
           data.nft = enrichedNFT;
         }
       } catch (error) {
         console.error('Error fetching enriched NFT details:', error);
-        // Continue with original NFT data if enrichment fails
       }
     }
-    
+
     return data;
   },
 
@@ -118,27 +90,18 @@ export const auctionService = {
    * Get featured auctions
    */
   getFeaturedAuctions: () => {
-    return fetchFromAPI<Auction[]>("/auctions/featured");
+    return api.get<Auction[]>("/auctions/featured").then(res => res.data);
   },
 
   /**
    * Place a bid on an auction
-   * @param auctionId Auction ID
-   * @param amount Bid amount
-   * @param bidderAddress Bidder's wallet address
    */
   placeBid: (auctionId: number, amount: string, bidderAddress: string) => {
-    return fetchFromAPI<Auction>(`/bids`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        auctionId,
-        amount,
-        bidderAddress,
-      }),
-    });
+    return api.post<Auction>(`/bids`, {
+      auctionId,
+      amount,
+      bidderAddress,
+    }).then(res => res.data);
   }
 };
 
@@ -150,41 +113,31 @@ export const bidPackService = {
    * Get all bid packs
    */
   getBidPacks: () => {
-    return fetchFromAPI<BidPack[]>("/bidpacks");
+    return api.get<BidPack[]>("/bidpacks").then(res => res.data);
   },
 
   /**
    * Get bid pack by ID
-   * @param id BidPack ID
    */
   getBidPack: (id: number) => {
-    return fetchFromAPI<BidPack>(`/bidpacks/${id}`);
+    return api.get<BidPack>(`/bidpacks/${id}`).then(res => res.data);
   },
 
   /**
    * Purchase a bid pack
-   * @param bidPackId BidPack ID
-   * @param walletAddress Buyer's wallet address
    */
   purchaseBidPack: (bidPackId: number, walletAddress: string) => {
-    return fetchFromAPI<any>("/bidpacks/purchase", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        bidPackId,
-        walletAddress,
-      }),
-    });
+    return api.post("/bidpacks/purchase", {
+      bidPackId,
+      walletAddress,
+    }).then(res => res.data);
   },
 
   /**
    * Get user's bid packs
-   * @param userId User ID
    */
   getUserBidPacks: (userId: number) => {
-    return fetchFromAPI<any[]>(`/users/${userId}/bidpacks`);
+    return api.get<any[]>(`/users/${userId}/bidpacks`).then(res => res.data);
   }
 };
 
@@ -196,7 +149,7 @@ export const activityService = {
    * Get all activity
    */
   getActivity: () => {
-    return fetchFromAPI<Activity[]>("/activity");
+    return api.get<Activity[]>("/activity").then(res => res.data);
   }
 };
 
@@ -208,7 +161,7 @@ export const blockchainService = {
    * Get blockchain stats
    */
   getBlockchainStats: () => {
-    return fetchFromAPI<BlockchainStats>("/blockchain/stats");
+    return api.get<BlockchainStats>("/blockchain/stats").then(res => res.data);
   }
 };
 
@@ -218,11 +171,10 @@ export const blockchainService = {
 export const userService = {
   /**
    * Get user by wallet address
-   * @param walletAddress Wallet address
    */
   getUserByWalletAddress: (walletAddress: string) => {
     if (!walletAddress) return Promise.resolve(null);
-    return fetchFromAPI<any>(`/users/by-wallet/${walletAddress}`);
+    return api.get<any>(`/users/by-wallet/${walletAddress}`).then(res => res.data);
   }
 };
 
@@ -232,17 +184,15 @@ export const userService = {
 export const achievementService = {
   /**
    * Get user achievements
-   * @param userId User ID
    */
   getUserAchievements: (userId: number) => {
-    return fetchFromAPI<any[]>(`/users/${userId}/achievements`);
+    return api.get<any[]>(`/users/${userId}/achievements`).then(res => res.data);
   },
 
   /**
    * Get user achievement stats
-   * @param userId User ID
    */
   getUserAchievementStats: (userId: number) => {
-    return fetchFromAPI<any>(`/users/${userId}/achievement-stats`);
+    return api.get<any>(`/users/${userId}/achievement-stats`).then(res => res.data);
   }
 };
