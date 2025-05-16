@@ -279,7 +279,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
               const collectionMapping: Record<number, {collection: string, id: string}> = {
                 1: {collection: 'azuki', id: '9605'},
                 2: {collection: 'degods', id: '8748'},
-                3: {collection: 'claynosaurz', id: '7221'},
+                3: {collection: 'lilzadventure', id: '7221'},
                 4: {collection: 'milady', id: '8697'},
                 5: {collection: 'cryptopunks', id: '7804'},
                 6: {collection: 'milady', id: '7218'},
@@ -307,11 +307,11 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                   target.src = `/attached_assets/8993.avif`;
                 } else if (mapping.collection === 'milady') {
                   target.src = `/attached_assets/7218.avif`;
-                } else if (mapping.collection === 'claynosaurz') {
-                  target.src = `/attached_assets/7218.avif`;
-                } else if (target.src !== `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`) {
+                } else if (mapping.collection === 'lilzadventure') {
+                  target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
+                } else if (target.src !== `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`) {
                   // For all other collections, try attached asset
-                  target.src = `/attached_assets/Screenshot 2025-05-15 at 13.27.19.png`;
+                  target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
                 }
                 return;
               }
