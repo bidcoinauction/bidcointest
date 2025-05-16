@@ -451,13 +451,19 @@ export default function AuctionDetailsPage() {
         <div>
           <div className="mb-6 relative">
             <img 
-              src={auctionId === 3 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png' : (detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg')} 
+              src={
+                auctionId === 3 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png' : 
+                auctionId === 6 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png' :
+                (detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg')
+              } 
               alt={detailedMetadata?.name || auction.nft.name} 
               className="w-full h-auto rounded-xl object-cover aspect-square"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 if (auctionId === 3) {
                   target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png';
+                } else if (auctionId === 6) {
+                  target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png';
                 } else {
                   target.src = '/placeholder-image.jpg';
                 }

@@ -306,7 +306,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                 } else if (mapping.collection === 'azuki') {
                   target.src = `/attached_assets/8993.avif`;
                 } else if (mapping.collection === 'milady') {
-                  target.src = `/attached_assets/7218.avif`;
+                  target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png`;
                 } else if (mapping.collection === 'lilzadventure') {
                   target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
                 } else if (target.src !== `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`) {
