@@ -162,46 +162,33 @@ export class UnleashNftsService {
       const chainId = this.normalizeChainId(chain);
       log(`Fetching metadata for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
       
-      // Try V2 endpoint with direct path format first
-      try {
-        log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/collection/${chainId}/${contractAddress}`, 'unleash-nfts');
-        const response = await axios.get(`${BASE_URL_V2}/collection/${chainId}/${contractAddress}`, {
-          headers: this.headersV2
-        });
-        
-        const collection = response.data;
-        
-        // Clean image URL
-        if (collection && collection.image_url) {
-          collection.image_url = this.cleanImageUrl(collection.image_url);
-        }
-        
-        return collection;
-      } catch (v2Error: any) {
-        log(`[unleash-nfts] Failed with v2 API format collection/${chainId}/${contractAddress}: ${v2Error.message}`, 'unleash-nfts');
-        
-        // Fall back to V1 endpoint
-        try {
-          log(`[unleash-nfts] Trying v1 format: ${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, 'unleash-nfts');
-          const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, {
-            headers: this.headersV1
-          });
-          
-          const collection = response.data;
-          
-          // Clean image URL
-          if (collection && collection.image_url) {
-            collection.image_url = this.cleanImageUrl(collection.image_url);
-          }
-          
-          return collection;
-        } catch (v1Error: any) {
-          log(`Both v2 and v1 collection metadata endpoints failed`, 'unleash-nfts');
-          throw v1Error;
-        }
+      // Use V1 endpoint consistently
+      log(`[unleash-nfts] Using v1 format: ${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, 'unleash-nfts');
+      const response = await axios.get(`${BASE_URL_V1}/collection/${chainId}/${contractAddress}`, {
+        headers: this.headersV1
+      });
+      
+      const collection = response.data;
+      
+      // Clean image URL
+      if (collection && collection.image_url) {
+        collection.image_url = this.cleanImageUrl(collection.image_url);
       }
+      
+      return collection;
     } catch (error: any) {
       this.handleError('getCollectionMetadata', error);
+      
+      // Additional details for troubleshooting
+      if (error.response) {
+        log(`Request: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, 'unleash-nfts');
+        if (error.response.status === 404) {
+          log(`Not found (404): Collection not found for contract address ${contractAddress}`, 'unleash-nfts');
+        } else if (error.response.status === 401) {
+          log(`Unauthorized (401): API key may be invalid or missing.`, 'unleash-nfts');
+        }
+      }
+      
       return null;
     }
   }
@@ -633,24 +620,24 @@ export class UnleashNftsService {
         log(`Using collection slug: ${slugName}`, 'unleash-nfts');
       }
       
-      // Try v2 endpoint first (as per updated docs)
+      // Use v1 endpoint directly (based on API requirements)
       try {
         let response;
         let nftData;
         
         // If we have a contract address, use the direct path format
         if (contractAddress) {
-          log(`[unleash-nfts] Trying direct path: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
-          response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-            headers: this.headersV2
+          log(`[unleash-nfts] Using direct v1 path: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+          response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
+            headers: this.headersV1
           });
           
           nftData = response.data;
         } else {
           // For slug-based lookup, we still need to use params
-          log(`[unleash-nfts] Using params with slug: ${BASE_URL_V2}/nft/metadata`, 'unleash-nfts');
-          response = await axios.get(`${BASE_URL_V2}/nft/metadata`, {
-            headers: this.headersV2,
+          log(`[unleash-nfts] Using params with slug: ${BASE_URL_V1}/nft/metadata`, 'unleash-nfts');
+          response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
+            headers: this.headersV1,
             params
           });
           
@@ -669,48 +656,24 @@ export class UnleashNftsService {
         }
         
         return nftData;
-      } catch (v2Error: any) {
-        const errorMsg = v2Error.response?.data?.message || v2Error.message;
-        log(`V2 NFT metadata endpoint failed: ${errorMsg}. Trying v1 endpoint...`, 'unleash-nfts');
+      } catch (error: any) {
+        const errorMsg = error.response?.data?.message || error.message;
+        log(`API Error in getNFTMetadataFlex: ${errorMsg}`, 'unleash-nfts');
         
-        // If v2 fails, try v1 endpoint
-        try {
-          let response;
-          
-          // If we have a contract address, use direct path format
-          if (contractAddress) {
-            log(`[unleash-nfts] Trying direct v1 path: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
-            response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-              headers: this.headersV1
-            });
+        // Additional details for troubleshooting
+        if (error.response) {
+          log(`Request: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, 'unleash-nfts');
+          if (error.response.status === 404) {
+            log(`Not found (404): The requested resource was not found. Check the contract address and token ID.`, 'unleash-nfts');
+          } else if (error.response.status === 401) {
+            log(`Unauthorized (401): API key may be invalid or missing.`, 'unleash-nfts');
           } else {
-            // For slug-based lookup, use query params
-            log(`[unleash-nfts] Trying slug with v1 endpoint: ${BASE_URL_V1}/nft/metadata`, 'unleash-nfts');
-            response = await axios.get(`${BASE_URL_V1}/nft/metadata`, {
-              headers: this.headersV1,
-              params
-            });
+            log(`Error status: ${error.response.status} ${error.response.statusText}`, 'unleash-nfts');
+            log(`Error details: ${JSON.stringify(error.response.data)}`, 'unleash-nfts');
           }
-          
-          const nftData = response.data;
-          
-          // Clean any image URLs in the response
-          if (nftData && nftData.image_url) {
-            nftData.image_url = this.cleanImageUrl(nftData.image_url);
-            log(`Cleaned image URL for NFT ${tokenId} from v1 endpoint`, 'unleash-nfts');
-          }
-          
-          // Clean collection image URLs if present
-          if (nftData && nftData.collection && nftData.collection.image_url) {
-            nftData.collection.image_url = this.cleanImageUrl(nftData.collection.image_url);
-          }
-          
-          return nftData;
-        } catch (v1Error: any) {
-          const v1ErrorMsg = v1Error.response?.data?.message || v1Error.message;
-          log(`Both v2 and v1 NFT metadata endpoints failed: ${v1ErrorMsg}`, 'unleash-nfts');
-          throw v1Error;
         }
+        
+        throw error;
       }
     } catch (error) {
       this.handleError('getNFTMetadataFlex', error);

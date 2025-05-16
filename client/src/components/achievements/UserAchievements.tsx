@@ -41,9 +41,16 @@ export default function UserAchievements() {
   const [userId, setUserId] = useState<number | null>(null);
 
   // Fetch the user by wallet address
-  const { data: user } = useQuery({
+  const { data: user, isLoading: isUserLoading, error: userError } = useQuery({
     queryKey: ["/api/users/by-wallet", address],
-    queryFn: () => getUserByWalletAddress(address || ""),
+    queryFn: async () => {
+      if (!address) return null;
+      const response = await fetch(`/api/users/by-wallet/${address}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user: ${response.statusText}`);
+      }
+      return response.json();
+    },
     enabled: !!address,
   });
 
@@ -55,23 +62,31 @@ export default function UserAchievements() {
   }, [user]);
 
   // Fetch user achievements
-  const { data: userAchievements, isLoading: isAchievementsLoading } = useQuery({
+  const { data: userAchievements, isLoading: isAchievementsLoading, error: achievementsError } = useQuery({
     queryKey: ["/api/users", userId, "achievements"],
     queryFn: async () => {
       const response = await fetch(`/api/users/${userId}/achievements`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch achievements: ${response.statusText}`);
+      }
       return response.json();
     },
     enabled: !!userId,
+    retry: 1,
   });
 
   // Fetch user achievement stats
-  const { data: achievementStats, isLoading: isStatsLoading } = useQuery({
+  const { data: achievementStats, isLoading: isStatsLoading, error: statsError } = useQuery({
     queryKey: ["/api/users", userId, "achievement-stats"],
     queryFn: async () => {
       const response = await fetch(`/api/users/${userId}/achievement-stats`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch achievement stats: ${response.statusText}`);
+      }
       return response.json();
     },
     enabled: !!userId,
+    retry: 1,
   });
 
   // Helper function to render achievement icon
@@ -130,10 +145,28 @@ export default function UserAchievements() {
     );
   }
 
-  if (isAchievementsLoading || isStatsLoading) {
+  // Show loading state
+  if (isUserLoading || isAchievementsLoading || isStatsLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  // Show error messages if any
+  if (userError || achievementsError || statsError) {
+    return (
+      <div className="text-center p-6 bg-red-900/20 rounded-lg border border-red-800">
+        <h3 className="text-xl font-semibold text-red-400 mb-2">Something went wrong</h3>
+        <p className="text-gray-300 mb-4">
+          We encountered an issue loading your achievements. This feature requires a connected wallet with activity on the platform.
+        </p>
+        <div className="text-sm text-gray-400 text-left max-w-lg mx-auto overflow-auto">
+          {userError && <p className="mb-1">• {userError instanceof Error ? userError.message : 'Failed to load user data'}</p>}
+          {achievementsError && <p className="mb-1">• {achievementsError instanceof Error ? achievementsError.message : 'Failed to load achievements'}</p>}
+          {statsError && <p className="mb-1">• {statsError instanceof Error ? statsError.message : 'Failed to load achievement statistics'}</p>}
+        </div>
       </div>
     );
   }
