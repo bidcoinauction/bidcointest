@@ -30,7 +30,7 @@ export default function Header() {
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shadow-glow">
               <Bitcoin className="text-white h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-display font-bold text-white">BidCoin</h1>
+            <h1 className="text-2xl font-display font-bold text-white">AuctionBlock</h1>
           </div>
         </div>
         
