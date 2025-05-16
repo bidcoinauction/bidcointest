@@ -1,7 +1,4 @@
-The image component in AuctionCard.tsx is updated to use getOptimalNFTImageSource and implement a multi-stage fallback strategy.
-```
 
-```replit_final_file
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
@@ -450,8 +447,6 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         </div>
       </div>
 
-
-
       {showBidModal && (
         <BidModal 
           isOpen={showBidModal}
@@ -471,4 +466,3 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     </div>
   );
 }
-`
