@@ -450,25 +450,38 @@ export default function AuctionDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
         <div>
           <div className="mb-6 relative">
-            <img 
-              src={
-                auctionId === 3 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png' : 
-                auctionId === 2 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png' :
-                (detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg')
-              } 
-              alt={detailedMetadata?.name || auction.nft.name} 
-              className="w-full h-auto rounded-xl object-cover aspect-square"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                if (auctionId === 3) {
-                  target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png';
-                } else if (auctionId === 2) {
-                  target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png';
-                } else {
-                  target.src = '/placeholder-image.jpg';
-                }
-              }}
-            />
+            {/* Show video for BEEPLE and mp4 files, otherwise show image */}
+            {(auctionId === 5 || auction.nft.imageUrl?.endsWith('.mp4')) ? (
+              <video 
+                src={auction.nft.imageUrl}
+                className="w-full h-auto rounded-xl object-cover aspect-square"
+                autoPlay
+                loop
+                muted
+                playsInline
+                controls
+              />
+            ) : (
+              <img 
+                src={
+                  auctionId === 3 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png' : 
+                  auctionId === 2 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png' :
+                  (detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg')
+                } 
+                alt={detailedMetadata?.name || auction.nft.name} 
+                className="w-full h-auto rounded-xl object-cover aspect-square"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (auctionId === 3) {
+                    target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png';
+                  } else if (auctionId === 2) {
+                    target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png';
+                  } else {
+                    target.src = '/placeholder-image.jpg';
+                  }
+                }}
+              />
+            )}
             <div className="absolute top-4 right-4 flex space-x-2">
               <Button variant="outline" size="sm" className="bg-black/30 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 rounded-full w-9 h-9 p-0">
                 <Heart className="h-5 w-5" />

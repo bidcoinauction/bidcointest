@@ -292,7 +292,7 @@ export class MemStorage implements IStorage {
     const nft5 = await this.createNFT({
       name: "BEEPLE: EVERYDAYS - Bulls Run",
       description: "BEEPLE: EVERYDAYS - THE 2020 COLLECTION is a collection of digital art pieces created by Beeple (Mike Winkelmann), one of the most famous digital artists in the NFT space.",
-      imageUrl: "https://bidcoinlanding.standard.us-east-1.oortstorages.com/f661377cb772f318ba53d52ff45c8921.png",
+      imageUrl: "https://bidcoinlanding.standard.us-east-1.oortstorages.com/9706007b462e8073c0a9771d9c795f9b.mp4",
       tokenId: "187",
       contractAddress: "0x6e5dc5405baefb8c0166bcc78d2692777f2cbffb",
       blockchain: "ETH",

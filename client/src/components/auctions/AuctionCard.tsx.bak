@@ -1,3 +1,4 @@
+
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useCallback, useEffect, useState } from "react";
@@ -14,21 +15,6 @@ import { useCurrencyPreference } from "@/contexts/CurrencyContext";
 
 interface AuctionCardProps {
   auction: Auction;
-}
-
-// Define interface for NFT metadata (TypeScript safety)
-interface NFTDetailedMetadata {
-  collection_name?: string;
-  contract_address?: string;
-  token_id?: string;
-  name?: string;
-  description?: string;
-  image_url?: string;
-  traits?: {
-    trait_type: string;
-    value: string;
-    rarity?: string;
-  }[];
 }
 
 export default function AuctionCard({ auction }: AuctionCardProps) {
@@ -57,7 +43,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     auction.nft.tokenId
   );
 
-  // Fetch detailed metadata from API
+  // Fetch detailed metadata from UnleashNFTs API
   useEffect(() => {
     const fetchDetailedMetadata = async () => {
       try {
@@ -72,35 +58,66 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           return;
         }
 
-        // Log details for debugging
+        // Call the UnleashNFTs API to get the detailed metadata
         console.log('Attempting to fetch NFT metadata for:', {
           contractAddress,
           tokenId,
           blockchain: blockchain || 'ethereum'
         });
 
-        // Try to get metadata from API
         try {
-          const metadata = await nftApi.getNFTMetadata(contractAddress, tokenId);
-          
+          // First try UnleashNFTs API
+          const metadata = await getNFTDetailedMetadata(
+            contractAddress, 
+            tokenId, 
+            blockchain || 'ethereum'
+          );
+
           if (metadata) {
-            setDetailedMetadata({
-              collection_name: metadata.collection?.name || auction.nft.collection || '',
+            console.log('✅ Detailed metadata loaded from UnleashNFTs:', metadata);
+            setDetailedMetadata(metadata);
+            return; // Exit early if successful
+          } else {
+            console.log('❌ No detailed metadata available from UnleashNFTs API');
+          }
+        } catch (unleashError) {
+          console.error('Error with UnleashNFTs API:', unleashError);
+        }
+
+        // Try Alchemy API as fallback
+        try {
+          console.log('⚠️ Trying Alchemy API as fallback...');
+          const alchemyData = await alchemyApi.getNFTMetadata(contractAddress, tokenId);
+
+          if (alchemyData) {
+            console.log('✅ Successfully retrieved data from Alchemy API:', alchemyData);
+
+            // Format Alchemy data to match expected format for UI rendering
+            const formattedData: NFTDetailedMetadata = {
+              collection_name: alchemyData.collection?.name || auction.nft.collectionName || '',
               contract_address: contractAddress,
               token_id: tokenId,
-              name: metadata.title || auction.nft.name || `NFT #${tokenId}`,
-              description: metadata.description || auction.nft.description || '',
-              image_url: metadata.image?.url || auction.nft.imageUrl || '',
-              traits: (metadata.attributes || []).map((attr: any) => ({
+              name: alchemyData.title || auction.nft.name || `NFT #${tokenId}`,
+              description: alchemyData.description || auction.nft.description || '',
+              image_url: alchemyData.image?.url || auction.nft.imageUrl || '',
+              // Floor price removed per requirements
+              traits: (alchemyData.attributes || []).map((attr: any) => ({
                 trait_type: attr.trait_type,
                 value: attr.value,
                 rarity: attr.rarity
               }))
-            });
+            };
+
+            setDetailedMetadata(formattedData);
+            return;
+          } else {
+            console.log('❌ No data available from Alchemy API either');
           }
-        } catch (error) {
-          console.error('Error fetching metadata:', error);
+        } catch (alchemyError) {
+          console.error('❌ Alchemy API fallback also failed:', alchemyError);
         }
+      } catch (error) {
+        console.error('Error fetching detailed metadata:', error);
       } finally {
         setLoading(false);
       }
@@ -153,7 +170,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
     const resetTime = new Date();
     resetTime.setSeconds(resetTime.getSeconds() + 60);
     setLocalEndTime(resetTime);
-  }, [localBidCount]);
+  }, []);
 
   // Set up automatic bid simulation
   useEffect(() => {
@@ -255,77 +272,76 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             src={tokenURIUnavailable ? getOptimalNFTImageSource(auction.nft) : (tokenImageUrl || getOptimalNFTImageSource(auction.nft))}
             alt={auction.nft.name}
             className="w-full h-44 object-cover cursor-pointer"
-            onClick={() => window.location.href = `/auctions/${auction.id}`}
             onError={(e) => {
-              // Multi-stage fallback system with tokenURI prioritization
-              const target = e.target as HTMLImageElement;
-              const auctionId = auction.id;
+            // Multi-stage fallback system with tokenURI prioritization
+            const target = e.target as HTMLImageElement;
+            const auctionId = auction.id;
 
-              // First try collection-specific assets if we know tokenURI failed 
-              // or if tokenURI image failed to load specifically
-              if (tokenURIUnavailable || (tokenImageUrl && target.src === tokenImageUrl)) {
-                // Only log once per auction ID to reduce console spam
-                const logKey = `tokenuri_log_${auctionId}`;
-                if (!sessionStorage.getItem(logKey)) {
-                  console.log(`TokenURI unavailable for auction #${auctionId}, using premium sources`);
-                  sessionStorage.setItem(logKey, 'true');
-                }
-
-                // Map NFT collections based on auction ID to premium sources
-                const collectionMapping: Record<number, {collection: string, id: string}> = {
-                  1: {collection: 'azuki', id: '9605'},
-                  2: {collection: 'milady', id: '7218'},
-                  3: {collection: 'lilzadventure', id: '7221'},
-                  4: {collection: 'degods', id: '8748'},
-                  5: {collection: 'cryptopunks', id: '7804'},
-                  6: {collection: 'doodles', id: '1234'},
-                  7: {collection: 'madlads', id: '8993'}
-                };
-
-                const mapping = collectionMapping[auctionId];
-
-                // Premium sources for high-value collections
-                if (mapping) {
-                  // Only log once per collection to reduce console spam
-                  const sourceLogKey = `premium_source_${mapping.collection}_${mapping.id}`;
-                  if (!sessionStorage.getItem(sourceLogKey)) {
-                    console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
-                    sessionStorage.setItem(sourceLogKey, 'true');
-                  }
-
-                  if (mapping.collection === 'degentoonz') {
-                    target.src = `/attached_assets/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png`;
-                  } else if (mapping.collection === 'madlads') {
-                    target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
-                  } else if (mapping.collection === 'degods') {
-                    target.src = `/attached_assets/8747-dead.png`;
-                  } else if (mapping.collection === 'azuki') {
-                    target.src = `/attached_assets/8993.avif`;
-                  } else if (mapping.collection === 'milady') {
-                    target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png`;
-                  } else if (mapping.collection === 'lilzadventure') {
-                    target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
-                  } else if (target.src !== `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`) {
-                    // For all other collections, try attached asset
-                    target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
-                  }
-                  return;
-                }
+            // First try collection-specific assets if we know tokenURI failed 
+            // or if tokenURI image failed to load specifically
+            if (tokenURIUnavailable || (tokenImageUrl && target.src === tokenImageUrl)) {
+              // Only log once per auction ID to reduce console spam
+              const logKey = `tokenuri_log_${auctionId}`;
+              if (!sessionStorage.getItem(logKey)) {
+                console.log(`TokenURI unavailable for auction #${auctionId}, using premium sources`);
+                sessionStorage.setItem(logKey, 'true');
               }
 
-              // Final fallback: use placeholder
-              if (target.src !== `/placeholder-nft.png`) {
-                // Only log once per auction ID
-                const placeholderLogKey = `placeholder_${auctionId}`;
-                if (!sessionStorage.getItem(placeholderLogKey)) {
-                  console.log(`Using placeholder for auction #${auctionId}`);
-                  sessionStorage.setItem(placeholderLogKey, 'true');
+              // Map NFT collections based on auction ID to premium sources
+              const collectionMapping: Record<number, {collection: string, id: string}> = {
+                1: {collection: 'azuki', id: '9605'},
+                2: {collection: 'milady', id: '7218'},
+                3: {collection: 'lilzadventure', id: '7221'},
+                4: {collection: 'degods', id: '8748'},
+                5: {collection: 'cryptopunks', id: '7804'},
+                6: {collection: 'doodles', id: '1234'},
+                7: {collection: 'madlads', id: '8993'}
+              };
+
+              const mapping = collectionMapping[auctionId];
+
+              // Premium sources for high-value collections
+              if (mapping) {
+                // Only log once per collection to reduce console spam
+                const sourceLogKey = `premium_source_${mapping.collection}_${mapping.id}`;
+                if (!sessionStorage.getItem(sourceLogKey)) {
+                  console.log(`Using premium source for ${mapping.collection} #${mapping.id}`);
+                  sessionStorage.setItem(sourceLogKey, 'true');
                 }
-                target.src = `/placeholder-nft.png`;
+
+                if (mapping.collection === 'degentoonz') {
+                  target.src = `/attached_assets/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png`;
+                } else if (mapping.collection === 'madlads') {
+                  target.src = 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
+                } else if (mapping.collection === 'degods') {
+                  target.src = `/attached_assets/8747-dead.png`;
+                } else if (mapping.collection === 'azuki') {
+                  target.src = `/attached_assets/8993.avif`;
+                } else if (mapping.collection === 'milady') {
+                  target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png`;
+                } else if (mapping.collection === 'lilzadventure') {
+                  target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
+                } else if (target.src !== `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`) {
+                  // For all other collections, try attached asset
+                  target.src = `https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png`;
+                }
+                return;
               }
-            }}
-          />
-        )}
+            }
+
+            // Final fallback: use placeholder
+            if (target.src !== `/placeholder-nft.png`) {
+              // Only log once per auction ID
+              const placeholderLogKey = `placeholder_${auctionId}`;
+              if (!sessionStorage.getItem(placeholderLogKey)) {
+                console.log(`Using placeholder for auction #${auctionId}`);
+                sessionStorage.setItem(placeholderLogKey, 'true');
+              }
+              target.src = `/placeholder-nft.png`;
+            }
+          }}
+          onClick={() => window.location.href = `/auctions/${auction.id}`}
+        />
       </div>
 
       {/* Item name and ID */}
