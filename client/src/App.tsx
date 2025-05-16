@@ -2,7 +2,7 @@ import { Switch, Route } from "wouter";
 import { useEffect } from "react";
 import AuctionsPage from "@/pages/auctions";
 import AuctionDetailsPage from "@/pages/auction-details";
-import AuctionPacksPage from "@/pages/bid-packs";
+import AuctionPacksPage from "@/pages/auction-packs";
 import ActivityPage from "@/pages/activity";
 import AboutPage from "@/pages/about";
 import DashboardPage from "@/pages/dashboard";
@@ -51,6 +51,7 @@ function App() {
             <Route path="/" component={AuctionsPage}/>
             <Route path="/auctions" component={AuctionsPage}/>
             <Route path="/auctions/:id" component={AuctionDetailsPage}/>
+            <Route path="/auction-packs" component={AuctionPacksPage}/>
             <Route path="/bid-packs" component={AuctionPacksPage}/>
             <Route path="/activity" component={ActivityPage}/>
             <Route path="/dashboard" component={DashboardPage}/>

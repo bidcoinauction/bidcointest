@@ -37,8 +37,8 @@ export default function Navigation() {
             </div>
             
             <div 
-              onClick={navigate("/bid-packs")}
-              className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/bid-packs") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
+              onClick={navigate("/auction-packs")}
+              className={`px-1 py-2 whitespace-nowrap cursor-pointer ${isActive("/auction-packs") || isActive("/bid-packs") ? "text-primary border-b-2 border-primary" : "text-gray-400 hover:text-white"}`}
             >
               AuctionPacks
             </div>
