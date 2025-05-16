@@ -6,11 +6,8 @@ const BASE_URL_V1 = 'https://api.unleashnfts.com/v1'; // Note: v1 uses /v1 in pa
 const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2'; // Note: v2 uses /api/v2 in path
 // Access the API key directly from the environment variable
 // In server-side code, we need to access process.env directly, not import.meta.env
-// Using fallback to hardcoded value for consistent API access
-const API_KEY = process.env.VITE_BITCRUNCH_API_KEY;
-if (!API_KEY) {
-  throw new Error('VITE_BITCRUNCH_API_KEY environment variable is not set');
-}
+const API_KEY = process.env.VITE_BITCRUNCH_API_KEY || '0c4b62cce16246d181310c3b57512529';
+log(`Using UnleashNFTs API key: ${API_KEY.substring(0, 4)}...${API_KEY.substring(API_KEY.length - 4)}`, 'unleash-nfts');
 
 // Type definitions based on the UnleashNFTs API
 export interface NFTCollection {
@@ -64,15 +61,15 @@ export class UnleashNftsService {
   private headersV2: Record<string, string>;
 
   constructor() {
-    // All endpoints use x-api-key, despite documentation suggesting otherwise
+    // Set up headers according to API requirements
     this.headersV1 = {
-      'accept': 'application/json',
+      'Accept': 'application/json',
       'x-api-key': API_KEY
     };
     
-    // V2 uses x-api-key: <API_KEY>
+    // Same headers for V2 endpoint
     this.headersV2 = {
-      'accept': 'application/json',
+      'Accept': 'application/json',
       'x-api-key': API_KEY
     };
     
