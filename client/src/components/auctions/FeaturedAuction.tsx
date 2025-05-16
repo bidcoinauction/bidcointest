@@ -54,7 +54,7 @@ export default function FeaturedAuction() {
     // Update leader
     setLocalLeader(randomBidder);
 
-    // Reset timer (Bidcoin reset mechanism to 1 minute)
+    // Reset timer (AuctionBlock reset mechanism to 1 minute)
     const resetTime = new Date();
     resetTime.setSeconds(resetTime.getSeconds() + 60);
     setLocalEndTime(resetTime);
@@ -175,7 +175,7 @@ export default function FeaturedAuction() {
           <div className="p-6 md:p-8 md:w-1/2 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start">
-                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">DEGEN TOONZ #4269</h2>
+                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">CRYPTOPUNKS #7804</h2>
                 <span className="bg-[#111827] px-3 py-1 rounded-lg text-xs font-mono text-primary">
                   ETH
                 </span>

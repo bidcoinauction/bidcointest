@@ -317,7 +317,7 @@ export function getOptimalNFTImageSource(nft: any): string {
     2: {collection: 'degods', id: '8748'},
     3: {collection: 'claynosaurz', id: '7221'},
     4: {collection: 'milady', id: '8697'},
-    5: {collection: 'degentoonz', id: '4269'},
+    5: {collection: 'cryptopunks', id: '7804'},
     6: {collection: 'milady', id: '7218'},
     7: {collection: 'madlads', id: '8993'}
   };
