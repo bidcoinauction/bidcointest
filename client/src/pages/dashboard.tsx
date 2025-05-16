@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import BidTracking from "@/components/bidding/BidTracking";
 import BuyBids from "@/components/bidding/BuyBids";
+import UserAchievements from "@/components/achievements/UserAchievements";
 import useWallet from "@/hooks/useWallet";
 
 export default function DashboardPage() {
@@ -376,6 +377,17 @@ export default function DashboardPage() {
                   onPurchaseComplete={handlePurchaseComplete}
                 />
               )}
+            </TabsContent>
+            
+            <TabsContent value="achievements" className="mt-0">
+              <div className="bg-[#1f2937] rounded-xl border border-[#374151] p-6">
+                <h2 className="text-xl font-display font-bold text-white mb-4">Your Achievements</h2>
+                <p className="text-gray-400 mb-6">
+                  Track your progress and earn rewards by participating in the BidCoin platform.
+                </p>
+                
+                <UserAchievements />
+              </div>
             </TabsContent>
           </Tabs>
         </>
