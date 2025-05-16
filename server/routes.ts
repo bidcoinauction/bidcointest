@@ -185,6 +185,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // We use the broadcastUpdate function we defined at the top
 
   // User routes
+  // Get user by wallet address - this route needs to come before /:id to avoid parameter conflicts
+  app.get('/api/users/by-wallet/:walletAddress', async (req, res) => {
+    try {
+      const { walletAddress } = req.params;
+      if (!walletAddress) {
+        return res.status(400).json({ message: 'Wallet address is required' });
+      }
+      
+      const user = await storage.getUserByWalletAddress(walletAddress);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      return res.json(user);
+    } catch (error) {
+      console.error('Error getting user by wallet address:', error);
+      return res.status(500).json({ message: 'Error getting user by wallet address' });
+    }
+  });
+  
   app.get('/api/users/:id', async (req, res) => {
     const id = parseInt(req.params.id);
     const user = await storage.getUser(id);
