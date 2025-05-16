@@ -229,7 +229,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
   }, [auction.id, subscribe, secondsRemaining]);
 
   // Format auction leader address
-  const leaderDisplay = formatAddress(localLeader);
+  const leaderDisplay = localLeader ? formatAddress(localLeader) : "No bids yet";
 
   // Format auction name and ID based on screenshot
   const tokenDisplay = auction.nft.tokenId ? `#${auction.nft.tokenId}` : `#${Math.floor(Math.random() * 100000)}`;
