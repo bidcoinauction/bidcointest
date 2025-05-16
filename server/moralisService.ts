@@ -1,5 +1,5 @@
-// This is a placeholder service to prevent import errors
-// It will be replaced by the UnleashNFTs API
+// This is a wrapper service that routes all Moralis API calls to Alchemy
+// This maintains backward compatibility while using Alchemy under the hood
 
 import { EvmChain } from "@moralisweb3/common-evm-utils";
 import { alchemyNftService } from './alchemyNftService';
