@@ -1175,7 +1175,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Floor price information removed per requirements
       }
       
-      return res.json(enrichedNFT);
+      // Final sanitization to remove any remaining floor price or retail price data
+      const sanitizedNFT = { ...enrichedNFT };
+      
+      // Remove all floor price and retail price related fields
+      delete sanitizedNFT.floorPrice;
+      delete sanitizedNFT.floorPriceUsd;
+      delete sanitizedNFT.retailPrice;
+      delete sanitizedNFT.floor_price;
+      delete sanitizedNFT.floor_price_usd;
+      
+      // Remove from collection data if it exists
+      if (sanitizedNFT.collection && typeof sanitizedNFT.collection === 'object') {
+        delete sanitizedNFT.collection.floorPrice;
+        delete sanitizedNFT.collection.floorPriceUsd;
+        delete sanitizedNFT.collection.floor_price;
+        delete sanitizedNFT.collection.floor_price_usd;
+      }
+      
+      return res.json(sanitizedNFT);
     } catch (error) {
       console.error('Error fetching NFT details:', error);
       return res.status(500).json({ message: 'Failed to fetch NFT details' });
