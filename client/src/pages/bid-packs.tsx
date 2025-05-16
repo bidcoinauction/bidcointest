@@ -77,7 +77,7 @@ function getPackButtonColor(type: string) {
   }
 }
 
-function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: BidPack, quantity: number) => void }) {
+function AuctionPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: BidPack, quantity: number) => void }) {
   const [quantity, setQuantity] = useState(1);
   
   // Calculate total price based on quantity
@@ -155,7 +155,7 @@ function BidPackCard({ pack, onPurchase }: { pack: BidPack; onPurchase: (pack: B
   );
 }
 
-export default function BidPacksPage() {
+export default function AuctionPacksPage() {
   const { purchasePack, isPurchasing } = useBidPacks();
   const { isConnected } = useWallet();
   const [activeTab, setActiveTab] = useState("bidpacks");
@@ -170,8 +170,8 @@ export default function BidPacksPage() {
       <section className="mb-8">
         <div className="md:flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-display font-bold text-white mb-2">BidPacks</h1>
-            <p className="text-gray-400 max-w-2xl">Purchase bid packs to save 10-20% compared to single bids. Choose from a variety of pack sizes or buy bids individually. All bids can be used across any auction.</p>
+            <h1 className="text-3xl font-display font-bold text-white mb-2">AuctionPacks</h1>
+            <p className="text-gray-400 max-w-2xl">Purchase auction packs to save 10-20% compared to single bids. Choose from a variety of pack sizes or buy bids individually. All bids can be used across any auction.</p>
           </div>
         </div>
         
@@ -215,7 +215,7 @@ export default function BidPacksPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {bidPacks?.map((pack) => (
-                  <BidPackCard 
+                  <AuctionPackCard 
                     key={pack.id} 
                     pack={pack} 
                     onPurchase={purchasePack}
