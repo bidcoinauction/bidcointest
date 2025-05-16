@@ -29,6 +29,43 @@ export function formatCurrency(amount: number | string | null, currency: string 
 }
 
 /**
+ * Calculate time remaining until a specific end time
+ * @param endTime End time as Date, string, or timestamp
+ * @returns Seconds remaining
+ */
+export function getTimeRemaining(endTime: Date | string | number | null): number {
+  if (!endTime) return 0;
+  
+  const total = new Date(endTime).getTime() - new Date().getTime();
+  return Math.max(0, Math.floor(total / 1000));
+}
+
+/**
+ * Format seconds into a readable countdown format (e.g. "2h 30m")
+ * @param seconds Total seconds remaining
+ * @returns Formatted time string
+ */
+export function formatCountdown(seconds: number): string {
+  if (seconds <= 0) return "Ended";
+  
+  const days = Math.floor(seconds / (24 * 60 * 60));
+  const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60));
+  const minutes = Math.floor((seconds % (60 * 60)) / 60);
+  const remainingSeconds = seconds % 60;
+  
+  // Different formats based on time remaining
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  } else if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`;
+  } else {
+    return `${remainingSeconds}s`;
+  }
+}
+
+/**
  * Format a price in USD
  * @param price The price to format
  * @returns Formatted price string with $ symbol
