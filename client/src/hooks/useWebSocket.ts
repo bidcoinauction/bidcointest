@@ -22,6 +22,13 @@ interface ConnectionInfo {
   latency: number | null;
 }
 
+// Add declaration for WebSocket
+declare global {
+  interface WebSocket {
+    clientId?: string;
+  }
+}
+
 /**
  * Enhanced WebSocket hook for real-time auction updates
  */
@@ -88,8 +95,9 @@ export function useWebSocket() {
           socketRef.current.close();
         }
 
-        // Create new WebSocket connection
+        // Create new WebSocket connection with proper path formatting
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        // Use the absolute path to avoid issues with Vite's dev server
         const wsUrl = `${protocol}//${window.location.host}/ws`;
         
         console.log(`[websocket] Connecting to ${wsUrl}...`);

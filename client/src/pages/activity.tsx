@@ -1,6 +1,6 @@
 // Removed header/navigation/footer imports
 import { useQuery } from "@tanstack/react-query";
-import { getActivity } from "@/lib/api";
+import { activityService } from "@/lib/apiService";
 import { formatRelativeTime } from "@/lib/utils";
 import { Activity, ActivityType } from "@shared/schema";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,7 +47,7 @@ export default function ActivityPage() {
   
   const { data: activities, isLoading, error } = useQuery({
     queryKey: ["/api/activity"],
-    queryFn: getActivity,
+    queryFn: activityService.getActivity,
   });
   
   // Filter activities based on search query, type, and time range

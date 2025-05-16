@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { getActivity } from "@/lib/api";
+import { activityService } from "@/lib/apiService";
 import { formatRelativeTime } from "@/lib/utils";
 import { Activity, ActivityType } from "@shared/schema";
 
@@ -49,7 +49,7 @@ function getActivityLabel(type: string) {
 export default function AuctionHistory() {
   const { data: activities, isLoading, error } = useQuery({
     queryKey: ["/api/activity"],
-    queryFn: getActivity,
+    queryFn: activityService.getActivity,
   });
 
   if (isLoading) {

@@ -16,9 +16,11 @@ import Footer from "@/components/layout/Footer";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 function App() {
-  const { isConnected, subscribe } = useWebSocket();
+  // Temporarily disable WebSocket to focus on core app functionality
+  // const { isConnected, subscribe, error } = useWebSocket();
 
-  // Subscribe to WebSocket events and update cache accordingly
+  // WebSocket events disabled temporarily to get the app working
+  /*
   useEffect(() => {
     if (isConnected) {
       // Subscribe to auction updates
@@ -40,6 +42,7 @@ function App() {
       };
     }
   }, [isConnected, subscribe]);
+  */
 
   return (
     <CurrencyProvider>
