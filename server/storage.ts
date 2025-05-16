@@ -248,7 +248,7 @@ export class MemStorage implements IStorage {
     const nft3 = await this.createNFT({
       name: "Lil Z's Adventure #245",
       description: "Lil Z's Adventure is an NFT collection launched in April 2024 with 8,097 unique characters on Ethereum.",
-      imageUrl: "/attached_assets/8993.avif",
+      imageUrl: "https://i.seadn.io/s/raw/files/83d0623f67fc51ab2798ea6e91de1714.png",
       tokenId: "245",
       contractAddress: "0x2e175f748976cd5cdb98f12d1abc5d137d6c9379",
       blockchain: "ETH",
@@ -273,14 +273,16 @@ export class MemStorage implements IStorage {
     const nft4 = await this.createNFT({
       name: "Azuki #9605",
       description: "Azuki starts with a collection of 10,000 avatars that give you membership access to The Garden: a corner of the internet where artists, builders, and web3 enthusiasts meet to create a decentralized future.",
-      imageUrl: "https://metadata.punks.com/v1/img/9605",
+      imageUrl: "https://i.seadn.io/gae/KlcVNwMVWXaWxPx8usZUXJLTZgVqLDHwHBWbfBpRvDBgY9GLB0QhRi2YBqHZlXrmOBQgxKEIk-TW3CQZpbk3GVgbhfGekQWZcxM?auto=format&dpr=1&w=1000",
       tokenId: "9605",
       contractAddress: "0xed5af388653567af2f388e6224dc7c4b3241c544",
       blockchain: "ETH",
       tokenStandard: "ERC-721",
       royalty: "7.5",
       collection: "Azuki",
+      collectionName: "Azuki",
       floorPrice: "12.5",
+      floorPriceUsd: "27,225.00",
       currency: "ETH",
       category: "pfp",
       items: 10000,
@@ -296,7 +298,7 @@ export class MemStorage implements IStorage {
     const nft5 = await this.createNFT({
       name: "BEEPLE: EVERYDAYS - Bulls Run",
       description: "BEEPLE: EVERYDAYS - THE 2020 COLLECTION is a collection of digital art pieces created by Beeple (Mike Winkelmann), one of the most famous digital artists in the NFT space.",
-      imageUrl: "/attached_assets/8747-dead.png",
+      imageUrl: "https://img.seadn.io/files/49a1a6cd3d4e8e195ce9c7f8e9a1d775.png",
       tokenId: "187",
       contractAddress: "0x6e5dc5405baefb8c0166bcc78d2692777f2cbffb",
       blockchain: "ETH",
@@ -321,7 +323,7 @@ export class MemStorage implements IStorage {
     const nft6 = await this.createNFT({
       name: "Doodles #1234",
       description: "A community-driven collectible NFT project featuring art by Burnt Toast. Doodles come in a joyful range of colors, traits and sizes with a collection size of 10,000.",
-      imageUrl: "/attached_assets/7218.avif",
+      imageUrl: "https://i.seadn.io/gae/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ?auto=format&dpr=1&w=1000",
       tokenId: "1234",
       contractAddress: "0x8a90cab2b38dba80c64b7734e58ee1db38b8992e",
       blockchain: "ETH",
@@ -346,7 +348,7 @@ export class MemStorage implements IStorage {
     const nft7 = await this.createNFT({
       name: "Mutant Ape Yacht Club #3652",
       description: "The MUTANT APE YACHT CLUB is a collection of up to 20,000 Mutant Apes that can only be created by exposing an existing Bored Ape to a vial of MUTANT SERUM or by minting a Mutant Ape in the public sale.",
-      imageUrl: "/attached_assets/4269.jpg",
+      imageUrl: "https://i.seadn.io/gae/lHexKRMpw-aoSyB1WdFBff5yfANLReFxHzt1DOj_sg7mS14yARpuvYcUtsyyx-Nkpk6WTcUPFoG53VnLJezYi8hAs0OxNZwlw6Y-dmI?auto=format&dpr=1&w=1000",
       tokenId: "3652",
       contractAddress: "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
       blockchain: "ETH",
