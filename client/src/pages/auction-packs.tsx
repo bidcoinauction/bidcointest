@@ -126,8 +126,8 @@ function getPackButtonColor(type: string) {
 
 function AuctionPackCard({ pack, onPurchase }: { pack: Partial<BidPack>; onPurchase: (pack: Partial<BidPack>, quantity: number) => void }) {
   const [quantity, setQuantity] = useState(1);
-  const badgeColorClass = getPackBadgeColor(pack.type);
-  const buttonColorClass = getPackButtonColor(pack.type);
+  const badgeColorClass = getPackBadgeColor(pack.type || "basic");
+  const buttonColorClass = getPackButtonColor(pack.type || "basic");
   
   const handleQuantityChange = (change: number) => {
     const newQuantity = quantity + change;
@@ -146,12 +146,12 @@ function AuctionPackCard({ pack, onPurchase }: { pack: Partial<BidPack>; onPurch
         <div className="flex justify-between items-start mb-4">
           <div>
             <span className={`text-xs font-medium px-2 py-1 rounded-full border ${badgeColorClass}`}>
-              {getPackLabel(pack.type)}
+              {getPackLabel(pack.type || "basic")}
             </span>
           </div>
           <div className="text-right">
             <div className="text-gray-400 text-sm">Price</div>
-            <div className="text-xl font-bold text-white">${pack.price.toFixed(2)}</div>
+            <div className="text-xl font-bold text-white">${Number(pack.price || 0).toFixed(2)}</div>
           </div>
         </div>
         
@@ -164,16 +164,16 @@ function AuctionPackCard({ pack, onPurchase }: { pack: Partial<BidPack>; onPurch
               <Package2 className="h-4 w-4 text-primary" />
               Bids:
             </div>
-            <div className="text-white font-semibold">{pack.bidCount}</div>
+            <div className="text-white font-semibold">{pack.bidCount || 0}</div>
           </div>
           
-          {pack.bonusBids > 0 && (
+          {(pack.bonusBids || 0) > 0 && (
             <div className="flex justify-between">
               <div className="text-gray-300 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-secondary" />
                 Bonus Bids:
               </div>
-              <div className="text-secondary font-semibold">+{pack.bonusBids}</div>
+              <div className="text-secondary font-semibold">+{pack.bonusBids || 0}</div>
             </div>
           )}
           
@@ -182,7 +182,7 @@ function AuctionPackCard({ pack, onPurchase }: { pack: Partial<BidPack>; onPurch
               <Timer className="h-4 w-4 text-primary" />
               Total Bids:
             </div>
-            <div className="text-white font-semibold">{pack.bidCount + (pack.bonusBids || 0)}</div>
+            <div className="text-white font-semibold">{(pack.bidCount || 0) + (pack.bonusBids || 0)}</div>
           </div>
         </div>
         
@@ -210,7 +210,7 @@ function AuctionPackCard({ pack, onPurchase }: { pack: Partial<BidPack>; onPurch
             className={`col-span-2 ${buttonColorClass} text-white font-medium py-2 px-4 rounded-md transition-colors duration-150 flex items-center justify-center`}
             onClick={handlePurchase}
           >
-            Buy Now · ${(pack.price * quantity).toFixed(2)}
+            Buy Now · ${(Number(pack.price || 0) * quantity).toFixed(2)}
           </button>
         </div>
       </div>
@@ -240,8 +240,8 @@ export default function AuctionPacksPage() {
     }
   });
   
-  const handlePurchase = (pack: BidPack, quantity: number) => {
-    console.log(`Purchasing ${quantity} of ${pack.name} for $${(pack.price * quantity).toFixed(2)}`);
+  const handlePurchase = (pack: Partial<BidPack>, quantity: number) => {
+    console.log(`Purchasing ${quantity} of ${pack.name} for $${(Number(pack.price || 0) * quantity).toFixed(2)}`);
     // API call to purchase packs would go here
     alert(`Thank you for purchasing ${quantity} ${pack.name}${quantity > 1 ? 's' : ''}!`);
   };
@@ -315,7 +315,7 @@ export default function AuctionPacksPage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {bidPacks?.map((pack) => (
-                  <AuctionPackCard key={pack.id} pack={pack} onPurchase={handlePurchase} />
+                  <AuctionPackCard key={pack.id} pack={pack as Partial<BidPack>} onPurchase={handlePurchase} />
                 ))}
               </div>
             )}
