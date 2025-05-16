@@ -12,6 +12,61 @@ const settings = {
   network: Network.ETH_MAINNET,
 };
 
+// Create a caching system to prevent redundant API calls
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  expiresAt: number;
+}
+
+class NFTMetadataCache {
+  private cache: Map<string, CacheEntry<any>> = new Map();
+  private defaultTTL: number = 1800000; // 30 minutes in milliseconds
+  
+  // Get a value from cache
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    
+    if (!entry) {
+      return null;
+    }
+    
+    // Check if the entry has expired
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return entry.data as T;
+  }
+  
+  // Set a value in cache with optional TTL
+  set<T>(key: string, value: T, ttl: number = this.defaultTTL): void {
+    const now = Date.now();
+    this.cache.set(key, {
+      data: value,
+      timestamp: now,
+      expiresAt: now + ttl
+    });
+  }
+  
+  // Clear the entire cache
+  clear(): void {
+    this.cache.clear();
+  }
+  
+  // Get cache stats
+  getStats(): { size: number, keys: string[] } {
+    return {
+      size: this.cache.size,
+      keys: Array.from(this.cache.keys())
+    };
+  }
+}
+
+// Create a global cache instance
+const nftCache = new NFTMetadataCache();
+
 // Define types based on Alchemy's API response format
 export interface AlchemyNFTMetadata {
   contract: {
@@ -92,6 +147,17 @@ export class AlchemyNftService {
    */
   async getNFTMetadata(contractAddress: string, tokenId: string): Promise<AlchemyNFTMetadata | null> {
     try {
+      // Create a cache key
+      const cacheKey = `nft:${contractAddress.toLowerCase()}:${tokenId}`;
+      
+      // Check if we have this NFT metadata in cache
+      const cachedData = nftCache.get<AlchemyNFTMetadata>(cacheKey);
+      if (cachedData) {
+        log(`Using cached NFT metadata for ${contractAddress}:${tokenId}`, 'alchemy-nft');
+        return cachedData;
+      }
+      
+      // If not in cache, log the fetch and get from API
       log(`Fetching NFT metadata for ${contractAddress}:${tokenId}`, 'alchemy-nft');
 
       // Use Alchemy SDK instead of axios
@@ -100,6 +166,11 @@ export class AlchemyNftService {
         tokenId,
         { refreshCache: false }
       );
+      
+      // Cache the response for future use (30 minutes)
+      if (response) {
+        nftCache.set(cacheKey, response as unknown as AlchemyNFTMetadata);
+      }
       
       return response as unknown as AlchemyNFTMetadata;
     } catch (error: any) {
@@ -116,6 +187,16 @@ export class AlchemyNftService {
    */
   async getNFTsForOwner(ownerAddress: string, pageKey?: string, pageSize: number = 100): Promise<any> {
     try {
+      // Create a cache key - include pagination in the cache key
+      const cacheKey = `owner:${ownerAddress.toLowerCase()}:page:${pageKey || 'first'}:size:${pageSize}`;
+      
+      // Check cache first
+      const cachedData = nftCache.get(cacheKey);
+      if (cachedData) {
+        log(`Using cached NFTs for owner ${ownerAddress}`, 'alchemy-nft');
+        return cachedData;
+      }
+      
       log(`Fetching NFTs for owner ${ownerAddress}`, 'alchemy-nft');
 
       // Use Alchemy SDK
@@ -132,6 +213,11 @@ export class AlchemyNftService {
         ownerAddress,
         options
       );
+      
+      // Cache the response
+      if (response) {
+        nftCache.set(cacheKey, response);
+      }
 
       return response;
     } catch (error: any) {
