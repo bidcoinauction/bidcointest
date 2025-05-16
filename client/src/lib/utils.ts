@@ -159,6 +159,27 @@ export function formatDate(date: Date | string | null): string {
 }
 
 /**
+ * Format a number with commas and decimals
+ * @param value Number to format
+ * @param decimals Number of decimal places (default: 2)
+ * @returns Formatted number string
+ */
+export function formatNumber(value: number | string | null | undefined, decimals: number = 2): string {
+  if (value === null || value === undefined) return '0';
+  
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  
+  // Handle NaN
+  if (isNaN(num)) return '0';
+  
+  // Format with commas and fixed decimal places
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals
+  });
+}
+
+/**
  * Calculate savings percentage based on retail price and current bid
  * For penny auctions, this is typically a high percentage (70-90%)
  * @param currentBid Current bid amount

@@ -24,10 +24,11 @@ import {
   getRarityColor, 
   getRarityLabel 
 } from '@/lib/utils';
+// These functions are already available in the utils file
 import {
   formatPriceUSD,
   formatPriceNative
-} from '@/lib/api';
+} from '@/lib/utils';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 import { useToast } from '@/hooks/use-toast';
 import { 
