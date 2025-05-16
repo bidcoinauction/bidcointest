@@ -72,28 +72,7 @@ export default function Navigation() {
             </div>
           </div>
           
-          {/* Currency display toggle */}
-          <div className="py-2">
-            <Select value={currencyDisplay} onValueChange={handleCurrencyChange}>
-              <SelectTrigger className="w-[150px] bg-[#1f2937] border-[#374151] h-8">
-                <SelectValue placeholder="Display Currency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="native" className="flex items-center">
-                  <div className="flex items-center">
-                    <Coins className="w-4 h-4 mr-2" />
-                    <span>Native Currency</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="usd" className="flex items-center">
-                  <div className="flex items-center">
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    <span>USD</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+
         </div>
       </div>
     </nav>

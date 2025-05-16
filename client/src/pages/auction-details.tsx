@@ -720,41 +720,7 @@ export default function AuctionDetailsPage() {
                         : "N/A"}
                     </p>
                   </div>
-                  <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
-                    <p className="text-gray-400 text-xs mb-1">Floor Price</p>
-                    <p className="text-white font-medium">
-                      {detailedMetadata?.floor_price_usd 
-                        ? (
-                          <span className="flex flex-col items-center">
-                            <span className="font-bold text-primary">
-                              ${formatPriceUSD(detailedMetadata.floor_price_usd)}
-                            </span>
-                          </span>
-                        ) : detailedMetadata?.floor_price 
-                        ? (
-                          <span className="flex flex-col items-center">
-                            <span className="font-bold text-primary">
-                              ${formatPriceUSD(detailedMetadata.floor_price)}
-                            </span>
-                          </span>
-                        )
-                        : auction.nft.floorPriceUsd 
-                        ? (
-                          <span className="flex flex-col items-center">
-                            <span className="font-bold text-primary">
-                              ${parseFloat(auction.nft.floorPriceUsd.toString()).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                            </span>
-                          </span>
-                        ) : auction.nft.floorPrice ? (
-                          <span className="flex flex-col items-center">
-                            <span className="font-bold text-primary">
-                              ${formatPriceUSD(auction.nft.floorPrice)}
-                            </span>
-                          </span>
-                        )
-                        : "N/A"}
-                    </p>
-                  </div>
+
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Volume (24h)</p>
                     <p className="text-white font-medium">
