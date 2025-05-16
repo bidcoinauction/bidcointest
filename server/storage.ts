@@ -224,7 +224,7 @@ export class MemStorage implements IStorage {
     const nft2 = await this.createNFT({
       name: "Milady #7218",
       description: "Milady Maker is a collection of 10,000 randomly generated Milady NFTs on the Ethereum blockchain.",
-      imageUrl: "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
+      imageUrl: "https://bidcoinlanding.standard.us-east-1.oortstorages.com/milady.png",
       tokenId: "7218",
       contractAddress: "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
       blockchain: "ETH",
