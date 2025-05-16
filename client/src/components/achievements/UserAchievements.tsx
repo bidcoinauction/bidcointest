@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Star, Award, Lock } from "lucide-react";
+import { 
+  Trophy, Star, Award, Lock, Target, Zap, Diamond, 
+  Flame, Heart, Coins, Medal, Gift, Crown
+} from "lucide-react";
 import useWallet from "@/hooks/useWallet";
 import { getUserByWalletAddress } from "@/lib/api";
 
@@ -98,37 +101,55 @@ export default function UserAchievements() {
         return <Star className="h-6 w-6 text-blue-400" />;
       case "award":
         return <Award className="h-6 w-6 text-green-400" />;
+      case "target":
+        return <Target className="h-6 w-6 text-blue-500" />;
+      case "zap":
+        return <Zap className="h-6 w-6 text-green-500" />;
+      case "diamond":
+        return <Diamond className="h-6 w-6 text-teal-500" />;
+      case "flame": 
+        return <Flame className="h-6 w-6 text-orange-500" />;
+      case "heart":
+        return <Heart className="h-6 w-6 text-pink-500" />;
+      case "coins":
+        return <Coins className="h-6 w-6 text-amber-500" />;
+      case "medal":
+        return <Medal className="h-6 w-6 text-indigo-500" />;
+      case "gift":
+        return <Gift className="h-6 w-6 text-emerald-500" />;
+      case "crown":
+        return <Crown className="h-6 w-6 text-yellow-400" />;
       default:
         return <Trophy className="h-6 w-6 text-primary" />;
     }
   };
 
-  // Helper function to render tier badge
+  // Helper function to render tier badge with more modern styling
   const renderTierBadge = (tier: string) => {
     let colorClass = "";
     
     switch (tier.toLowerCase()) {
       case "bronze":
-        colorClass = "bg-amber-700 hover:bg-amber-800";
+        colorClass = "text-amber-700 border-amber-800/50 bg-amber-950/30";
         break;
       case "silver":
-        colorClass = "bg-gray-400 hover:bg-gray-500";
+        colorClass = "text-gray-400 border-gray-500/50 bg-gray-950/30";
         break;
       case "gold":
-        colorClass = "bg-yellow-500 hover:bg-yellow-600";
+        colorClass = "text-yellow-500 border-yellow-600/50 bg-yellow-950/30";
         break;
       case "platinum":
-        colorClass = "bg-blue-400 hover:bg-blue-500";
+        colorClass = "text-blue-400 border-blue-500/50 bg-blue-950/30";
         break;
       case "diamond":
-        colorClass = "bg-purple-500 hover:bg-purple-600";
+        colorClass = "text-purple-400 border-purple-500/50 bg-purple-950/30";
         break;
       default:
-        colorClass = "bg-primary hover:bg-primary-dark";
+        colorClass = "text-primary border-primary/50 bg-primary-dark/10";
     }
     
     return (
-      <Badge className={colorClass}>
+      <Badge variant="outline" className={`${colorClass} text-xs font-medium`}>
         {tier}
       </Badge>
     );
