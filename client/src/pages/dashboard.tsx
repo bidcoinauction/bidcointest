@@ -13,7 +13,8 @@ import {
   Clock, 
   PlusCircle,
   Coins,
-  LucidePieChart
+  LucidePieChart,
+  Trophy
 } from "lucide-react";
 import BidTracking from "@/components/bidding/BidTracking";
 import BuyBids from "@/components/bidding/BuyBids";
@@ -266,6 +267,13 @@ export default function DashboardPage() {
                 >
                   <Tag className="h-4 w-4 mr-2" />
                   Buy Bids
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="achievements" 
+                  className="data-[state=active]:bg-[#1f2937] data-[state=active]:text-white py-2"
+                >
+                  <Trophy className="h-4 w-4 mr-2" />
+                  Achievements
                 </TabsTrigger>
               </TabsList>
             </div>
