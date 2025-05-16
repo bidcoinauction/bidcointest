@@ -105,18 +105,18 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
     }
   };
   
-  // Function to test fetching the Degen Toonz NFT #4269
-  const testFetchDegenToonz = async () => {
+  // Function to test fetching the CryptoPunk #7804
+  const testFetchCryptoPunk = async () => {
     setIsFetchingNFT(true);
     setNftResult(null);
     
     try {
-      // Degen Toonz contract address and token ID
-      const contractAddress = '0xbba9187d5108e395d0681462523c4404de06a497';
-      const tokenId = '4269';
+      // CryptoPunk contract address and token ID
+      const contractAddress = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB';
+      const tokenId = '7804';
       const blockchain = 'ethereum';
       
-      console.log('Testing Degen Toonz NFT fetch:', {
+      console.log('Testing CryptoPunk NFT fetch:', {
         contractAddress,
         tokenId,
         blockchain
@@ -125,15 +125,15 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
       const metadata = await getNFTDetailedMetadata(contractAddress, tokenId, blockchain);
       
       if (metadata) {
-        console.log('Successfully retrieved Degen Toonz NFT:', metadata);
+        console.log('Successfully retrieved CryptoPunk NFT:', metadata);
         setNftResult(metadata);
         
         toast({
           title: "NFT Retrieved Successfully",
-          description: `Got Degen Toonz #4269 with ${metadata.traits?.length || 0} traits`,
+          description: `Got CryptoPunk #7804 with ${metadata.traits?.length || 0} traits`,
         });
       } else {
-        console.error('Failed to retrieve Degen Toonz NFT - no data returned');
+        console.error('Failed to retrieve CryptoPunk NFT - no data returned');
         
         toast({
           title: "NFT Fetch Failed",
@@ -143,7 +143,7 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('Error fetching Degen Toonz NFT:', errorMessage);
+      console.error('Error fetching CryptoPunk NFT:', errorMessage);
       
       toast({
         title: "NFT Fetch Failed",
@@ -189,11 +189,11 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={testFetchDegenToonz} 
+                  onClick={testFetchCryptoPunk} 
                   disabled={isFetchingNFT}
                   className="w-full text-xs bg-blue-900/30 border-blue-800/50 text-blue-400 hover:bg-blue-800/20"
                 >
-                  {isFetchingNFT ? 'Fetching Degen Toonz...' : 'Test with Degen Toonz #4269'}
+                  {isFetchingNFT ? 'Fetching CryptoPunk...' : 'Test with CryptoPunk #7804'}
                 </Button>
               </div>
             </div>
@@ -223,7 +223,7 @@ export function ApiKeyModal({ isOpen, onClose, onSuccess }: ApiKeyModalProps) {
             
             {nftResult && (
               <div className="p-3 mb-4 rounded text-sm bg-blue-900/20 border border-blue-800/50 text-blue-300">
-                <h3 className="font-medium mb-2 text-white">Degen Toonz #4269 Properties:</h3>
+                <h3 className="font-medium mb-2 text-white">CryptoPunk #7804 Properties:</h3>
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {nftResult.traits?.map((trait: any, i: number) => (
                     <div key={i} className="flex justify-between">

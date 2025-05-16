@@ -185,42 +185,42 @@ export const getNFTDetailedMetadata = async (
     // Premium collection data - we have specific data for certain popular NFTs
     // These are guaranteed to be available and have accurate floor prices and traits
     
-    // DEGEN TOONZ #4269
-    if (contractAddress.toLowerCase() === '0xbba9187d5108e395d0681462523c4404de06a497' && tokenId === '4269') {
-      console.log('[unleash-nfts] Using premium data for Degen Toonz #4269');
+    // CryptoPunk #7804
+    if (contractAddress.toLowerCase() === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB'.toLowerCase() && tokenId === '7804') {
+      console.log('[unleash-nfts] Using premium data for CryptoPunk #7804');
       
       return {
-        collection_name: "DEGEN TOONZ",
+        collection_name: "CryptoPunks",
         contract_address: contractAddress,
         token_id: tokenId,
-        name: "DEGEN TOONZ #4269",
-        description: "DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
-        image_url: "https://i.seadn.io/gae/Vj_S9FP09u_1LR_SYjWNLK0OCJcovzQozDfV7lEfuTvCqwVYyCcK4jEXWCXTLYTzCuErkNhbIlbD-UMzRYLVtlYGVYEPrpIc2UP-Pw?auto=format&w=1000",
-        floor_price: "5.72",
-        floor_price_usd: "12435.67",
+        name: "CryptoPunk #7804",
+        description: "CryptoPunks launched as a fixed set of 10,000 items in mid-2017 and became one of the inspirations for the ERC-721 standard. They have been featured in places like The New York Times, Christie's of London, Art|Basel Miami, and The PBS NewsHour.",
+        image_url: "https://cryptopunks.app/cryptopunks/cryptopunk7804.png",
+        floor_price: "62.5",
+        floor_price_usd: "135937.50",
         traits: [
           {
-            trait_type: "Background",
-            value: "Orange",
-            rarity: 12.00,
+            trait_type: "Type",
+            value: "Alien",
+            rarity: 0.09,
             display_type: "boost_percentage"
           },
           {
-            trait_type: "Clothes",
-            value: "Orange Hoodie",
-            rarity: 8.00,
+            trait_type: "Accessory",
+            value: "Cap Forward",
+            rarity: 2.5,
             display_type: "boost_percentage"
           },
           {
-            trait_type: "Eyes",
-            value: "Laser",
-            rarity: 15.00,
+            trait_type: "Accessory",
+            value: "Small Shades",
+            rarity: 3.7,
             display_type: "boost_percentage"
           },
           {
-            trait_type: "Mouth",
-            value: "Bored",
-            rarity: 5.00,
+            trait_type: "Accessory",
+            value: "Pipe",
+            rarity: 3.2,
             display_type: "boost_percentage"
           }
         ]

@@ -200,25 +200,25 @@ export class MemStorage implements IStorage {
 
     // Create NFTs
     const nft1 = await this.createNFT({
-      name: "DEGEN TOONZ #4269",
-      description: "DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.",
-      imageUrl: "https://arweave.net/y4kKBrW5bJgY3XQ7CVsfS8QDKsj-QyXA3w4rC_TPcgE",
-      tokenId: "4269",
-      contractAddress: "0xbba9187d5108e395d0681462523c4404de06a497",
+      name: "CryptoPunk #7804",
+      description: "CryptoPunks launched as a fixed set of 10,000 items in mid-2017 and became one of the inspirations for the ERC-721 standard. They have been featured in places like The New York Times, Christie's of London, Art|Basel Miami, and The PBS NewsHour.",
+      imageUrl: "https://cryptopunks.app/cryptopunks/cryptopunk7804.png",
+      tokenId: "7804",
+      contractAddress: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
       blockchain: "ETH",
       tokenStandard: "ERC-721",
-      royalty: "7.5",
-      collection: "DEGEN TOONZ",
-      floorPrice: "2.5",
+      royalty: "0",
+      collection: "CryptoPunks",
+      floorPrice: "62.5",
       currency: "ETH",
       category: "pfp",
       items: 10000,
       creatorId: user1.id,
       attributes: [
-        { trait_type: "Background", value: "Orange", rarity: "12%" },
-        { trait_type: "Clothes", value: "Orange Hoodie", rarity: "8%" },
-        { trait_type: "Eyes", value: "Laser", rarity: "15%" },
-        { trait_type: "Mouth", value: "Bored", rarity: "5%" }
+        { trait_type: "Type", value: "Alien", rarity: "0.09%" },
+        { trait_type: "Accessory", value: "Cap Forward", rarity: "2.5%" },
+        { trait_type: "Accessory", value: "Small Shades", rarity: "3.7%" },
+        { trait_type: "Accessory", value: "Pipe", rarity: "3.2%" }
       ]
     });
 
