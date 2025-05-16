@@ -862,7 +862,6 @@ export default function AuctionDetailsPage() {
               </div>
               <div className="p-4">
                 <h3 className="text-white font-medium mb-1 truncate">Collection #{1000 + i}</h3>
-                <p className="text-gray-400 text-sm mb-2">Floor: $0.32</p>
                 <Button 
                   variant="outline" 
                   className="w-full text-primary border-primary hover:bg-primary/10"
