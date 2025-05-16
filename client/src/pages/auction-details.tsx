@@ -39,7 +39,7 @@ export default function AuctionDetailsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { address } = useWallet();
-  const { subscribe } = useWebSocket();
+  const { isConnected, subscribe, subscribeToAuction, requestAuctionStats } = useWebSocket();
   
   const { data: auction, isLoading, error } = useQuery({
     queryKey: [`/api/auctions/${auctionId}`],
@@ -231,14 +231,31 @@ export default function AuctionDetailsPage() {
   
   // Subscribe to WebSocket events for real-time updates
   useEffect(() => {
-    // Subscribe to bid updates
+    if (!isConnected) return;
+    
+    // Subscribe to specific auction updates
+    subscribeToAuction(auctionId);
+    
+    // Request latest auction stats immediately
+    requestAuctionStats(auctionId);
+    
+    // Schedule periodic stat requests for this auction
+    const statsInterval = setInterval(() => {
+      requestAuctionStats(auctionId);
+    }, 15000); // Every 15 seconds
+    
+    // Subscribe to different types of auction events
     const unsubscribeBids = subscribe("new-bid", (data) => {
       if (data.auction && data.auction.id === auctionId) {
+        // Log the real-time update
+        console.log(`[websocket] Received bid update for auction ${auctionId}:`, data);
+        
+        // Refresh the auction data using React Query
         queryClient.invalidateQueries({ queryKey: [`/api/auctions/${auctionId}`] });
         
         // Update local state with new bid information from the auction object
-        setLocalBidCount(data.auction.bidCount);
-        setLocalCurrentBid(Number(data.auction.currentBid));
+        setLocalBidCount(data.auction.bidCount || 0);
+        setLocalCurrentBid(Number(data.auction.currentBid || 0));
         
         // Set leader from bid data if available
         if (data.bid && data.bid.bidderAddress) {
@@ -249,13 +266,35 @@ export default function AuctionDetailsPage() {
         const resetTime = new Date();
         resetTime.setSeconds(resetTime.getSeconds() + 60);
         setLocalEndTime(resetTime);
+        
+        // Optional: Play a sound effect for new bids
+        // const bidSound = new Audio('/bid-sound.mp3');
+        // bidSound.play();
+      }
+    });
+    
+    // Subscribe to auction stats updates
+    const unsubscribeStats = subscribe("auction-stats-update", (data) => {
+      if (data.auctionId === auctionId) {
+        console.log(`[websocket] Received stats update for auction ${auctionId}:`, data);
+        
+        // Update local state with new stats if needed
+        if (data.bidCount !== undefined) {
+          setLocalBidCount(data.bidCount);
+        }
+        
+        if (data.currentBid !== undefined) {
+          setLocalCurrentBid(Number(data.currentBid));
+        }
       }
     });
     
     return () => {
       unsubscribeBids();
+      unsubscribeStats();
+      clearInterval(statsInterval);
     };
-  }, [auctionId, queryClient, subscribe]);
+  }, [auctionId, isConnected, queryClient, subscribe, subscribeToAuction, requestAuctionStats]);
   
   // Use local countdown instead of server time
   const { formattedTime, isComplete } = useCountdown({

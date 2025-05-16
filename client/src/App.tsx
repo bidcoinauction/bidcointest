@@ -8,7 +8,7 @@ import AboutPage from "@/pages/about";
 import DashboardPage from "@/pages/dashboard";
 import NFTCollectionsPage from "@/pages/nft-collections";
 import NotFound from "@/pages/not-found";
-import useWebSocket from "@/hooks/useWebSocket";
+import { useWebSocket } from "@/hooks/useWebSocket";
 import { queryClient } from "@/lib/queryClient";
 import Header from "@/components/layout/Header";
 import Navigation from "@/components/layout/Navigation";

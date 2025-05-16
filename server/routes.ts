@@ -39,14 +39,32 @@ function normalizeTraitRarity(traits: Array<{
   }));
 }
 
-// Broadcast updates to all connected WebSocket clients
+// Broadcast updates to all connected WebSocket clients with enhanced metadata
 function broadcastUpdate(type: string, data: any) {
-  const message = JSON.stringify({ type, data });
+  // Add timestamp to every message for client-side processing
+  const enhancedData = {
+    ...data,
+    timestamp: new Date().toISOString(),
+    messageId: `${type}-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+  };
+  
+  const message = JSON.stringify({ 
+    type, 
+    data: enhancedData 
+  });
+  
+  // Log broadcast for debugging
+  console.log(`[websocket] Broadcasting ${type} event to ${wsClients.length} clients`);
+  
+  let deliveredCount = 0;
   wsClients.forEach(client => {
     if (client.readyState === WebSocket.OPEN) {
       client.send(message);
+      deliveredCount++;
     }
   });
+  
+  console.log(`[websocket] Successfully delivered to ${deliveredCount}/${wsClients.length} clients`);
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -55,33 +73,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup WebSocket server for real-time updates
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
   
-  wss.on('connection', (ws) => {
-    // Add client to our list
+  // WebSocket connection event
+  wss.on('connection', (ws, req) => {
+    console.log(`[websocket] New client connected from ${req.socket.remoteAddress}`);
+    
+    // Add client to our list with a unique ID
+    const clientId = `client-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    ws.clientId = clientId;
     wsClients.push(ws);
     
+    // Handle incoming messages
     ws.on('message', (message) => {
-      // You can handle incoming messages here if needed
       try {
         const data = JSON.parse(message.toString());
+        console.log(`[websocket] Received message from ${clientId}:`, data.type);
+        
         // Process message based on type
         if (data.type === 'ping') {
-          ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+          // Respond to ping with pong + timestamp
+          ws.send(JSON.stringify({ 
+            type: 'pong', 
+            data: {
+              timestamp: new Date().toISOString(),
+              clientId
+            }
+          }));
+        } else if (data.type === 'subscribe') {
+          // Handle client subscription to specific auctions
+          const auctionId = data.auctionId;
+          if (auctionId) {
+            ws.subscribedAuctions = ws.subscribedAuctions || [];
+            if (!ws.subscribedAuctions.includes(auctionId)) {
+              ws.subscribedAuctions.push(auctionId);
+              ws.send(JSON.stringify({
+                type: 'subscription-confirmed',
+                data: {
+                  auctionId,
+                  message: `Subscribed to auction ${auctionId} updates`,
+                  timestamp: new Date().toISOString()
+                }
+              }));
+            }
+          }
+        } else if (data.type === 'auction-stats') {
+          // Handle request for auction stats
+          const auctionId = data.auctionId;
+          if (auctionId) {
+            // Get latest auction data from storage
+            storage.getAuction(auctionId).then(auction => {
+              if (auction) {
+                // Get recent bids for this auction
+                storage.getBidsForAuction(auctionId).then(bids => {
+                  // Calculate bid rate (bids per minute)
+                  const now = new Date();
+                  const oneMinuteAgo = new Date(now.getTime() - 60000);
+                  const recentBids = bids.filter(b => 
+                    b.timestamp && new Date(b.timestamp) >= oneMinuteAgo
+                  );
+                  
+                  ws.send(JSON.stringify({
+                    type: 'auction-stats-update',
+                    data: {
+                      auctionId,
+                      bidCount: auction.bidCount,
+                      currentBid: auction.currentBid,
+                      lastBidTime: bids[0]?.timestamp || null,
+                      bidRate: recentBids.length,
+                      uniqueBidders: [...new Set(bids.map(b => b.bidderId))].length,
+                      timestamp: new Date().toISOString()
+                    }
+                  }));
+                });
+              }
+            });
+          }
         }
       } catch (error) {
-        // Silent error handling
+        console.error(`[websocket] Error processing message:`, error);
       }
     });
     
+    // Handle client disconnect
     ws.on('close', () => {
-      // Remove client from our list when they disconnect
+      console.log(`[websocket] Client ${clientId} disconnected`);
+      // Remove client from our list
       wsClients = wsClients.filter(client => client !== ws);
     });
     
-    // Send initial connection confirmation
+    // Handle connection errors
+    ws.on('error', (error) => {
+      console.error(`[websocket] Error with client ${clientId}:`, error);
+    });
+    
+    // Send initial connection confirmation with server stats
     ws.send(JSON.stringify({ 
       type: 'connected', 
-      message: 'Connected to Bidcoin auction server',
-      timestamp: new Date().toISOString()
+      data: {
+        message: 'Connected to Bidcoin auction server',
+        clientId,
+        clientCount: wsClients.length,
+        timestamp: new Date().toISOString(),
+        serverVersion: '1.2.0'
+      }
     }));
   });
   
