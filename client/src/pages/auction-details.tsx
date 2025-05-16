@@ -1,6 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { getAuction } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useCountdown from "@/hooks/useCountdown";
@@ -11,7 +10,8 @@ import {
   getRarityColor, 
   getRarityLabel, 
   formatRarity,
-  getBlockchainExplorerUrl
+  getBlockchainExplorerUrl,
+  formatPriceNative
 } from "@/lib/utils";
 import { useState, useEffect, useCallback } from "react";
 import BidModal from "@/components/modals/BidModal";
@@ -21,8 +21,8 @@ import { Heart, Share2, ExternalLink, Trophy, TrendingUp, Award } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { getNFTDetailedMetadata } from "@/lib/unleashApi";
-import { alchemyApi } from "@/lib/alchemyApi";
+import { fetchFromAPI } from "@/lib/api";
+import { nftApi } from "@/lib/apiService";
 
 export default function AuctionDetailsPage() {
   const [, params] = useRoute("/auctions/:id");
@@ -43,7 +43,7 @@ export default function AuctionDetailsPage() {
   
   const { data: auction, isLoading, error } = useQuery({
     queryKey: [`/api/auctions/${auctionId}`],
-    queryFn: () => getAuction(auctionId),
+    queryFn: () => fetch(`/api/auctions/${auctionId}`).then(res => res.json()),
   });
   
   // Initialize local state from auction data when it loads
@@ -105,10 +105,10 @@ export default function AuctionDetailsPage() {
         });
         
         try {
-          const metadata = await getNFTDetailedMetadata(
+          const metadata = await nftApi.getDetailedMetadata(
             contractAddress, 
             tokenId, 
-            blockchain || 'ethereum'
+            typeof blockchain === 'number' ? blockchain : 1 // Default to Ethereum chain ID
           );
           
           if (metadata) {

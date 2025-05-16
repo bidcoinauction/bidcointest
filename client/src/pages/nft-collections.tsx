@@ -1,15 +1,5 @@
 import { useState, useEffect } from 'react';
-import { 
-  NFTCollection, 
-  getCollectionsByChain,
-  getCollectionsByBlockchain,
-  getCollectionMetrics,
-  getCollectionNFTs,
-  getNFTValuation,
-  getNFTDetailedMetadata,
-  testApiConnection,
-  getApiStatus
-} from '@/lib/unleashApi';
+import { nftApi } from '@/lib/apiService';
 import { useCurrencyPreference } from '@/contexts/CurrencyContext';
 import { ApiKeyModal } from '@/components/modals/ApiKeyModal';
 import { useQuery } from '@tanstack/react-query';

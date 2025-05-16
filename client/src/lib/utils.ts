@@ -18,605 +18,304 @@ export function formatCurrency(amount: number | string | null, currency: string 
   const safeCurrency = currency ?? 'ETH';
   
   // Format for crypto - make values smaller to match penny auction style
-  if (typeof safeAmount === 'number') {
-    // For penny auctions, we want to display smaller values (like 0.1221 ETH)
-    const displayAmount = safeAmount * 0.15;
-    return `${displayAmount.toFixed(4)} ${safeCurrency}`;
+  if (safeCurrency !== 'USD') {
+    const numAmount = typeof safeAmount === 'string' ? parseFloat(safeAmount) : safeAmount;
+    return `${numAmount.toFixed(4)} ${safeCurrency}`;
   }
   
-  // For string inputs, parse and adjust similarly
-  if (typeof safeAmount === 'string') {
-    const numAmount = parseFloat(safeAmount);
-    if (!isNaN(numAmount)) {
-      const displayAmount = numAmount * 0.15;
-      return `${displayAmount.toFixed(4)} ${safeCurrency}`;
-    }
-  }
-  
-  return `${safeAmount} ${safeCurrency}`;
+  // Format for USD
+  const numAmount = typeof safeAmount === 'string' ? parseFloat(safeAmount) : safeAmount;
+  return `$${numAmount.toFixed(2)}`;
 }
 
-// Format date to relative time (e.g., "2 mins ago")
-export function formatRelativeTime(date: Date | string | number | null): string {
-  if (date === null) {
-    return "recently";
-  }
-  
+/**
+ * Format a price in USD
+ * @param price The price to format
+ * @returns Formatted price string with $ symbol
+ */
+export function formatPriceUSD(price: string | number | undefined): string {
+  if (price === undefined) return '$0.00';
+  const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+  return `$${priceNum.toFixed(2)}`;
+}
+
+/**
+ * Format a price in native blockchain currency
+ * @param price The price to format
+ * @param symbol The currency symbol (ETH, MATIC, etc.)
+ * @returns Formatted price with currency symbol
+ */
+export function formatPriceNative(price: string | number | undefined, symbol = "ETH"): string {
+  if (price === undefined) return '0.00 ETH';
+  const priceNum = typeof price === 'string' ? parseFloat(price) : price;
+  return `${priceNum.toFixed(4)} ${symbol}`;
+}
+
+/**
+ * Format a timestamp to a relative time string (e.g. "2h 30m")
+ * @param date Date or date string
+ * @returns Formatted relative time string
+ */
+export function formatRelativeTime(date: Date | string): string {
+  const targetDate = typeof date === "string" ? new Date(date) : date;
   const now = new Date();
-  const then = new Date(date);
-  const seconds = Math.floor((now.getTime() - then.getTime()) / 1000);
+  const diffMs = targetDate.getTime() - now.getTime();
   
-  if (seconds < 60) {
-    return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+  if (diffMs < 0) {
+    return "Ended";
   }
   
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) {
-    return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  
+  if (diffDays > 0) {
+    return `${diffDays}d ${diffHours % 24}h`;
   }
-  
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+  if (diffHours > 0) {
+    return `${diffHours}h ${diffMins % 60}m`;
   }
-  
-  const days = Math.floor(hours / 24);
-  if (days < 30) {
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
+  if (diffMins > 0) {
+    return `${diffMins}m ${diffSecs % 60}s`;
   }
-  
-  const months = Math.floor(days / 30);
-  if (months < 12) {
-    return `${months} month${months !== 1 ? 's' : ''} ago`;
-  }
-  
-  const years = Math.floor(months / 12);
-  return `${years} year${years !== 1 ? 's' : ''} ago`;
-}
-
-// Format countdown time (e.g., "01:23:45")
-export function formatCountdown(totalSeconds: number): string {
-  if (totalSeconds <= 0) return "00:00:00";
-  
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  
-  return [hours, minutes, seconds]
-    .map(val => val.toString().padStart(2, "0"))
-    .join(":");
-}
-
-// Calculate time remaining in seconds
-export function getTimeRemaining(endTime: Date | string | number | null): number {
-  if (endTime === null) {
-    return 0;
-  }
-  
-  try {
-    const now = new Date().getTime();
-    const end = new Date(endTime).getTime();
-    const diff = end - now;
-    
-    return diff > 0 ? Math.floor(diff / 1000) : 0;
-  } catch (error) {
-    console.error("Error calculating time remaining:", error);
-    return 0;
-  }
-}
-
-// Get appropriate chain currency symbol
-export function getCurrencySymbol(chainId: number | null): string {
-  if (!chainId) return "ETH";
-  
-  // Common chain IDs
-  switch (chainId) {
-    case 1: // Ethereum Mainnet
-      return "ETH";
-    case 56: // Binance Smart Chain
-      return "BNB";
-    case 137: // Polygon
-      return "MATIC";
-    case 43114: // Avalanche
-      return "AVAX";
-    case 42161: // Arbitrum
-      return "ETH";
-    case 10: // Optimism
-      return "ETH";
-    default:
-      return "ETH";
-  }
-}
-
-// Format price to USD for penny auctions - accepts any type safely
-export function formatPriceUSD(price: unknown): string {
-  // Handle different input types safely
-  let numPrice = 0;
-  
-  try {
-    if (price === null || price === undefined) {
-      numPrice = 0;
-    } else if (typeof price === "number") {
-      numPrice = isNaN(price) ? 0 : price; 
-    } else if (typeof price === "string") {
-      numPrice = parseFloat(price) || 0;
-    } else if (typeof price === "object") {
-      // In case it's a wrapped number object
-      numPrice = Number(price) || 0;
-    } else {
-      numPrice = 0;
-    }
-    
-    // Format as a proper USD value with 2 decimal places
-    return numPrice.toFixed(2);
-  } catch (e) {
-    console.error("Error formatting price:", e);
-    return "0.00";
-  }
-}
-
-// Format number with appropriate suffixes for readability
-export function formatNumber(num: number | null | undefined, digits = 1): string {
-  if (num === null || num === undefined) return '0';
-  
-  const lookup = [
-    { value: 1, symbol: "" },
-    { value: 1e3, symbol: "K" },
-    { value: 1e6, symbol: "M" },
-    { value: 1e9, symbol: "B" },
-    { value: 1e12, symbol: "T" }
-  ];
-  
-  const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  const item = lookup
-    .slice()
-    .reverse()
-    .find(function(item) {
-      return num >= item.value;
-    });
-    
-  return item
-    ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol
-    : "0";
+  return `${diffSecs}s`;
 }
 
 /**
- * Get a color for rarity based on percentage
- * @param rarity Rarity percentage (0-100)
- * @returns CSS color value
+ * Calculate bid increment amount based on current bid
+ * @param currentBid Current bid amount
+ * @returns Increment amount (0.03 USD worth)
  */
-export function getRarityColor(rarity: number | null | undefined): string {
-  if (rarity === null || rarity === undefined) return 'bg-gray-500';
-  
-  // Ensure the rarity is a number
-  const rarityNum = typeof rarity === 'string' ? parseFloat(rarity) : rarity;
-  
-  // Handle NaN
-  if (isNaN(rarityNum)) return 'bg-gray-500';
-  
-  // Convert percentage to a 0-100 scale if it's provided as decimal
-  const percentage = rarityNum <= 1 ? rarityNum * 100 : rarityNum;
-  
-  if (percentage <= 1) return 'bg-red-600'; // Legendary: <1%
-  if (percentage <= 5) return 'bg-orange-500'; // Epic: 1-5%
-  if (percentage <= 15) return 'bg-purple-500'; // Rare: 5-15%
-  if (percentage <= 35) return 'bg-blue-500'; // Uncommon: 15-35%
-  return 'bg-green-500'; // Common: >35%
+export function calculateBidIncrement(currentBid: string | number): string {
+  return "0.03"; // Fixed bid increment for penny auction style
 }
 
 /**
- * Get a label for rarity based on percentage
- * @param rarity Rarity percentage (0-100)
- * @returns Rarity label
+ * Calculate bid fee based on our platform rules
+ * @returns Standard bid fee ($0.24)
  */
-export function getRarityLabel(rarity: number | null | undefined): string {
-  if (rarity === null || rarity === undefined) return 'Unknown';
-  
-  // Ensure the rarity is a number
-  const rarityNum = typeof rarity === 'string' ? parseFloat(rarity) : rarity;
-  
-  // Handle NaN
-  if (isNaN(rarityNum)) return 'Unknown';
-  
-  // Convert percentage to a 0-100 scale if it's provided as decimal
-  const percentage = rarityNum <= 1 ? rarityNum * 100 : rarityNum;
-  
-  if (percentage <= 1) return 'Legendary';
-  if (percentage <= 5) return 'Epic';
-  if (percentage <= 15) return 'Rare';
-  if (percentage <= 35) return 'Uncommon';
-  return 'Common';
+export function calculateBidFee(): string {
+  return "0.24"; // Fixed bid fee
 }
 
 /**
- * Format rarity as a percentage string
- * @param rarity Rarity as number
- * @returns Formatted percentage string
+ * Parse a query string parameter
+ * @param value Query parameter value
+ * @returns Parsed value (number or original value)
  */
-export function formatRarity(rarity: number | null | undefined): string {
-  if (rarity === null || rarity === undefined) return 'Unknown';
+export function parseQueryParam(value: string | null): number | string | null {
+  if (value === null) return null;
   
-  // Ensure the rarity is a number
-  const rarityNum = typeof rarity === 'string' ? parseFloat(rarity) : rarity;
+  // Try to parse as number
+  const num = Number(value);
+  if (!isNaN(num)) return num;
   
-  // Handle NaN
-  if (isNaN(rarityNum)) return 'Unknown';
-  
-  // Convert percentage to a 0-100 scale if it's provided as decimal
-  const percentage = rarityNum <= 1 ? rarityNum * 100 : rarityNum;
-  
-  return `${percentage.toFixed(2)}%`;
+  return value;
 }
 
 /**
- * Get a blockchain explorer URL for an NFT
- * @param contractAddress NFT contract address
- * @param tokenId NFT token ID
- * @param blockchain Blockchain name (ethereum, polygon, etc.)
- * @returns Explorer URL
+ * Format a date to a readable string
+ * @param date Date or date string
+ * @returns Formatted date string
  */
-export function getBlockchainExplorerUrl(
-  contractAddress: string, 
-  tokenId: string, 
-  blockchain: string = 'ethereum'
-): string {
-  switch (blockchain.toLowerCase()) {
-    case 'ethereum':
-      return `https://etherscan.io/token/${contractAddress}?a=${tokenId}`;
-    case 'polygon':
-      return `https://polygonscan.com/token/${contractAddress}?a=${tokenId}`;
-    case 'binance':
-    case 'bsc':
-      return `https://bscscan.com/token/${contractAddress}?a=${tokenId}`;
-    case 'avalanche':
-      return `https://snowtrace.io/token/${contractAddress}?a=${tokenId}`;
-    case 'arbitrum':
-      return `https://arbiscan.io/token/${contractAddress}?a=${tokenId}`;
-    case 'optimism':
-      return `https://optimistic.etherscan.io/token/${contractAddress}?a=${tokenId}`;
-    case 'fantom':
-      return `https://ftmscan.com/token/${contractAddress}?a=${tokenId}`;
-    default:
-      return `https://etherscan.io/token/${contractAddress}?a=${tokenId}`;
+export function formatDate(date: Date | string | null): string {
+  if (!date) return 'N/A';
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+/**
+ * Calculate savings percentage based on retail price and current bid
+ * For penny auctions, this is typically a high percentage (70-90%)
+ * @param currentBid Current bid amount
+ * @param retailPrice Full retail price 
+ * @returns Percentage saved as a string
+ */
+export function calculateSavings(currentBid: string | number, retailPrice: string | number): string {
+  const bid = typeof currentBid === 'string' ? parseFloat(currentBid) : currentBid;
+  const retail = typeof retailPrice === 'string' ? parseFloat(retailPrice) : retailPrice;
+  
+  if (!retail || retail <= 0) return '0%';
+  
+  const savings = ((retail - bid) / retail) * 100;
+  return `${Math.round(savings)}%`;
+}
+
+/**
+ * Generate a random color for UI elements based on a string input
+ * @param input String to generate color from
+ * @returns Hexadecimal color string
+ */
+export function stringToColor(input: string): string {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    hash = input.charCodeAt(i) + ((hash << 5) - hash);
   }
+  
+  let color = '#';
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xFF;
+    color += ('00' + value.toString(16)).slice(-2);
+  }
+  
+  return color;
 }
 
 /**
- * Get the optimal image source for an NFT with blockchain integration
- * Uses a multi-tiered approach: 
- * 1. Try to get tokenURI from blockchain data
- * 2. Try collection-specific premium URLs
- * 3. Try attached assets
- * 4. Fall back to placeholder
- * 
- * @param nft The NFT object
- * @returns The optimal image URL
+ * Truncate text with ellipsis
+ * @param text Text to truncate
+ * @param length Maximum length before truncation
+ * @returns Truncated text
+ */
+export function truncateText(text: string, length: number = 100): string {
+  if (!text) return '';
+  if (text.length <= length) return text;
+  return text.slice(0, length) + '...';
+}
+
+/**
+ * Sanitize NFT image URL to ensure it's valid and accessible
+ * @param url Original URL from API
+ * @returns Sanitized URL
+ */
+export function sanitizeNFTImageUrl(url: string | null | undefined): string {
+  if (!url) return '/placeholders/nft-placeholder.png';
+  
+  // Handle IPFS URLs
+  if (url.startsWith('ipfs://')) {
+    return url.replace('ipfs://', 'https://ipfs.io/ipfs/');
+  }
+  
+  // Handle relative URLs
+  if (url.startsWith('/')) {
+    // This is a relative URL, likely from our own API
+    return url;
+  }
+  
+  // Return direct URLs as-is if they're valid
+  return url;
+}
+
+/**
+ * Get the optimal NFT image source based on available options
+ * @param nft NFT object with possible image sources
+ * @returns Best available image URL
  */
 export function getOptimalNFTImageSource(nft: any): string {
-  if (!nft) return '/placeholder-nft.png';
+  // First try direct URL from NFT object
+  if (nft.imageUrl) return sanitizeNFTImageUrl(nft.imageUrl);
   
-  // Detect OortStorages URLs and prioritize these hosted URLs
-  if (nft.imageUrl && nft.imageUrl.includes('oortstorages.com')) {
-    return nft.imageUrl;
+  // Try metadata image if available
+  if (nft.metadata && nft.metadata.image) {
+    return sanitizeNFTImageUrl(nft.metadata.image);
   }
   
-  // First priority: Use tokenURI data if we have contractAddress and tokenId
-  if (nft.contractAddress && nft.tokenId) {
-    // If we have the token_uri with image data already, use it directly
-    if (nft.token_uri?.image) {
-      return sanitizeNFTImageUrl(nft.token_uri.image);
-    }
-    
-    // If we have token_image_url, use it (from UnleashNFTs API)
-    if (nft.token_image_url && nft.token_image_url !== 'NA') {
-      return sanitizeNFTImageUrl(nft.token_image_url);
-    }
+  // Try media.gateway if available (Alchemy format)
+  if (nft.media && nft.media[0] && nft.media[0].gateway) {
+    return sanitizeNFTImageUrl(nft.media[0].gateway);
   }
   
-  // Direct mappings for hosted NFT images (added for reliability)
-  const hostedImageMappings: Record<string, string> = {
-    "Doodles #1234": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
-    "Mutant Ape Yacht Club #3652": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/ebebf8da2543032f469b1a436d848822.png",
-    "CryptoPunk #7804": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png",
-    "BAYC #4269": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/4269.jpg",
-    "Milady #7218": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7218.avif",
-    "DeGods #8747": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png",
-    "Mad Lads #8993": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif"
-  };
-  
-  // Check for name matches in our hosted collection
-  if (nft.name && hostedImageMappings[nft.name]) {
-    return hostedImageMappings[nft.name];
-  }
-  
-  // Second priority: Collection-specific premium URLs by NFT ID or collection
-  const nftId = nft.id;
-  
-  // Collection mappings by NFT ID
-  const collectionMapping: Record<number, {collection: string, id: string}> = {
-    1: {collection: 'azuki', id: '9605'},
-    2: {collection: 'degods', id: '8748'},
-    3: {collection: 'claynosaurz', id: '7221'},
-    4: {collection: 'milady', id: '8697'},
-    5: {collection: 'cryptopunks', id: '7804'},
-    6: {collection: 'doodles', id: '1234'},
-    7: {collection: 'mayc', id: '3652'}
-  };
-  
-  const mapping = collectionMapping[nftId];
-  
-  if (mapping) {
-    // Direct hosted URL mappings
-    const hostedCollectionMap: Record<string, string> = {
-      'doodles': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
-      'mayc': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/ebebf8da2543032f469b1a436d848822.png",
-      'cryptopunks': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png",
-      'degods': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png",
-      'milady': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7218.avif",
-      'madlads': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif"
+  // Try hosted image by name match
+  if (nft.name) {
+    const hostedImages: Record<string, string> = {
+      "Doodles #1234": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
+      "Mutant Ape Yacht Club #3652": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/ebebf8da2543032f469b1a436d848822.png",
+      "CryptoPunk #7804": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png",
+      "BAYC #4269": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/4269.jpg",
+      "Milady #7218": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7218.avif",
+      "DeGods #8747": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png",
+      "Mad Lads #8993": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif"
     };
     
-    if (hostedCollectionMap[mapping.collection]) {
-      return hostedCollectionMap[mapping.collection];
-    }
-    
-    // Legacy premium sources as fallback
-    if (mapping.collection === 'degentoonz') {
-      return `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
-    } else if (mapping.collection === 'madlads') {
-      return 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif';
-    } else if (mapping.collection === 'degods') {
-      return 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png';
+    if (hostedImages[nft.name]) {
+      return hostedImages[nft.name];
     }
   }
   
-  // Third priority: Known local assets for fallback
-  const knownLocalAssets: Record<number, string> = {
-    1: '8993.avif',
-    2: '8747-dead.png',
-    3: '7218.avif',
-    4: '4269.jpg',
-    5: '0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png',
-    6: '7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif',
-    7: 'ebebf8da2543032f469b1a436d848822.png'
-  };
-  
-  if (knownLocalAssets[nftId]) {
-    const assetPath = `/attached_assets/${knownLocalAssets[nftId]}`;
-    return assetPath;
-  }
-  
-  // Last resort: Use the API-provided URL with sanitization or placeholder
-  return nft.imageUrl ? sanitizeNFTImageUrl(nft.imageUrl) : '/placeholder-nft.png';
+  // Default fallback
+  return '/placeholders/nft-placeholder.png';
 }
 
 /**
- * Sanitize NFT image URLs to use direct IPFS gateways or authenticated sources instead of
- * third-party marketplaces which may block access
- * 
- * @param imageUrl Original image URL
- * @returns Sanitized image URL using direct sources
+ * Get blockchain explorer URL for a contract or token
+ * @param address Contract or wallet address
+ * @param chainId Blockchain ID (default: 1 for Ethereum)
+ * @param type Type of explorer page (address, token, tx)
+ * @returns Explorer URL
  */
-export function sanitizeNFTImageUrl(imageUrl: string | null | undefined): string {
-  if (!imageUrl) return '/placeholder-nft.png';
+export function getBlockchainExplorerUrl(address: string, chainId: number = 1, type: 'address' | 'token' | 'tx' = 'address'): string {
+  // Default to Ethereum
+  let baseUrl = 'https://etherscan.io';
   
-  try {
-    let url = imageUrl.trim();
-    
-    // Create a cache key based on URL for session storage
-    const cacheKey = `sanitize_${url.substring(0, 50)}`;
-    
-    // Check if we've processed this URL before
-    const cachedResult = sessionStorage.getItem(cacheKey);
-    if (cachedResult) {
-      return cachedResult;
-    }
-    
-    // Only log once per URL type to reduce console spam
-    const logKey = `sanitize_log_${url.substring(0, 20)}`;
-    if (!sessionStorage.getItem(logKey)) {
-      console.log(`Sanitizing NFT image URL: ${url}`);
-      sessionStorage.setItem(logKey, 'true');
-    }
-    
-    // Check and replace HTTP with HTTPS first for security
-    if (url.startsWith('http://')) {
-      url = url.replace('http://', 'https://');
-    }
-    
-    // Special case for data URLs - leave them as is
-    if (url.startsWith('data:image/')) {
-      sessionStorage.setItem(cacheKey, url);
-      return url;
-    }
-    
-    // Handle premium NFT collection URLs (direct from verified sources)
-    if (url.includes('degentoonz.io') || 
-        url.includes('animation-url.degods.com') ||
-        url.includes('seadn.io/polygon') ||
-        url.includes('cdn.degentoonz.io')) {
-      sessionStorage.setItem(cacheKey, url);
-      return url; // These are already optimized and reliable
-    }
-    
-    // Handle malformed URLs or relative paths
-    if (!url.includes('://') && !url.startsWith('data:')) {
-      if (url.startsWith('/')) {
-        sessionStorage.setItem(cacheKey, url);
-        return url; // Leave server relative paths as is
-      } else if (url.startsWith('ipfs://')) {
-        // Continue processing with IPFS handler below
-      } else {
-        url = 'https://' + url;
-      }
-    }
-    
-    // OpenSea URLs - Use IPFS gateway or direct URL
-    if (url.includes('opensea.io') || url.includes('openseauserdata.com')) {
-      const ipfsMatch = url.match(/ipfs\/([a-zA-Z0-9]+)/);
-      if (ipfsMatch && ipfsMatch[1]) {
-        const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
-        
-        // Only log once per session for OpenSea URL conversions
-        if (!sessionStorage.getItem('opensea_ipfs_log')) {
-          console.log(`Converted OpenSea URL to IPFS gateway`);
-          sessionStorage.setItem('opensea_ipfs_log', 'true');
-        }
-        
-        sessionStorage.setItem(cacheKey, newUrl);
-        return newUrl;
-      } else {
-        // Try to extract the direct image URL from OpenSea links
-        const directMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
-        if (directMatch) {
-          // Use a direct CDN URL if possible
-          const newUrl = `https://i.seadn.io/gae/${directMatch[1]}`;
-          
-          // Only log once per session for OpenSea direct extractions
-          if (!sessionStorage.getItem('opensea_direct_log')) {
-            console.log(`Extracted direct image from OpenSea URL`);
-            sessionStorage.setItem('opensea_direct_log', 'true');
-          }
-          
-          sessionStorage.setItem(cacheKey, newUrl);
-          return newUrl;
-        }
-      }
-    }
-    
-    // Magic Eden URLs - Convert to Arweave
-    if (url.includes('magiceden.io') || url.includes('magiceden.com')) {
-      const idMatch = url.match(/([a-zA-Z0-9_-]{43,})/);
-      if (idMatch && idMatch[1]) {
-        const newUrl = `https://arweave.net/${idMatch[1]}`;
-        
-        // Only log once per session for Magic Eden URL conversions
-        if (!sessionStorage.getItem('magiceden_arweave_log')) {
-          console.log(`Converted Magic Eden URL to Arweave`);
-          sessionStorage.setItem('magiceden_arweave_log', 'true');
-        }
-        
-        sessionStorage.setItem(cacheKey, newUrl);
-        return newUrl;
-      } else {
-        // Try to extract the filename and use a direct URL
-        const filenameMatch = url.match(/([^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
-        if (filenameMatch) {
-          // Use a public storage URL if we have the filename
-          const newUrl = `https://user-content.magiceden.io/${filenameMatch[1]}`;
-          
-          // Only log once per session
-          if (!sessionStorage.getItem('magiceden_filename_log')) {
-            console.log(`Extracted filename from Magic Eden URL`);
-            sessionStorage.setItem('magiceden_filename_log', 'true');
-          }
-          
-          sessionStorage.setItem(cacheKey, newUrl);
-          return newUrl;
-        }
-      }
-    }
-    
-    // IPFS URLs with IPFS protocol
-    if (url.startsWith('ipfs://')) {
-      const ipfsId = url.substring(7); // Remove ipfs:// prefix
-      const newUrl = `https://ipfs.io/ipfs/${ipfsId}`;
-      
-      // Only log once per session
-      if (!sessionStorage.getItem('ipfs_protocol_log')) {
-        console.log(`Converted IPFS protocol URL to gateway`);
-        sessionStorage.setItem('ipfs_protocol_log', 'true');
-      }
-      
-      sessionStorage.setItem(cacheKey, newUrl);
-      return newUrl;
-    }
-    
-    // IPFS URLs with wrong gateway or path format
-    if (url.includes('ipfs') && !url.includes('ipfs.io')) {
-      // More comprehensive regex to extract IPFS hash
-      const ipfsMatch = url.match(/ipfs[:/ ]+([a-zA-Z0-9]{46}|[a-zA-Z0-9]{59}|Qm[a-zA-Z0-9]{44})/i);
-      if (ipfsMatch && ipfsMatch[1]) {
-        const newUrl = `https://ipfs.io/ipfs/${ipfsMatch[1]}`;
-        
-        // Only log once per session
-        if (!sessionStorage.getItem('ipfs_gateway_log')) {
-          console.log(`Converted to IPFS gateway URL`);
-          sessionStorage.setItem('ipfs_gateway_log', 'true');
-        }
-        
-        sessionStorage.setItem(cacheKey, newUrl);
-        return newUrl;
-      }
-    }
-    
-    // Arweave URLs with wrong gateway
-    if (url.includes('arweave') && !url.includes('arweave.net')) {
-      const arweaveMatch = url.match(/([a-zA-Z0-9_-]{43})/);
-      if (arweaveMatch && arweaveMatch[1]) {
-        const newUrl = `https://arweave.net/${arweaveMatch[1]}`;
-        
-        // Only log once per session
-        if (!sessionStorage.getItem('arweave_gateway_log')) {
-          console.log(`Converted to Arweave gateway URL`);
-          sessionStorage.setItem('arweave_gateway_log', 'true');
-        }
-        
-        sessionStorage.setItem(cacheKey, newUrl);
-        return newUrl;
-      }
-    }
-    
-    // Ensure properly encoded URLs for special characters
-    if (url.includes(' ') || url.includes('"') || url.includes("'")) {
-      const encodedUrl = encodeURI(url);
-      if (encodedUrl !== url) {
-        console.log(`URL encoded to handle special characters: ${encodedUrl}`);
-        url = encodedUrl;
-      }
-    }
-    
-    // Handle S3 and other cloud storage URLs
-    const s3Match = url.match(/amazonaws\.com\/([^/]+\/[^/]+\/[^/]+\.(png|jpg|jpeg|gif|webp|svg))/i);
-    if (s3Match) {
-      // Ensure we're using HTTPS for S3 URLs
-      const newUrl = `https://s3.amazonaws.com/${s3Match[1]}`;
-      console.log(`Normalized S3 URL: ${newUrl}`);
-      return newUrl;
-    }
-    
-    // Special case for Solana NFTs - normalize to Arweave or Metaplex CDN
-    if (url.includes('solana') || url.includes('metaplex')) {
-      const arweavePattern = /[a-zA-Z0-9_-]{43}/;
-      const matches = url.match(arweavePattern);
-      if (matches && matches[0]) {
-        const newUrl = `https://arweave.net/${matches[0]}`;
-        
-        // Only log once per session
-        if (!sessionStorage.getItem('solana_metaplex_log')) {
-          console.log(`Normalized Solana/Metaplex URL to Arweave`);
-          sessionStorage.setItem('solana_metaplex_log', 'true');
-        }
-        
-        sessionStorage.setItem(cacheKey, newUrl);
-        return newUrl;
-      }
-    }
-    
-    // Only log once per session for no transformation needed
-    if (!sessionStorage.getItem('no_transform_needed_log')) {
-      console.log(`No URL transformation needed, returning original`);
-      sessionStorage.setItem('no_transform_needed_log', 'true');
-    }
-    
-    sessionStorage.setItem(cacheKey, url);
-    return url;
-  } catch (error) {
-    // Only log errors once per session
-    if (!sessionStorage.getItem('sanitize_error_log')) {
-      console.error('Error sanitizing NFT image URL');
-      sessionStorage.setItem('sanitize_error_log', 'true');
-    }
-    return imageUrl || '/placeholder-nft.png';
+  // Handle different chains
+  switch (chainId) {
+    case 137: // Polygon
+      baseUrl = 'https://polygonscan.com';
+      break;
+    case 56: // BSC
+      baseUrl = 'https://bscscan.com';
+      break;
+    case 43114: // Avalanche
+      baseUrl = 'https://snowtrace.io';
+      break;
+    case 10: // Optimism
+      baseUrl = 'https://optimistic.etherscan.io';
+      break;
+    case 42161: // Arbitrum
+      baseUrl = 'https://arbiscan.io';
+      break;
+    default:
+      baseUrl = 'https://etherscan.io';
   }
+  
+  return `${baseUrl}/${type}/${address}`;
+}
+
+/**
+ * Format rarity value for display
+ * @param rarity Rarity value as decimal (0-1)
+ * @returns Formatted rarity percentage
+ */
+export function formatRarity(rarity: number): string {
+  if (rarity === undefined || rarity === null) return 'N/A';
+  
+  // Convert to percentage and round to 2 decimal places
+  return `${(rarity * 100).toFixed(2)}%`;
+}
+
+/**
+ * Get color for rarity value
+ * @param rarity Rarity value as decimal (0-1)
+ * @returns CSS color class
+ */
+export function getRarityColor(rarity: number): string {
+  if (rarity === undefined || rarity === null) return 'text-gray-500';
+  
+  if (rarity < 0.01) return 'text-purple-600 font-bold'; // Mythic
+  if (rarity < 0.05) return 'text-orange-500 font-bold'; // Legendary
+  if (rarity < 0.15) return 'text-blue-500'; // Epic
+  if (rarity < 0.35) return 'text-green-500'; // Rare
+  return 'text-gray-500'; // Common
+}
+
+/**
+ * Get label for rarity value
+ * @param rarity Rarity value as decimal (0-1)
+ * @returns Rarity label
+ */
+export function getRarityLabel(rarity: number): string {
+  if (rarity === undefined || rarity === null) return 'Unknown';
+  
+  if (rarity < 0.01) return 'Mythic';
+  if (rarity < 0.05) return 'Legendary';
+  if (rarity < 0.15) return 'Epic';
+  if (rarity < 0.35) return 'Rare';
+  return 'Common';
 }

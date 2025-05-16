@@ -5,14 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 import BidModal from "@/components/modals/BidModal";
 import { useCountdown } from "@/hooks/useCountdown";
 import { Auction } from "@shared/schema";
-import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl, getOptimalNFTImageSource } from "@/lib/utils";
-import { formatPriceNative } from "@/lib/api";
+import { formatCurrency, formatAddress, formatPriceUSD, sanitizeNFTImageUrl, getOptimalNFTImageSource, formatPriceNative } from "@/lib/utils";
 import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import useTokenURI from "@/hooks/useTokenURI";
-import { getNFTDetailedMetadata, type NFTDetailedMetadata } from "@/lib/unleashApi";
-import { alchemyApi } from "@/lib/alchemyApi";
+import { nftApi } from "@/lib/apiService";
 import { useCurrencyPreference } from "@/contexts/CurrencyContext";
 
 interface AuctionCardProps {
