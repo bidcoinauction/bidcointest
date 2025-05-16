@@ -61,15 +61,19 @@ export class UnleashNftsService {
   private headersV2: Record<string, string>;
 
   constructor() {
-    // Set up headers according to API requirements
+    // Set up headers according to API requirements with correct format
     this.headersV1 = {
       'Accept': 'application/json',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Content-Type': 'application/json',
       'x-api-key': API_KEY
     };
     
     // Same headers for V2 endpoint
     this.headersV2 = {
       'Accept': 'application/json',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Content-Type': 'application/json',
       'x-api-key': API_KEY
     };
     
@@ -500,14 +504,21 @@ export class UnleashNftsService {
       const chainId = this.normalizeChainId(chain);
       log(`Fetching detailed NFT metadata for ${contractAddress}/${tokenId} on chain ${chainId}`, 'unleash-nfts');
       
+      // Create complete headers with all required fields
+      const headers = {
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Content-Type': 'application/json',
+        'x-api-key': API_KEY
+      };
+      
       try {
         // Use v2 endpoint with direct path format
         // Direct format: /nft/{blockchain}/{contract_address}/{token_id}
-        log(`[unleash-nfts] Trying format: ${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+        const v2Url = `${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`;
+        log(`[unleash-nfts] Trying direct path: ${v2Url}`, 'unleash-nfts');
         
-        const response = await axios.get(`${BASE_URL_V2}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-          headers: this.headersV2
-        });
+        const response = await axios.get(v2Url, { headers });
         
         const nftData = response.data;
         
@@ -522,7 +533,7 @@ export class UnleashNftsService {
           nftData.collection.image_url = this.cleanImageUrl(nftData.collection.image_url);
         }
         
-        log(`✅ Success with direct NFT path format: ${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
+        log(`✅ Detailed metadata loaded from UnleashNFTs:`, nftData);
         return nftData;
       } catch (v2Error: any) {
         const errorMsg = v2Error.response?.data?.message || v2Error.message;
@@ -530,10 +541,10 @@ export class UnleashNftsService {
         
         // If v2 fails, try v1 endpoint with direct path format
         try {
-          log(`[unleash-nfts] Trying v1 format: ${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, 'unleash-nfts');
-          const response = await axios.get(`${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`, {
-            headers: this.headersV1
-          });
+          const v1Url = `${BASE_URL_V1}/nft/${chainId}/${contractAddress}/${tokenId}`;
+          log(`[unleash-nfts] Trying direct v1 path: ${v1Url}`, 'unleash-nfts');
+          
+          const response = await axios.get(v1Url, { headers });
           
           const nftData = response.data;
           
@@ -548,10 +559,29 @@ export class UnleashNftsService {
             nftData.collection.image_url = this.cleanImageUrl(nftData.collection.image_url);
           }
           
+          log(`✅ Detailed metadata loaded from UnleashNFTs:`, nftData);
           return nftData;
         } catch (v1Error: any) {
-          const v1ErrorMsg = v1Error.response?.data?.message || v1Error.message;
-          log(`Both v2 and v1 NFT metadata endpoints failed: ${v1ErrorMsg}`, 'unleash-nfts');
+          // Log detailed error information for debugging
+          log(`Both v2 and v1 NFT metadata endpoints failed: ${v1Error.message}`, 'unleash-nfts');
+          log(`API Error in getNFTDetailedMetadata: ${v1Error.message}`, 'unleash-nfts');
+          log(`Request: GET ${v1Error.config?.url}`, 'unleash-nfts');
+          
+          if (v1Error.response) {
+            const status = v1Error.response.status;
+            const statusText = v1Error.response.statusText;
+            log(`Status: ${status} - ${statusText}`, 'unleash-nfts');
+            
+            // Add specific error messaging based on status code
+            if (status === 404) {
+              log(`Not found (404): The requested resource was not found. Check the contract address and token ID.`, 'unleash-nfts');
+            } else if (status === 401) {
+              log(`Unauthorized (401): API key may be invalid or missing.`, 'unleash-nfts');
+            } else if (status === 429) {
+              log(`Rate limited (429): Too many requests. Please wait and try again.`, 'unleash-nfts');
+            }
+          }
+          
           throw v1Error;
         }
       }
