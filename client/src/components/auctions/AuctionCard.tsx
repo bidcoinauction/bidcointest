@@ -347,7 +347,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           <p className="text-gray-400 font-medium">
             Leader<br/>
             <span className="text-primary font-bold text-xs">
-              {formatAddress(currentLeader)}
+              {formatAddress(localLeader)}
             </span>
           </p>
         </div>
