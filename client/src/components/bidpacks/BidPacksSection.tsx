@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { getBidPacks } from "@/lib/api";
+import { bidPackService } from "@/lib/apiService";
 import useBidPacks from "@/hooks/useBidPacks";
 import {
   Bolt,
@@ -155,7 +155,7 @@ export default function AuctionPacksSection() {
   
   const { data: bidPacks, isLoading, error } = useQuery({
     queryKey: ["/api/bidpacks"],
-    queryFn: getBidPacks,
+    queryFn: bidPackService.getBidPacks,
   });
 
   if (isLoading) {

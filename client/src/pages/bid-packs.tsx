@@ -1,6 +1,6 @@
 // Removed header/footer imports
 import { useQuery } from "@tanstack/react-query";
-import { getBidPacks } from "@/lib/api";
+import { bidPackService } from "@/lib/apiService";
 import useBidPacks from "@/hooks/useBidPacks";
 import { Button } from "@/components/ui/button";
 import { Bolt, Rocket, Crown, Gem, CheckCircle, AlertCircle, CreditCard, Wallet, ArrowRight } from "lucide-react";
@@ -162,7 +162,7 @@ export default function AuctionPacksPage() {
   
   const { data: bidPacks, isLoading, error } = useQuery({
     queryKey: ["/api/bidpacks"],
-    queryFn: getBidPacks,
+    queryFn: bidPackService.getBidPacks,
   });
 
   return (
