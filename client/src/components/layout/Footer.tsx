@@ -38,7 +38,7 @@ export default function Footer() {
               <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shadow-glow">
                 <i className="fa-solid fa-coin text-white text-xl"></i>
               </div>
-              <h3 className="text-2xl font-display font-bold text-white">BidCoin</h3>
+              <h3 className="text-2xl font-display font-bold text-white">AuctionBlock</h3>
             </div>
             <p className="text-gray-400 mb-4">The premier Web3 auction platform for NFTs, Ordinals, and digital collectibles.</p>
             <div className="flex space-x-4">
@@ -101,7 +101,7 @@ export default function Footer() {
         </div>
         
         <div className="border-t border-[#374151] mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2023 BidCoin. All rights reserved.</p>
+          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2025 AuctionBlock. All rights reserved.</p>
           <div className="flex space-x-6 text-sm text-gray-400">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
             <a href="#" className="hover:text-white transition-colors">Terms</a>
