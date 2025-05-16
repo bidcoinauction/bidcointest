@@ -711,15 +711,6 @@ export default function AuctionDetailsPage() {
               <div className="mb-4">
                 <div className="flex space-x-4 mb-4">
                   <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
-                    <p className="text-gray-400 text-xs mb-1">Retail Price</p>
-                    <p className="text-white font-medium">
-                      {auction.nft.retailPrice 
-                        ? `$${formatPriceUSD(auction.nft.retailPrice)}`
-                        : "N/A"}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#111827] rounded-lg p-3 text-center flex-1">
                     <p className="text-gray-400 text-xs mb-1">Volume (24h)</p>
                     <p className="text-white font-medium">
                       {auction.nft.volume24h 

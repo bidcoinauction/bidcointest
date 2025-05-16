@@ -39,9 +39,6 @@ export const nfts = pgTable("nfts", {
   collectionImage: text("collection_image"), // Added for collection image
   
   // Price metrics
-  floorPrice: decimal("floor_price", { precision: 10, scale: 6 }),
-  floorPriceUsd: decimal("floor_price_usd", { precision: 10, scale: 2 }), // Added USD floor price for consistent display
-  retailPrice: decimal("retail_price", { precision: 10, scale: 6 }), // Added retail price for discount calculation
   priceAvg: decimal("price_avg", { precision: 10, scale: 6 }), // Average price at which NFTs are sold
   priceCeiling: decimal("price_ceiling", { precision: 10, scale: 6 }), // Highest price at which an NFT in the collection was sold
   
