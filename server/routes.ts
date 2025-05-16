@@ -1018,28 +1018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const enhanceMetadata = (metadata: any, contract_address: string) => {
         if (!metadata) return metadata;
         
-        if (contract_address === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
-          metadata.floor_price = "11.73";
-          metadata.floor_price_usd = "25560.94";
-        } else if (contract_address === '0x2e175f748976cd5cdb98f12d1abc5d137d6c9379') { // Lil Z's Adventure
-          metadata.floor_price = "0.74";
-          metadata.floor_price_usd = "1610.58";
-        } else if (contract_address === '0x4aeb52db83daa33a31673599e892d9247b0449ca') { // Claynosaurz
-          metadata.floor_price = "3.85";
-          metadata.floor_price_usd = "8398.75";
-        } else if (contract_address === '0x8a90cab2b38dba80c64b7734e58ee1db38b8992e') { // Doodles
-          metadata.floor_price = "2.12";
-          metadata.floor_price_usd = "4611.16";
-        } else if (contract_address === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
-          metadata.floor_price = "45.72";
-          metadata.floor_price_usd = "99466.56";
-        } else if (contract_address === '0x60e4d786628fea6478f785a6d7e704777c86a7c6') { // Mutant Ape Yacht Club
-          metadata.floor_price = "2.248";
-          metadata.floor_price_usd = "4894.21";
-        } else if (contract_address === '0x6e5dc5405baefb8c0166bcc78d2692777f2cbffb') { // BEEPLE: EVERYDAYS
-          metadata.floor_price = "15.99";
-          metadata.floor_price_usd = "34818.22";
-        }
+        // Floor price references removed per requirements
         
         return metadata;
       };
@@ -1056,10 +1035,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       // Try UnleashNFTs API first
-      let metadata = null;
+      let nftMetadata = null;
       
       try {
-        metadata = await unleashNftsService.getNFTMetadataFlex({
+        nftMetadata = await unleashNftsService.getNFTMetadataFlex({
           contractAddress: contract_address as string | undefined,
           slugName: slug_name as string | undefined,
           tokenId: token_id as string,
@@ -1070,23 +1049,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If UnleashNFTs API didn't return valid data, try Alchemy API as fallback
-      if (!metadata && contract_address) {
+      if (!nftMetadata && contract_address) {
         try {
           const alchemyData = await alchemyNftService.getNFTMetadata(contract_address, token_id as string);
           if (alchemyData) {
-            metadata = alchemyNftService.formatNFTMetadata(alchemyData);
+            nftMetadata = alchemyNftService.formatNFTMetadata(alchemyData);
           }
         } catch (error) {
           // Silent error handling
         }
       }
       
-      // Apply floor price data for premium NFTs
-      if (isPremiumNFT || metadata) {
-        metadata = enhanceMetadata(metadata || {}, contract_address as string);
+      // Apply metadata enhancements for premium NFTs
+      if (isPremiumNFT || nftMetadata) {
+        nftMetadata = enhanceMetadata(nftMetadata || {}, contract_address as string);
       }
       
-      return res.json(metadata || { message: 'No metadata found' });
+      return res.json(nftMetadata || { message: 'No metadata found' });
     } catch (error) {
       return res.status(500).json({ message: 'Failed to fetch NFT metadata' });
     }
@@ -1149,27 +1128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ) {
             // Apply premium data for selected NFTs
             
-            // Set consistent floor prices based on premium data
-            if (nft.contractAddress === '0xed5af388653567af2f388e6224dc7c4b3241c544') { // Azuki
-              enrichedNFT.floorPrice = '11.73';
-              enrichedNFT.floorPriceUsd = '25560.94';
-            } else if (nft.contractAddress === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6') { // DeGods
-              enrichedNFT.floorPrice = '4.58';
-              enrichedNFT.floorPriceUsd = '9945.10';
-            } else if (nft.contractAddress === '0x4aeb52db83daa33a31673599e892d9247b0449ca') { // Claynosaurz
-              enrichedNFT.floorPrice = '3.85';
-              enrichedNFT.floorPriceUsd = '8398.75';
-            } else if (nft.contractAddress === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
-              enrichedNFT.floorPrice = '2.35';
-              enrichedNFT.floorPriceUsd = '5129.75';
-            } else if (nft.contractAddress === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
-              enrichedNFT.floorPrice = '5.72';
-              enrichedNFT.floorPriceUsd = '12435.67';
-            } else if (nft.contractAddress === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
-                      nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') { // MadLads
-              enrichedNFT.floorPrice = '5.91';
-              enrichedNFT.floorPriceUsd = '12890.56';
-            }
+            // Floor price information removed per requirements
           }
         }
       } catch (metadataError) {

@@ -74,8 +74,7 @@ export default function AuctionDetailsPage() {
       // Still set detailedMetadata state to ensure UI consistency
       setDetailedMetadata({
         ...auction.nft,
-        floor_price: auction.nft.floorPrice.toString(),
-        floor_price_usd: auction.nft.floorPriceUsd?.toString(),
+        // Floor price removed per requirements
         traits: auction.nft.attributes.map(attr => ({
           trait_type: attr.trait_type,
           value: attr.value,
@@ -140,8 +139,7 @@ export default function AuctionDetailsPage() {
               name: alchemyData.title || auction.nft.name || `NFT #${tokenId}`,
               description: alchemyData.description || auction.nft.description || '',
               image_url: alchemyData.image?.url || auction.nft.imageUrl || '',
-              floor_price: alchemyData.collection?.floorPrice?.toString() || '',
-              floor_price_usd: '',
+              // Floor price removed per requirements
               traits: (alchemyData.attributes || []).map((attr: any) => ({
                 trait_type: attr.trait_type,
                 value: attr.value,
