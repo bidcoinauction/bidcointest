@@ -365,6 +365,8 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
             <Clock className="h-3 w-3 mr-1 text-gray-400" />
             00:{formatTimeLeft()}
           </div>
+          <p className="text-gray-400 text-xs mt-1">Bid Cost</p>
+          <p className="text-green-400 text-xs">$0.24 per bid</p>
         </div>
 
         <div className="text-right">
