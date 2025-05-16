@@ -345,36 +345,10 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
         <div className="flex justify-between items-start text-xs">
           <p className="text-gray-400">{tokenDisplay}</p>
           <p className="text-gray-400 font-medium">
-            Floor<br/>
-            {currencyDisplay === 'native' && detailedMetadata?.floor_price && detailedMetadata?.collection_name ? (
-              <span className="text-primary font-bold">
-                {formatPriceNative(
-                  detailedMetadata.floor_price,
-                  auction.nft.currency || 'ETH'
-                )}
-              </span>
-            ) : currencyDisplay === 'native' && auction.nft.floorPrice && auction.nft.currency ? (
-              <span className="text-primary font-bold">
-                {formatPriceNative(
-                  auction.nft.floorPrice,
-                  auction.nft.currency
-                )}
-              </span>
-            ) : detailedMetadata?.floor_price_usd ? (
-              <span className="text-primary font-bold">
-                ${formatPriceUSD(detailedMetadata.floor_price_usd)}
-              </span>
-            ) : auction.nft.floorPriceUsd ? (
-              <span className="text-primary font-bold">
-                ${formatPriceUSD(auction.nft.floorPriceUsd)}
-              </span>
-            ) : auction.nft.floorPrice ? (
-              <span className="text-primary font-bold">
-                ${formatPriceUSD(auction.nft.floorPrice)}
-              </span>
-            ) : (
-              "N/A"
-            )}
+            Leader<br/>
+            <span className="text-primary font-bold text-xs">
+              {formatAddress(currentLeader)}
+            </span>
           </p>
         </div>
       </div>
