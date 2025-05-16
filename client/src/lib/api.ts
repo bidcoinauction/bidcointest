@@ -258,6 +258,12 @@ export async function getBlockchainStats(): Promise<BlockchainStats> {
   return fetchFromAPI<BlockchainStats>("/blockchain/stats");
 }
 
+// User API calls
+export async function getUserByWalletAddress(walletAddress: string): Promise<any> {
+  if (!walletAddress) return null;
+  return fetchFromAPI<any>(`/users/by-wallet/${walletAddress}`);
+}
+
 // Format utilities for presenting data
 export function formatPrice(price: string | number, currency = "USD"): string {
   const priceNum = typeof price === 'string' ? parseFloat(price) : price;
