@@ -295,6 +295,11 @@ export function getBlockchainExplorerUrl(
 export function getOptimalNFTImageSource(nft: any): string {
   if (!nft) return '/placeholder-nft.png';
   
+  // Detect OortStorages URLs and prioritize these hosted URLs
+  if (nft.imageUrl && nft.imageUrl.includes('oortstorages.com')) {
+    return nft.imageUrl;
+  }
+  
   // First priority: Use tokenURI data if we have contractAddress and tokenId
   if (nft.contractAddress && nft.tokenId) {
     // If we have the token_uri with image data already, use it directly
@@ -308,6 +313,22 @@ export function getOptimalNFTImageSource(nft: any): string {
     }
   }
   
+  // Direct mappings for hosted NFT images (added for reliability)
+  const hostedImageMappings: Record<string, string> = {
+    "Doodles #1234": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
+    "Mutant Ape Yacht Club #3652": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/ebebf8da2543032f469b1a436d848822.png",
+    "CryptoPunk #7804": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png",
+    "BAYC #4269": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/4269.jpg",
+    "Milady #7218": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7218.avif",
+    "DeGods #8747": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png",
+    "Mad Lads #8993": "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif"
+  };
+  
+  // Check for name matches in our hosted collection
+  if (nft.name && hostedImageMappings[nft.name]) {
+    return hostedImageMappings[nft.name];
+  }
+  
   // Second priority: Collection-specific premium URLs by NFT ID or collection
   const nftId = nft.id;
   
@@ -318,41 +339,51 @@ export function getOptimalNFTImageSource(nft: any): string {
     3: {collection: 'claynosaurz', id: '7221'},
     4: {collection: 'milady', id: '8697'},
     5: {collection: 'cryptopunks', id: '7804'},
-    6: {collection: 'milady', id: '7218'},
-    7: {collection: 'madlads', id: '8993'}
+    6: {collection: 'doodles', id: '1234'},
+    7: {collection: 'mayc', id: '3652'}
   };
   
   const mapping = collectionMapping[nftId];
   
   if (mapping) {
+    // Direct hosted URL mappings
+    const hostedCollectionMap: Record<string, string> = {
+      'doodles': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif",
+      'mayc': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/ebebf8da2543032f469b1a436d848822.png",
+      'cryptopunks': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png",
+      'degods': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png",
+      'milady': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/7218.avif",
+      'madlads': "https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif"
+    };
+    
+    if (hostedCollectionMap[mapping.collection]) {
+      return hostedCollectionMap[mapping.collection];
+    }
+    
+    // Legacy premium sources as fallback
     if (mapping.collection === 'degentoonz') {
       return `https://cdn.degentoonz.io/public/toonz/viewer/index.html#${mapping.id}`;
     } else if (mapping.collection === 'madlads') {
-      return 'https://i2.seadn.io/polygon/0x8ec79a75be1bf1394e8d657ee006da730d003789/ce2989e5ced9080494cf1ffddf8ed9/dace2989e5ced9080494cf1ffddf8ed9.jpeg?w=1000';
+      return 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/8993.avif';
     } else if (mapping.collection === 'degods') {
-      return `https://animation-url.degods.com/?tokenId=${mapping.id}`;
+      return 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/8747-dead.png';
     }
   }
   
   // Third priority: Known local assets for fallback
   const knownLocalAssets: Record<number, string> = {
-    1: 'Screenshot 2025-05-15 at 13.25.53.png',
-    2: 'Screenshot 2025-05-15 at 13.27.19.png',
-    3: 'Screenshot 2025-05-15 at 13.28.23.png',
-    4: 'Screenshot 2025-05-15 at 13.39.34.png',
-    5: 'Screenshot 2025-05-15 at 13.39.51.png',
-    7: '8993.avif',
-    8: '7218.avif'
+    1: '8993.avif',
+    2: '8747-dead.png',
+    3: '7218.avif',
+    4: '4269.jpg',
+    5: '0x56b0fda9566d9e9b35e37e2a29484b8ec28bb5f7833ac2f8a48ae157bad691b5.png',
+    6: '7B0qai02OdHA8P_EOVK672qUliyjQdQDGNrACxs7WnTgZAkJa_wWURnIFKeOh5VTf8cfTqW3wQpozGedaC9mteKphEOtztls02RlWQ.avif',
+    7: 'ebebf8da2543032f469b1a436d848822.png'
   };
   
   if (knownLocalAssets[nftId]) {
-    // Only log once per NFT ID to reduce console spam
-    const assetLogKey = `attached_asset_${nftId}`;
-    if (!sessionStorage.getItem(assetLogKey)) {
-      console.log(`Using attached asset for NFT #${nftId}: ${knownLocalAssets[nftId]}`);
-      sessionStorage.setItem(assetLogKey, 'true');
-    }
-    return `/attached_assets/${knownLocalAssets[nftId]}`;
+    const assetPath = `/attached_assets/${knownLocalAssets[nftId]}`;
+    return assetPath;
   }
   
   // Last resort: Use the API-provided URL with sanitization or placeholder
