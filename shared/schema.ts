@@ -434,3 +434,57 @@ export type BlockchainStats = {
   networks: BlockchainNetwork[];
   marketStats: MarketStat[];
 };
+
+// Achievement system
+export const achievements = pgTable("achievements", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  type: text("type").notNull(), // bid, auction, collection, social
+  tier: text("tier").notNull().default("bronze"), // bronze, silver, gold, platinum
+  points: integer("points").notNull(),
+  icon: text("icon").notNull(),
+  condition: jsonb("condition").notNull(), // JSON with condition details
+  isSecret: boolean("is_secret").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAchievementSchema = createInsertSchema(achievements).pick({
+  name: true,
+  description: true,
+  type: true,
+  tier: true,
+  points: true,
+  icon: true,
+  condition: true,
+  isSecret: true,
+});
+
+// User achievements
+export const userAchievements = pgTable("user_achievements", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  achievementId: integer("achievement_id").notNull().references(() => achievements.id),
+  progress: integer("progress").notNull().default(0),
+  completed: boolean("completed").default(false),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertUserAchievementSchema = createInsertSchema(userAchievements).pick({
+  userId: true,
+  achievementId: true,
+  progress: true,
+  completed: true,
+  completedAt: true,
+});
+
+// Type definitions for achievements
+export type Achievement = typeof achievements.$inferSelect;
+export type InsertAchievement = z.infer<typeof insertAchievementSchema>;
+
+export type UserAchievement = typeof userAchievements.$inferSelect & {
+  achievement: Achievement;
+  user: User;
+}
+export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;

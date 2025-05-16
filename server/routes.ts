@@ -11,12 +11,15 @@ import {
   insertAuctionHistorySchema,
   insertBidPackSchema,
   insertUserBidPackSchema,
+  insertAchievementSchema,
+  insertUserAchievementSchema,
 } from "@shared/schema";
 import { z } from "zod";
 import { magicEdenService } from "./magicEden";
 import { moralisService } from "./moralisService";
 import { unleashNftsService } from "./unleashNftsService";
 import { alchemyNftService } from "./alchemyNftService";
+import { achievementService } from "./achievementService";
 import { EvmChain } from "@moralisweb3/common-evm-utils";
 
 // WebSocket clients and utility functions
@@ -792,6 +795,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(traits);
     } catch (error) {
       return res.status(500).json({ message: 'Failed to fetch collection traits' });
+    }
+  });
+  
+  // Achievement system endpoints
+  
+  // Get all achievements
+  app.get('/api/achievements', async (req, res) => {
+    try {
+      const achievements = await db.select().from(achievements);
+      return res.json(achievements);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+      return res.status(500).json({ message: 'Failed to fetch achievements' });
+    }
+  });
+  
+  // Get user achievements
+  app.get('/api/users/:userId/achievements', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const userAchievements = await achievementService.getUserAchievements(parseInt(userId));
+      return res.json(userAchievements);
+    } catch (error) {
+      console.error(`Error fetching user achievements for user ${req.params.userId}:`, error);
+      return res.status(500).json({ message: 'Failed to fetch user achievements' });
+    }
+  });
+  
+  // Get user achievement stats
+  app.get('/api/users/:userId/achievement-stats', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const stats = await achievementService.getUserAchievementStats(parseInt(userId));
+      return res.json(stats);
+    } catch (error) {
+      console.error(`Error fetching achievement stats for user ${req.params.userId}:`, error);
+      return res.status(500).json({ message: 'Failed to fetch achievement stats' });
+    }
+  });
+  
+  // Process an achievement trigger (mostly used internally, but exposed as API for testing)
+  app.post('/api/achievements/trigger', async (req, res) => {
+    try {
+      const triggerSchema = z.object({
+        type: z.enum(['bid_placed', 'auction_won', 'login_streak', 'bid_count', 'collection_bid', 'first_bid', 'first_win', 'social_share']),
+        userId: z.number(),
+        // Optional fields based on trigger type
+        auctionId: z.number().optional(),
+        days: z.number().optional(),
+        count: z.number().optional(),
+        collection: z.string().optional(),
+        platform: z.string().optional(),
+      });
+      
+      const validatedData = triggerSchema.parse(req.body);
+      const unlockedAchievements = await achievementService.processTrigger(validatedData as any);
+      
+      return res.json({ 
+        success: true, 
+        unlockedAchievements: unlockedAchievements.map(ua => ({
+          id: ua.achievement.id,
+          name: ua.achievement.name,
+          description: ua.achievement.description,
+          points: ua.achievement.points,
+          tier: ua.achievement.tier,
+          icon: ua.achievement.icon
+        }))
+      });
+    } catch (error) {
+      console.error('Error processing achievement trigger:', error);
+      return res.status(500).json({ message: 'Failed to process achievement trigger' });
     }
   });
 
