@@ -451,9 +451,17 @@ export default function AuctionDetailsPage() {
         <div>
           <div className="mb-6 relative">
             <img 
-              src={detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg'} 
+              src={auctionId === 3 ? 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png' : (detailedMetadata?.image_url || auction.nft.imageUrl || '/placeholder-image.jpg')} 
               alt={detailedMetadata?.name || auction.nft.name} 
-              className="w-full h-auto rounded-xl object-cover aspect-square" 
+              className="w-full h-auto rounded-xl object-cover aspect-square"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (auctionId === 3) {
+                  target.src = 'https://bidcoinlanding.standard.us-east-1.oortstorages.com/panz.png';
+                } else {
+                  target.src = '/placeholder-image.jpg';
+                }
+              }}
             />
             <div className="absolute top-4 right-4 flex space-x-2">
               <Button variant="outline" size="sm" className="bg-black/30 backdrop-blur-sm border-white/20 text-white hover:bg-white/20 rounded-full w-9 h-9 p-0">
