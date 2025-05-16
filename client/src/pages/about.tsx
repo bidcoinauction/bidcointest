@@ -75,8 +75,8 @@ export default function AboutPage() {
                     <span className="text-primary font-bold">2</span>
                   </div>
                   <div>
-                    <h3 className="text-white font-medium mb-1">Purchase AuctionPacks</h3>
-                    <p className="text-gray-300 text-sm">Buy AuctionPacks (ordinals) to participate in auctions. These are cost-effective compared to individual bids.</p>
+                    <h3 className="text-white font-medium mb-1">Purchase BidPacks</h3>
+                    <p className="text-gray-300 text-sm">Buy BidPacks (ordinals) to participate in auctions. These are cost-effective compared to individual bids.</p>
                   </div>
                 </div>
                 
@@ -189,9 +189,9 @@ export default function AboutPage() {
             </div>
             
             <div className="bg-[#1f2937] rounded-xl p-6 border border-[#374151]">
-              <h3 className="text-lg font-display font-bold text-white mb-2">How secure is AuctionBlock?</h3>
+              <h3 className="text-lg font-display font-bold text-white mb-2">How secure is Bidcoin?</h3>
               <p className="text-gray-300">
-                AuctionBlock utilizes blockchain technology for all transactions, ensuring security, transparency, and immutability. Our platform 
+                Bidcoin utilizes blockchain technology for all transactions, ensuring security, transparency, and immutability. Our platform 
                 integrates with secure wallet providers and follows industry best practices for smart contract design and security audits.
               </p>
             </div>
@@ -209,7 +209,7 @@ export default function AboutPage() {
         <div className="bg-[#1f2937] rounded-xl p-8 border border-[#374151] text-center">
           <h2 className="text-2xl font-display font-bold text-white mb-4">Ready to Start Bidding?</h2>
           <p className="text-gray-300 max-w-2xl mx-auto mb-6">
-            Join AuctionBlock today and discover a new way to collect unique digital assets using blockchain technology. 
+            Join Bidcoin today and discover a new way to collect unique digital assets using blockchain technology. 
             Connect your wallet, purchase BidPacks, and start bidding on exciting NFTs and ordinals.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
