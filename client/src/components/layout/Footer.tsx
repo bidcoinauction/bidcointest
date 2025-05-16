@@ -38,7 +38,7 @@ export default function Footer() {
               <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center shadow-glow">
                 <i className="fa-solid fa-coin text-white text-xl"></i>
               </div>
-              <h3 className="text-2xl font-display font-bold text-white">AuctionBlock</h3>
+              <h3 className="text-2xl font-display font-bold text-white">Bidcoin</h3>
             </div>
             <p className="text-gray-400 mb-4">The premier Web3 auction platform for NFTs, Ordinals, and digital collectibles.</p>
             <div className="flex space-x-4">
