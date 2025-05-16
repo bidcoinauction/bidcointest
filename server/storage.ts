@@ -246,25 +246,27 @@ export class MemStorage implements IStorage {
     });
 
     const nft3 = await this.createNFT({
-      name: "MadLads #8993",
-      description: "Mad Lads is a collection of 10,000 NFTs on the Solana blockchain. Each Mad Lad represents a member of the community of creators, artists, and builders.",
-      imageUrl: "https://bafybeigz4l6zdtc3bmj4j7nvj7ruw5shiv71ycmsufvbw3qneubqsj2f7m.ipfs.dweb.link/8993.png",
-      tokenId: "8993",
-      contractAddress: "0xc88bfed94fd57443a012787bd43958fbd8553c69",
-      blockchain: "SOL",
-      tokenStandard: "Metaplex",
+      name: "Lil Z's Adventure #245",
+      description: "Lil Z's Adventure is an NFT collection launched in April 2024 with 8,097 unique characters on Ethereum.",
+      imageUrl: "/attached_assets/8993.avif",
+      tokenId: "245",
+      contractAddress: "0x2e175f748976cd5cdb98f12d1abc5d137d6c9379",
+      blockchain: "ETH",
+      tokenStandard: "ERC-721",
       royalty: "5.0",
-      collection: "Mad Lads",
-      floorPrice: "55.0",
-      currency: "SOL",
+      collection: "Lil Z's Adventure",
+      collectionName: "Lil Z's Adventure",
+      floorPrice: "0.25",
+      floorPriceUsd: "550.00",
+      currency: "ETH",
       category: "pfp",
-      items: 10000,
+      items: 8097,
       creatorId: user3.id,
       attributes: [
-        { trait_type: "Background", value: "Blue", rarity: "7%" },
-        { trait_type: "Clothing", value: "Black Hoodie", rarity: "3%" },
-        { trait_type: "Expression", value: "Smirk", rarity: "5%" },
-        { trait_type: "Headwear", value: "Crown", rarity: "2%" }
+        { trait_type: "Background", value: "Vibrant Green", rarity: "8%" },
+        { trait_type: "Character", value: "Lil Z Explorer", rarity: "4%" },
+        { trait_type: "Accessory", value: "Adventure Backpack", rarity: "6%" },
+        { trait_type: "Headwear", value: "Explorer Hat", rarity: "3%" }
       ]
     });
 
@@ -292,71 +294,78 @@ export class MemStorage implements IStorage {
     });
 
     const nft5 = await this.createNFT({
-      name: "DeGods #8748",
-      description: "DeGods is a digital art collection and global community of creators, innovators, and frens. Consider this your digital identity into the DeGods ecosystem.",
-      imageUrl: "https://bafybeie3hbhuwtzcegjllfqf7a3qgkpj4xsvl7fqi73mms3ub3do52dvhy.ipfs.dweb.link/",
-      tokenId: "8748",
-      contractAddress: "0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6",
-      blockchain: "SOL",
-      tokenStandard: "Metaplex",
-      royalty: "7.0",
-      collection: "DeGods",
-      floorPrice: "460.0",
-      currency: "SOL",
-      category: "pfp",
-      items: 10000,
+      name: "BEEPLE: EVERYDAYS - Bulls Run",
+      description: "BEEPLE: EVERYDAYS - THE 2020 COLLECTION is a collection of digital art pieces created by Beeple (Mike Winkelmann), one of the most famous digital artists in the NFT space.",
+      imageUrl: "/attached_assets/8747-dead.png",
+      tokenId: "187",
+      contractAddress: "0x6e5dc5405baefb8c0166bcc78d2692777f2cbffb",
+      blockchain: "ETH",
+      tokenStandard: "ERC-721",
+      royalty: "10.0",
+      collection: "BEEPLE: EVERYDAYS",
+      collectionName: "BEEPLE: EVERYDAYS",
+      floorPrice: "15.99",
+      floorPriceUsd: "34818.22",
+      currency: "ETH",
+      category: "art",
+      items: 722,
       creatorId: user5.id,
       attributes: [
-        { trait_type: "Background", value: "Gray", rarity: "8%" },
-        { trait_type: "Skin", value: "Gold", rarity: "4%" },
-        { trait_type: "Eyes", value: "Sleepy", rarity: "7%" },
-        { trait_type: "Mouth", value: "Neutral", rarity: "15%" }
+        { trait_type: "Style", value: "Digital illustration", rarity: "25%" },
+        { trait_type: "Collection", value: "EVERYDAYS", rarity: "100%" },
+        { trait_type: "Artist", value: "Beeple", rarity: "100%" },
+        { trait_type: "Theme", value: "Financial", rarity: "12%" }
       ]
     });
 
     const nft6 = await this.createNFT({
-      name: "Claynosaurz #7221",
-      description: "Claynosaurz is a collection of 10,000 unique 3D characters, made of clay, living on the Solana blockchain. Claynosaurz is a PFP project that is building a 3D world.",
-      imageUrl: "https://cdn.claynosaurz.com/images/pfp/clayno/7221.png",
-      tokenId: "7221",
-      contractAddress: "0x4aEb52dB83DaA33a31673599E892d9247b0449cA",
-      blockchain: "SOL",
-      tokenStandard: "Metaplex",
+      name: "Doodles #1234",
+      description: "A community-driven collectible NFT project featuring art by Burnt Toast. Doodles come in a joyful range of colors, traits and sizes with a collection size of 10,000.",
+      imageUrl: "/attached_assets/7218.avif",
+      tokenId: "1234",
+      contractAddress: "0x8a90cab2b38dba80c64b7734e58ee1db38b8992e",
+      blockchain: "ETH",
+      tokenStandard: "ERC-721",
       royalty: "5.0",
-      collection: "Claynosaurz",
-      floorPrice: "75.0",
-      currency: "SOL",
+      collection: "Doodles",
+      collectionName: "Doodles",
+      floorPrice: "1.25",
+      floorPriceUsd: "2722.50",
+      currency: "ETH",
       category: "pfp",
-      items: 10000,
+      items: 9998,
       creatorId: user6.id,
       attributes: [
-        { trait_type: "Species", value: "Diplodocus", rarity: "7%" },
-        { trait_type: "Skin", value: "Sunset", rarity: "5%" },
-        { trait_type: "Eyes", value: "Friendly", rarity: "15%" },
-        { trait_type: "Background", value: "Violet", rarity: "10%" }
+        { trait_type: "Background", value: "Blue Sky", rarity: "10%" },
+        { trait_type: "Face", value: "Happy", rarity: "15%" },
+        { trait_type: "Head", value: "Pink Hair", rarity: "7%" },
+        { trait_type: "Body", value: "Blue Hoodie", rarity: "8%" }
       ]
     });
 
     const nft7 = await this.createNFT({
-      name: "Milady #8697",
-      description: "Milady Maker is a collection of 10,000 generative PFPs based on a variation of the y2k Millennial Ms Paint aesthetic.",
-      imageUrl: "https://cdn.milady.io/renders/8697.png",
-      tokenId: "8697",
-      contractAddress: "0x5af0d9827e0c53e4799bb226655a1de152a425a5",
+      name: "Mutant Ape Yacht Club #3652",
+      description: "The MUTANT APE YACHT CLUB is a collection of up to 20,000 Mutant Apes that can only be created by exposing an existing Bored Ape to a vial of MUTANT SERUM or by minting a Mutant Ape in the public sale.",
+      imageUrl: "/attached_assets/4269.jpg",
+      tokenId: "3652",
+      contractAddress: "0x60e4d786628fea6478f785a6d7e704777c86a7c6",
       blockchain: "ETH",
       tokenStandard: "ERC-721",
       royalty: "7.5",
-      collection: "Milady",
-      floorPrice: "3.8",
+      collection: "Mutant Ape Yacht Club",
+      collectionName: "Mutant Ape Yacht Club",
+      floorPrice: "2.248",
+      floorPriceUsd: "4894.21",
       currency: "ETH",
       category: "pfp",
-      items: 10000,
+      items: 19551,
       creatorId: user7.id,
       attributes: [
-        { trait_type: "Face", value: "Makeup Blue", rarity: "2%" },
-        { trait_type: "Hair", value: "Buns Blonde", rarity: "5%" },
-        { trait_type: "Background", value: "Purple", rarity: "7%" },
-        { trait_type: "Drip", value: "Fuzzy Coat", rarity: "3%" }
+        { trait_type: "Fur", value: "Psychedelic Green", rarity: "1.7%" },
+        { trait_type: "Background", value: "Army Green", rarity: "12.4%" },
+        { trait_type: "Eyes", value: "Angry", rarity: "4.6%" },
+        { trait_type: "Clothes", value: "Biker Vest", rarity: "3.8%" },
+        { trait_type: "Mouth", value: "Bored", rarity: "23%" }
       ]
     });
 
@@ -597,8 +606,10 @@ export class MemStorage implements IStorage {
       type: "single",
       bidCount: 1,
       bonusBids: 0,
+      totalBids: 1,
       price: "0.24",
       originalPrice: "0.24",
+      pricePerBid: "0.24",
       currency: "USD",
       available: true,
     });
@@ -608,8 +619,10 @@ export class MemStorage implements IStorage {
       type: "starter",
       bidCount: 60,
       bonusBids: 0,
+      totalBids: 60,
       price: "12.00",
       originalPrice: "14.40",
+      pricePerBid: "0.20",
       currency: "USD",
       available: true,
     });
@@ -619,8 +632,10 @@ export class MemStorage implements IStorage {
       type: "pro",
       bidCount: 155,
       bonusBids: 0,
+      totalBids: 155,
       price: "30.00",
       originalPrice: "37.20",
+      pricePerBid: "0.19",
       currency: "USD",
       available: true,
     });
@@ -630,8 +645,10 @@ export class MemStorage implements IStorage {
       type: "premium",
       bidCount: 325,
       bonusBids: 0,
+      totalBids: 325,
       price: "60.00",
       originalPrice: "78.00",
+      pricePerBid: "0.18",
       currency: "USD",
       available: true,
     });
@@ -641,8 +658,10 @@ export class MemStorage implements IStorage {
       type: "whale",
       bidCount: 650,
       bonusBids: 0,
+      totalBids: 650,
       price: "120.00",
       originalPrice: "156.00",
+      pricePerBid: "0.18",
       currency: "USD",
       available: true,
     });
