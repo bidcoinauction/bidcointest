@@ -178,7 +178,7 @@ export default function AuctionPacksPage() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
           <TabsList className="bg-[#1f2937] border-b border-[#374151] mb-6 w-full justify-start rounded-none h-auto py-1 px-0">
             <TabsTrigger value="bidpacks" className="px-4 py-2 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
-              BidPacks
+              AuctionPacks
             </TabsTrigger>
             <TabsTrigger value="history" className="px-4 py-2 data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none">
               Purchase History
@@ -242,7 +242,7 @@ export default function AuctionPacksPage() {
                 <div className="bg-[#111827] rounded-lg p-5 text-center">
                   <p className="text-gray-400 mb-6">You haven't purchased any bid packs yet.</p>
                   <Button className="bg-primary hover:bg-primary-dark text-white" onClick={() => setActiveTab("bidpacks")}>
-                    Browse BidPacks
+                    Browse AuctionPacks
                   </Button>
                 </div>
               </div>
@@ -260,16 +260,16 @@ export default function AuctionPacksPage() {
           
           <TabsContent value="usage">
             <div className="bg-[#1f2937] rounded-xl p-6 border border-[#374151]">
-              <h2 className="text-2xl font-display font-bold text-white mb-6">How BidPacks Work</h2>
+              <h2 className="text-2xl font-display font-bold text-white mb-6">How AuctionPacks Work</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="bg-[#111827] p-5 rounded-lg">
                   <h3 className="text-xl font-medium text-white mb-4 flex items-center">
                     <CreditCard className="h-5 w-5 mr-2 text-primary" />
-                    Purchase BidPacks
+                    Purchase AuctionPacks
                   </h3>
                   <p className="text-gray-300 mb-3">
-                    BidPacks are ordinals containing a specific number of bids that you can use to participate in auctions.
+                    AuctionPacks are ordinals containing a specific number of bids that you can use to participate in auctions.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-start">
@@ -313,9 +313,9 @@ export default function AuctionPacksPage() {
               </div>
               
               <div className="bg-gradient-to-r from-primary/20 to-accent/20 p-5 rounded-lg border border-primary/30">
-                <h3 className="text-lg font-medium text-white mb-2">Why Use BidPacks?</h3>
+                <h3 className="text-lg font-medium text-white mb-2">Why Use AuctionPacks?</h3>
                 <p className="text-gray-300 mb-4">
-                  BidPacks provide a more cost-effective way to participate in auctions compared to individual transactions. By purchasing bids in bulk, you save on transaction fees and get more value with larger packs.
+                  AuctionPacks provide a more cost-effective way to participate in auctions compared to individual transactions. By purchasing bids in bulk, you save on transaction fees and get more value with larger packs.
                 </p>
                 <Button variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10">
                   Learn More <ArrowRight className="h-4 w-4 ml-2" />
