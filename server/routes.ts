@@ -706,7 +706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (contract_address === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
           metadata.floor_price = "2.35";
           metadata.floor_price_usd = "5129.75";
-        } else if (contract_address === '0xbba9187d5108e395d0681462523c4404de06a497') { // DegenToonz
+        } else if (contract_address === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
           metadata.floor_price = "5.72";
           metadata.floor_price_usd = "12435.67";
         } else if (contract_address === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
@@ -724,7 +724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (contract_address === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6' && token_id === '8748') ||
         (contract_address === '0x4aeb52db83daa33a31673599e892d9247b0449ca' && token_id === '7221') ||
         (contract_address === '0x5af0d9827e0c53e4799bb226655a1de152a425a5' && token_id === '7218') ||
-        (contract_address === '0xbba9187d5108e395d0681462523c4404de06a497' && token_id === '4269') ||
+        (contract_address === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB' && token_id === '7804') ||
         ((contract_address === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
           contract_address === '0x8ec79a75be1bf1394e8d657ee006da730d003789') && 
           token_id === '8993')
@@ -817,7 +817,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             (nft.contractAddress === '0x60cd862c9c687a9de49aecdc3a99b74a4fc54ab6' && nft.tokenId === '8748') ||
             (nft.contractAddress === '0x4aeb52db83daa33a31673599e892d9247b0449ca' && nft.tokenId === '7221') ||
             (nft.contractAddress === '0x5af0d9827e0c53e4799bb226655a1de152a425a5' && nft.tokenId === '7218') ||
-            (nft.contractAddress === '0xbba9187d5108e395d0681462523c4404de06a497' && nft.tokenId === '4269') ||
+            (nft.contractAddress === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB' && nft.tokenId === '7804') ||
             ((nft.contractAddress === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
               nft.contractAddress === '0x8ec79a75be1bf1394e8d657ee006da730d003789') && 
               nft.tokenId === '8993')
@@ -837,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else if (nft.contractAddress === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
               enrichedNFT.floorPrice = '2.35';
               enrichedNFT.floorPriceUsd = '5129.75';
-            } else if (nft.contractAddress === '0xbba9187d5108e395d0681462523c4404de06a497') { // DegenToonz
+            } else if (nft.contractAddress === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
               enrichedNFT.floorPrice = '5.72';
               enrichedNFT.floorPriceUsd = '12435.67';
             } else if (nft.contractAddress === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
@@ -912,7 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (nft.contractAddress === '0x5af0d9827e0c53e4799bb226655a1de152a425a5') { // Milady
           enrichedNFT.floorPrice = '2.35';
           enrichedNFT.floorPriceUsd = '5129.75';
-        } else if (nft.contractAddress === '0xbba9187d5108e395d0681462523c4404de06a497') { // DegenToonz
+        } else if (nft.contractAddress === '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB') { // CryptoPunks
           enrichedNFT.floorPrice = '5.72';
           enrichedNFT.floorPriceUsd = '12435.67';
         } else if (nft.contractAddress === '0xc88bfed94fd57443a012787bd43958fbd8553c69' || 
