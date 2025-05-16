@@ -439,6 +439,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currency: auction.currency || "ETH",
       });
       
+      // Process achievement triggers
+      try {
+        // Trigger achievements for bid placed
+        await achievementService.processTrigger({
+          type: 'bid_placed',
+          userId: bidder.id,
+          auctionId: auction.id,
+          bidCount: updatedBidCount
+        });
+        
+        // Check for first bid achievement if this is the user's first bid
+        await achievementService.checkFirstTimeAchievement(bidder.id, 'bid');
+        
+        // Update bid count achievements
+        await achievementService.updateBidCountAchievements(bidder.id);
+        
+        // Check for collection-specific achievements
+        if (nft && nft.contractAddress) {
+          await achievementService.processTrigger({
+            type: 'collection_bid',
+            userId: bidder.id,
+            collection: nft.contractAddress
+          });
+        }
+      } catch (error) {
+        console.error('Error processing achievements:', error);
+        // Non-blocking - continue even if achievements fail
+      }
+      
       // Get updated auction
       const updatedAuction = await storage.getAuction(bidData.auctionId);
       
