@@ -175,12 +175,16 @@ export default function FeaturedAuction() {
           <div className="p-6 md:p-8 md:w-1/2 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start">
-                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">CRYPTOPUNKS #7804</h2>
+                <h2 className="text-2xl md:text-3xl font-display font-bold text-white mb-2">
+                  {featuredAuction?.nft?.name || 'MUTANT APE YACHT CLUB #3652'}
+                </h2>
                 <span className="bg-[#111827] px-3 py-1 rounded-lg text-xs font-mono text-primary">
-                  ETH
+                  {featuredAuction?.currency || 'ETH'}
                 </span>
               </div>
-              <p className="text-gray-300 mb-4">DEGEN TOONZ Collection is the debut PFP collection from Degen Toonz, featuring a wide set of rare traits that make each NFT unique.</p>
+              <p className="text-gray-300 mb-4">
+                {featuredAuction?.nft?.description || 'The Mutant Ape Yacht Club is a collection of up to 20,000 Mutant Apes that can only be created by exposing an existing Bored Ape to a vial of MUTANT SERUM or by minting a Mutant in the public sale.'}
+              </p>
 
               <div className="grid grid-cols-2 gap-4 mb-2">
                 <div className="bg-background/50 p-3 rounded-lg">
