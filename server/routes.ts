@@ -123,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             storage.getAuction(auctionId).then(auction => {
               if (auction) {
                 // Get recent bids for this auction
-                storage.getBidsForAuction(auctionId).then(bids => {
+                storage.getBidsByAuction(auctionId).then(bids => {
                   // Calculate bid rate (bids per minute)
                   const now = new Date();
                   const oneMinuteAgo = new Date(now.getTime() - 60000);
