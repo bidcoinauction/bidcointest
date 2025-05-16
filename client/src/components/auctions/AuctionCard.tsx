@@ -206,7 +206,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
           setLocalLeader(data.bid.bidderAddress);
         }
 
-        // Reset timer (Bidcoin reset mechanism)
+        // Reset timer (AuctionBlock reset mechanism)
         const resetTime = new Date();
         resetTime.setSeconds(resetTime.getSeconds() + 60);
 
@@ -423,7 +423,7 @@ export default function AuctionCard({ auction }: AuctionCardProps) {
                   const newBidCount = localBidCount + 1;
                   setLocalCurrentBid(parseFloat((newBidCount * 0.03).toFixed(2)));
 
-                  // Reset timer (Bidcoin reset mechanism)
+                  // Reset timer (AuctionBlock reset mechanism)
                   const resetTime = new Date();
                   resetTime.setSeconds(resetTime.getSeconds() + 60);
                   setLocalEndTime(resetTime);

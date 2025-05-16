@@ -321,7 +321,7 @@ export default function BidModal({ isOpen, onClose, auction, minimumBid, onPlace
                   <h3 className="text-lg font-display font-medium text-white">Enhance Your Bidding Strategy</h3>
                 </div>
                 <p className="text-gray-300 mb-4">
-                  Bidcoin offers strategic bidding options to improve your chances of winning auctions. 
+                  AuctionBlock offers strategic bidding options to improve your chances of winning auctions. 
                   Each strategy has different advantages based on auction dynamics and competition.
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
