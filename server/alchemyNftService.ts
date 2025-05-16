@@ -234,6 +234,16 @@ export class AlchemyNftService {
    */
   async getNFTsForContract(contractAddress: string, pageKey?: string, pageSize: number = 100): Promise<any> {
     try {
+      // Create a cache key - include pagination in the cache key
+      const cacheKey = `contract:${contractAddress.toLowerCase()}:page:${pageKey || 'first'}:size:${pageSize}`;
+      
+      // Check cache first
+      const cachedData = nftCache.get(cacheKey);
+      if (cachedData) {
+        log(`Using cached NFTs for contract ${contractAddress}`, 'alchemy-nft');
+        return cachedData;
+      }
+      
       log(`Fetching NFTs for contract ${contractAddress}`, 'alchemy-nft');
 
       // Use Alchemy SDK
@@ -250,6 +260,11 @@ export class AlchemyNftService {
         contractAddress,
         options
       );
+      
+      // Cache the response
+      if (response) {
+        nftCache.set(cacheKey, response);
+      }
 
       return response;
     } catch (error: any) {
@@ -264,12 +279,27 @@ export class AlchemyNftService {
    */
   async getContractMetadata(contractAddress: string): Promise<any> {
     try {
+      // Create a cache key for collection metadata
+      const cacheKey = `collection:${contractAddress.toLowerCase()}`;
+      
+      // Check cache first
+      const cachedData = nftCache.get(cacheKey);
+      if (cachedData) {
+        log(`Using cached collection metadata for ${contractAddress}`, 'alchemy-nft');
+        return cachedData;
+      }
+      
       log(`Fetching collection metadata for ${contractAddress}`, 'alchemy-nft');
 
       // Use Alchemy SDK
       const response = await this.alchemy.nft.getContractMetadata(
         contractAddress
       );
+      
+      // Cache the response for a longer period (2 hours) since collection metadata rarely changes
+      if (response) {
+        nftCache.set(cacheKey, response, 7200000); // 2 hours
+      }
 
       return response;
     } catch (error: any) {
@@ -347,6 +377,16 @@ export class AlchemyNftService {
    */
   async getTrendingCollections(limit: number = 10): Promise<any[]> {
     try {
+      // Create a cache key for trending collections - include limit in the key
+      const cacheKey = `trending:collections:limit:${limit}`;
+      
+      // Check cache first
+      const cachedData = nftCache.get(cacheKey);
+      if (cachedData) {
+        log(`Using cached trending collections data`, 'alchemy-nft');
+        return cachedData;
+      }
+      
       log(`Fetching trending collections with limit ${limit}`, 'alchemy-nft');
 
       // Get collections with floor price
@@ -364,7 +404,7 @@ export class AlchemyNftService {
       }
 
       // Map collections to our format
-      return response.data.collections.map((collection: any) => ({
+      const formattedCollections = response.data.collections.map((collection: any) => ({
         name: collection.name,
         contract_address: collection.contract_address,
         description: collection.description,
@@ -377,6 +417,11 @@ export class AlchemyNftService {
         volume_24h: collection.volume || 0,
         items_count: collection.total_supply || 0
       }));
+      
+      // Cache the response for 1 hour
+      nftCache.set(cacheKey, formattedCollections, 3600000); // 1 hour
+      
+      return formattedCollections;
     } catch (error: any) {
       this.handleError('getTrendingCollections', error);
       return [];
