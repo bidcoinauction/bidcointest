@@ -208,7 +208,7 @@ export default function UserAchievements() {
               <div>
                 <h4 className="text-white font-medium mb-3">Next Achievements</h4>
                 <div className="space-y-3">
-                  {achievementStats.nextAchievements.slice(0, 3).map((ua) => (
+                  {achievementStats.nextAchievements.slice(0, 3).map((ua: UserAchievement) => (
                     <div key={ua.id} className="bg-[#111827] p-3 rounded-lg flex items-center">
                       <div className="mr-3">
                         {renderIcon(ua.achievement.icon)}
