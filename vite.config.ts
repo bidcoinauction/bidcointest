@@ -2,11 +2,13 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { splitVendorChunkPlugin } from 'vite';
 
 export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
+    splitVendorChunkPlugin(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
@@ -27,7 +29,23 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
-    chunkSizeWarningLimit: 1000, // Increase this value as needed
+    chunkSizeWarningLimit: 1500, // Increased from 1000
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-components': [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-popover'
+          ],
+          'ethers': ['ethers'],
+          'utils': ['axios', 'date-fns', 'zod']
+        }
+      }
+    }
   },
   server: {
     proxy: {

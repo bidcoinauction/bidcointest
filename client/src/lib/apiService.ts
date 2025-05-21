@@ -31,6 +31,10 @@ export const auctionService = {
 
   getFeaturedAuctions: () => {
     return api.get('/auctions/featured').then(res => res.data);
+  },
+  
+  placeBid: (auctionId: number, amount: string, bidderAddress: string) => {
+    return api.post('/bids', { auctionId, amount, bidderAddress }).then(res => res.data);
   }
 };
 
@@ -40,6 +44,10 @@ export const auctionService = {
 export const bidPackService = {
   getBidPacks: () => {
     return api.get('/bidpacks').then(res => res.data);
+  },
+  
+  purchaseBidPack: (packId: number, address: string) => {
+    return api.post('/bidpacks/purchase', { packId, address }).then(res => res.data);
   }
 };
 
@@ -57,6 +65,10 @@ export const activityService = {
  */
 export const blockchainService = {
   getStats: () => {
+    return api.get('/blockchain/stats').then(res => res.data);
+  },
+  
+  getBlockchainStats: () => {
     return api.get('/blockchain/stats').then(res => res.data);
   }
 };
@@ -78,6 +90,14 @@ export const nftApi = {
         { trait_type: 'Mouth', value: 'Smile' }
       ]
     });
+  },
+  
+  getTokenURI: (contractAddress: string, tokenId: string, chainId: number = 1) => {
+    return api.get(`/alchemy/nft/${contractAddress}/${tokenId}`).then(res => res.data);
+  },
+  
+  getNFTMetadata: (contractAddress: string, tokenId: string) => {
+    return api.get(`/alchemy/nft/${contractAddress}/${tokenId}`).then(res => res.data);
   }
 };
 
@@ -87,5 +107,27 @@ export const nftApi = {
 export const alchemyApi = {
   getNFTMetadata: (contractAddress: string, tokenId: string) => {
     return api.get(`/alchemy/nft/${contractAddress}/${tokenId}`).then(res => res.data);
+  }
+};
+
+/**
+ * User API functions
+ */
+export const userService = {
+  getUserByWalletAddress: (address: string) => {
+    return api.get(`/users/by-wallet/${address}`).then(res => res.data);
+  }
+};
+
+/**
+ * Achievement API functions
+ */
+export const achievementService = {
+  getUserAchievements: (userId: number) => {
+    return api.get(`/users/${userId}/achievements`).then(res => res.data);
+  },
+  
+  getUserAchievementStats: (userId: number) => {
+    return api.get(`/users/${userId}/achievement-stats`).then(res => res.data);
   }
 };
