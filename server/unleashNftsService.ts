@@ -3,7 +3,7 @@ import { log } from './vite';
 
 // Updated API endpoints based on the latest UnleashNFTs documentation
 const BASE_URL_V1 = 'https://api.unleashnfts.com/v1'; // Note: v1 uses /v1 in path
-const BASE_URL_V2 = 'https://api.unleashnfts.com/api/v2'; // Note: v2 uses /api/v2 in path
+const BASE_URL_V2 = 'https://api.unleashnfts.com/v2'; // Changed from /api/v2 to match docs
 // Access the API key directly from the environment variable
 // In server-side code, we need to access process.env directly, not import.meta.env
 const API_KEY = process.env.VITE_BITCRUNCH_API_KEY || '0c4b62cce16246d181310c3b57512529';
@@ -113,7 +113,7 @@ export class UnleashNftsService {
    * @param metrics Type of metrics to include (volume, floor_price, etc.)
    * @param sortBy Field to sort by (volume, market_cap, etc.)
    */
-  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume,marketcap,price_floor,price_avg,price_ceiling,holders,sales,traders,holders_diamond_hands,holders_whales,volume_change,marketcap_change,holders_change,sales_change,traders_change', sortBy: string = 'volume'): Promise<NFTCollection[]> {
+  async getCollectionsByChain(chain: string, page: number = 1, limit: number = 10, metricsParam: string = 'volume,market_cap,floor_price,holders,sales,traders,volume_change,market_cap_change,holders_change,sales_change,traders_change', sortBy: string = 'volume_24h'): Promise<NFTCollection[]> {
     try {
       const chainId = this.normalizeChainId(chain);
       log(`Fetching collections for chain ${chainId}...`, 'unleash-nfts');
@@ -313,33 +313,25 @@ export class UnleashNftsService {
     if (!url) return '';
     
     // Skip already cleaned URLs
-    if (url.startsWith('data:image') || url.includes('ipfs.io')) {
+    if (url.startsWith('data:image')) {
       return url;
     }
     
     try {
-      // Convert IPFS gateway URLs to use ipfs.io gateway which has better CORS support
-      if (url.includes('ipfs')) {
-        // Extract CID from various IPFS URL formats
-        let cid = '';
-        
-        // Handle ipfs:// protocol
-        if (url.startsWith('ipfs://')) {
-          cid = url.replace('ipfs://', '');
-          return `https://ipfs.io/ipfs/${cid}`;
-        }
-        
-        // Handle URLs with /ipfs/ path
-        if (url.includes('/ipfs/')) {
-          cid = url.split('/ipfs/')[1];
-          return `https://ipfs.io/ipfs/${cid}`;
-        }
+      // Convert IPFS gateway URLs to use recommended image proxy
+      if (url.startsWith('ipfs://')) {
+        const cid = url.replace('ipfs://', '');
+        return `https://unleash.imgix.net/ipfs/${cid}`;
+      }
+      
+      // Handle URLs with /ipfs/ path
+      if (url.includes('/ipfs/')) {
+        const cid = url.split('/ipfs/')[1];
+        return `https://unleash.imgix.net/ipfs/${cid}`;
       }
       
       // Handle Magic Eden URLs - replace with direct source
       if (url.includes('magiceden') || url.includes('opensea')) {
-        // Don't use these URLs as they have CORS restrictions
-        // Instead return a placeholder or cached version
         log(`Skipping restricted marketplace URL: ${url}`, 'unleash-nfts');
         return '/placeholder-nft.png';
       }
@@ -464,8 +456,9 @@ export class UnleashNftsService {
       const chainId = this.normalizeChainId(chain);
       log(`Fetching valuation for NFT ${contractAddress}/${tokenId} on chain ${chainId}`, 'unleash-nfts');
       
-      const response = await axios.get(`${BASE_URL_V1}/nft/valuation`, {
-        headers: this.headersV1,
+      // Changed from V1 to V2 per documentation
+      const response = await axios.get(`${BASE_URL_V2}/nft/valuation`, {
+        headers: this.headersV2,
         params: {
           blockchain: chainId,
           collection_address: contractAddress,
@@ -667,7 +660,11 @@ export class UnleashNftsService {
       'fantom': '250',
       'ftm': '250',
       'base': '8453',
-      'solana': '900'
+      'solana': '900',
+      // Added new chains from docs
+      'gnosis': '100',
+      'zksync': '324',
+      'linea': '59144'
     };
     
     // Check if the chain is already a numeric ID
@@ -718,6 +715,17 @@ export class UnleashNftsService {
       return;
     }
     
+    // Add handling for documented error codes
+    if (status === 403) {
+      log(`Forbidden (403): Upgrade plan required for this endpoint`, 'unleash-nfts');
+      return;
+    }
+    
+    if (status === 422) {
+      log(`Validation Error (422): Check request parameters`, 'unleash-nfts');
+      return;
+    }
+    
     // Detailed logging for other error types
     log(`API Error in ${method}: ${errorMessage}`, 'unleash-nfts');
     log(`Request: ${requestMethod.toUpperCase()} ${requestUrl}`, 'unleash-nfts');
@@ -750,7 +758,8 @@ export class UnleashNftsService {
     offset?: number,
     time_range?: string,
     include_washtrade?: boolean,
-    category?: string[]
+    category?: string[],
+    cursor?: string // Added cursor-based pagination support
   }): Promise<any> {
     try {
       // Use v1 API endpoint for collections
@@ -783,6 +792,7 @@ export class UnleashNftsService {
       if (params.time_range) queryParams.time_range = params.time_range;
       if (params.include_washtrade !== undefined) queryParams.include_washtrade = params.include_washtrade;
       if (params.category) queryParams.category = params.category;
+      if (params.cursor) queryParams.cursor = params.cursor;
       
       // Log the API call
       log(`Fetching collections with params: ${JSON.stringify(queryParams)}`, 'unleash-nfts');
@@ -844,6 +854,27 @@ export class UnleashNftsService {
       return response.data;
     } catch (error: any) {
       this.handleError('getCollectionsByBlockchain', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get collection mint feed (real-time data)
+   * @param contractAddress The collection contract address
+   * @param chain The blockchain name (ethereum, polygon, etc.)
+   */
+  async getCollectionMintFeed(contractAddress: string, chain: string = 'ethereum'): Promise<any> {
+    try {
+      const chainId = this.normalizeChainId(chain);
+      log(`Fetching mint feed for collection ${contractAddress} on chain ${chainId}`, 'unleash-nfts');
+      
+      const response = await axios.get(`${BASE_URL_V2}/mint-feed/${chainId}/${contractAddress}`, {
+        headers: this.headersV2
+      });
+      
+      return response.data || null;
+    } catch (error: any) {
+      this.handleError('getCollectionMintFeed', error);
       return null;
     }
   }

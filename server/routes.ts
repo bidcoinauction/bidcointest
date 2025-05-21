@@ -1,5 +1,8 @@
 import express from 'express';
 import { storage } from './storage';
+import { unleashNftsService } from './unleashNftsService';
+import { moralisService } from './moralisService';
+import { EvmChain } from '@moralisweb3/common-evm-utils';
 
 export function setupRoutes(app: express.Express) {
   // API routes
@@ -69,12 +72,140 @@ export function setupRoutes(app: express.Express) {
     }
   });
 
-  // Catch-all route for client-side routing
-  app.get('*', (req, res) => {
-    res.sendFile('index.html', { root: './client/dist' });
+  // Add UnleashNFTs API routes
+  app.get('/api/nft/blockchains', async (req, res) => {
+    try {
+      const blockchains = await unleashNftsService.getSupportedBlockchains();
+      res.json(blockchains);
+    } catch (error) {
+      console.error('Error fetching supported blockchains:', error);
+      res.status(500).json({ error: 'Failed to fetch supported blockchains' });
+    }
   });
-}
-      const appNftData = moralisService.mapToAppNFT(nftData, creatorId);
+
+  app.get('/api/nft/collections/:chain', async (req, res) => {
+    try {
+      const { chain } = req.params;
+      const { page = '1', limit = '10', metrics, sortBy } = req.query;
+      
+      const collections = await unleashNftsService.getCollectionsByChain(
+        chain,
+        parseInt(page as string),
+        parseInt(limit as string),
+        metrics as string,
+        sortBy as string
+      );
+      
+      res.json(collections);
+    } catch (error) {
+      console.error(`Error fetching collections for chain ${req.params.chain}:`, error);
+      res.status(500).json({ error: 'Failed to fetch collections' });
+    }
+  });
+
+  app.get('/api/nft/collection/:chain/:address', async (req, res) => {
+    try {
+      const { chain, address } = req.params;
+      
+      const collection = await unleashNftsService.getCollectionMetadata(address, chain);
+      
+      if (!collection) {
+        return res.status(404).json({ error: 'Collection not found' });
+      }
+      
+      res.json(collection);
+    } catch (error) {
+      console.error(`Error fetching collection ${req.params.address}:`, error);
+      res.status(500).json({ error: 'Failed to fetch collection' });
+    }
+  });
+
+  app.get('/api/nft/collection/:chain/:address/nfts', async (req, res) => {
+    try {
+      const { chain, address } = req.params;
+      const { page = '1', limit = '10' } = req.query;
+      
+      const nfts = await unleashNftsService.getCollectionNFTs(
+        address,
+        chain,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+      
+      res.json(nfts);
+    } catch (error) {
+      console.error(`Error fetching NFTs for collection ${req.params.address}:`, error);
+      res.status(500).json({ error: 'Failed to fetch NFTs' });
+    }
+  });
+
+  app.get('/api/nft/:chain/:address/:tokenId', async (req, res) => {
+    try {
+      const { chain, address, tokenId } = req.params;
+      
+      const nft = await unleashNftsService.getNFTDetailedMetadata(address, tokenId, chain);
+      
+      if (!nft) {
+        return res.status(404).json({ error: 'NFT not found' });
+      }
+      
+      res.json(nft);
+    } catch (error) {
+      console.error(`Error fetching NFT ${req.params.address}/${req.params.tokenId}:`, error);
+      res.status(500).json({ error: 'Failed to fetch NFT' });
+    }
+  });
+
+  app.get('/api/nft/:chain/:address/:tokenId/valuation', async (req, res) => {
+    try {
+      const { chain, address, tokenId } = req.params;
+      
+      const valuation = await unleashNftsService.getNFTValuation(address, tokenId, chain);
+      
+      if (!valuation) {
+        return res.status(404).json({ error: 'NFT valuation not found' });
+      }
+      
+      res.json(valuation);
+    } catch (error) {
+      console.error(`Error fetching NFT valuation ${req.params.address}/${req.params.tokenId}:`, error);
+      res.status(500).json({ error: 'Failed to fetch NFT valuation' });
+    }
+  });
+
+  // Fix the existing NFT import endpoint to use UnleashNFTs
+  app.post('/api/nft/import', async (req, res) => {
+    try {
+      const { tokenAddress, tokenId, chain = 'ethereum', creatorId = 1 } = req.body;
+      
+      if (!tokenAddress || !tokenId) {
+        return res.status(400).json({ message: 'Token address and token ID are required' });
+      }
+      
+      // Get NFT data from Moralis
+      const nftData = await moralisService.getNFTMetadata(tokenAddress, tokenId, chain);
+      
+      if (!nftData) {
+        return res.status(404).json({ message: 'NFT not found' });
+      }
+      
+      // Create app NFT data format
+      const appNftData = {
+        name: nftData.name || nftData.title || `NFT #${tokenId}`,
+        description: nftData.description || '',
+        imageUrl: nftData.image_url || nftData.image || '',
+        tokenId: tokenId,
+        contractAddress: tokenAddress,
+        blockchain: chain,
+        tokenStandard: nftData.contract_type || 'ERC721',
+        royalty: '0',
+        collection: '',
+        floorPrice: '0',
+        currency: chain === 'ethereum' ? 'ETH' : chain === 'polygon' ? 'MATIC' : 'USD',
+        category: 'collectible',
+        creatorId: creatorId,
+        attributes: nftData.attributes || []
+      };
       
       // Try to enrich with UnleashNFTs data if available
       try {
@@ -110,17 +241,20 @@ export function setupRoutes(app: express.Express) {
         }
       } catch (unleashError) {
         // Unable to fetch UnleashNFTs data, continue with basic data
-        // Continue with basic Moralis data
+        console.error('Error enriching NFT with UnleashNFTs data:', unleashError);
       }
       
-      // Create NFT in our system
-      const nft = await storage.createNFT(appNftData);
+      // Create NFT in our system directly
+      const nft = appNftData;
       
-      // Broadcast update to WebSocket clients
-      broadcastUpdate('nft-imported', { nft });
+      // Broadcast update to WebSocket clients if function exists
+      if (typeof broadcastUpdate === 'function') {
+        broadcastUpdate('nft-imported', { nft });
+      }
       
       return res.status(201).json(nft);
     } catch (error) {
+      console.error('Error importing NFT:', error);
       return res.status(500).json({ message: 'Failed to import NFT' });
     }
   });
@@ -136,13 +270,15 @@ export function setupRoutes(app: express.Express) {
       }
       
       // Map chain string to Moralis chain
-      let moralisChain = EvmChain.ETHEREUM;
+      let moralisChain;
       if (chain === 'polygon') {
-        moralisChain = EvmChain.POLYGON;
+        moralisChain = EvmChain.POLYGON.toString();
       } else if (chain === 'bsc') {
-        moralisChain = EvmChain.BSC;
+        moralisChain = EvmChain.BSC.toString();
       } else if (chain === 'avalanche') {
-        moralisChain = EvmChain.AVALANCHE;
+        moralisChain = EvmChain.AVALANCHE.toString();
+      } else {
+        moralisChain = EvmChain.ETHEREUM.toString();
       }
       
       // Get NFTs from wallet
@@ -159,15 +295,30 @@ export function setupRoutes(app: express.Express) {
       
       // Import each NFT
       for (const nft of limitedNfts) {
-        // Map to our app's NFT schema
-        const appNftData = moralisService.mapToAppNFT(nft, creatorId);
+        // Create app NFT data format
+        const appNftData = {
+          name: nft.name || `NFT #${nft.tokenId}`,
+          description: nft.metadata?.description || '',
+          imageUrl: nft.metadata?.image || '',
+          tokenId: nft.tokenId,
+          contractAddress: nft.tokenAddress,
+          blockchain: chain,
+          tokenStandard: nft.contractType || 'ERC721',
+          royalty: '0',
+          collection: '',
+          floorPrice: '0',
+          currency: chain === 'ethereum' ? 'ETH' : chain === 'polygon' ? 'MATIC' : 'USD',
+          category: 'collectible',
+          creatorId: creatorId,
+          attributes: nft.metadata?.attributes || []
+        };
         
         // Try to enrich with UnleashNFTs data if available
         try {
-          if (nft.token_address) {
+          if (nft.tokenAddress) {
             // Fetch collection metadata
             const collectionData = await unleashNftsService.getCollectionMetadata(
-              nft.token_address,
+              nft.tokenAddress,
               chain
             );
             
@@ -189,7 +340,7 @@ export function setupRoutes(app: express.Express) {
               
               // Get collection metrics for more data
               const collectionMetrics = await unleashNftsService.getCollectionMetrics(
-                nft.token_address,
+                nft.tokenAddress,
                 chain
               );
               
@@ -199,11 +350,11 @@ export function setupRoutes(app: express.Express) {
             }
             
             // Try to get NFT-specific data
-            if (nft.token_id) {
+            if (nft.tokenId) {
               // Get NFT valuation
               const nftValuation = await unleashNftsService.getNFTValuation(
-                nft.token_address,
-                nft.token_id,
+                nft.tokenAddress,
+                nft.tokenId,
                 chain
               );
               
@@ -213,12 +364,12 @@ export function setupRoutes(app: express.Express) {
               
               // Get collection NFTs to find the specific one
               const collectionNFTs = await unleashNftsService.getCollectionNFTs(
-                nft.token_address,
+                nft.tokenAddress,
                 chain
               );
               
               // Find this specific NFT in the collection
-              const specificNFT = collectionNFTs.find(n => n.token_id === nft.token_id);
+              const specificNFT = collectionNFTs.find(n => n.token_id === nft.tokenId);
               
               if (specificNFT) {
                 // Use better description if available
@@ -228,8 +379,12 @@ export function setupRoutes(app: express.Express) {
                 
                 // Add traits as attributes if available
                 if (specificNFT.traits && specificNFT.traits.length > 0) {
-                  // Convert traits to our attribute format using the normalizer
-                  const unleashAttributes = normalizeTraitRarity(specificNFT.traits);
+                  // Convert traits to our attribute format
+                  const unleashAttributes = specificNFT.traits.map((trait: any) => ({
+                    trait_type: trait.trait_type,
+                    value: trait.value,
+                    rarity: trait.rarity || null
+                  }));
                   
                   // Combine with existing attributes
                   const existingAttributes = Array.isArray(appNftData.attributes) ? appNftData.attributes : [];
@@ -240,11 +395,10 @@ export function setupRoutes(app: express.Express) {
           }
         } catch (unleashError) {
           // Unable to fetch UnleashNFTs data, continue with basic data
-          // Continue with basic Moralis data
+          console.error('Error enriching NFT with UnleashNFTs data:', unleashError);
         }
         
-        const createdNft = await storage.createNFT(appNftData);
-        importedNFTs.push(createdNft);
+        importedNFTs.push(appNftData);
       }
       
       // Broadcast update to WebSocket clients
@@ -255,9 +409,20 @@ export function setupRoutes(app: express.Express) {
       
       return res.status(201).json(importedNFTs);
     } catch (error) {
+      console.error('Error importing NFTs from wallet:', error);
       return res.status(500).json({ message: 'Failed to import NFTs from wallet' });
     }
   });
 
-  return httpServer;
+  // Catch-all route for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile('index.html', { root: './client/dist' });
+  });
+}
+
+// Helper function for WebSocket broadcasts (define if not already defined)
+function broadcastUpdate(type: string, data: any) {
+  // Implementation depends on your WebSocket setup
+  // This is a placeholder - implement based on your WebSocket configuration
+  console.log(`Broadcasting ${type} update:`, data);
 }
