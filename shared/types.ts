@@ -21,16 +21,13 @@ export interface BidPack {
 export interface NFTAttribute {
   trait_type: string;
   value: string;
-  rarity?: number;
 }
 
 export interface NFTCollection {
   contract_address: string;
   name: string;
-  blockchain?: string;
-  imageUrl?: string;
-  totalSupply?: number;
-  floorPrice?: number;
+  image_url: string;
+  floor_price?: number;
 }
 
 export type WalletProvider = 'metamask' | 'walletconnect' | 'coinbase';

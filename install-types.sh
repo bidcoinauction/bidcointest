@@ -1,0 +1,1 @@
+npm install -D @types/web3 @types/lodash @types/node

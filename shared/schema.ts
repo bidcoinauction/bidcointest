@@ -33,44 +33,48 @@ export const nfts = pgTable("nfts", {
   contractAddress: text("contract_address").notNull(),
   blockchain: text("blockchain").notNull(),
   tokenStandard: text("token_standard").notNull(),
-  royalty: decimal("royalty", { precision: 5, scale: 2 }).default("0"),
+  royalty: decimal("royalty", { precision: 5, scale: 2 }).default("0.00"),
   collection: text("collection"),
   collectionName: text("collection_name"), // Collection name display
   collectionImage: text("collection_image"), // Added for collection image
   
   // Price metrics
-  priceAvg: decimal("price_avg", { precision: 10, scale: 6 }), // Average price at which NFTs are sold
-  priceCeiling: decimal("price_ceiling", { precision: 10, scale: 6 }), // Highest price at which an NFT in the collection was sold
+  floorPrice: integer("floor_price"),
+  floorPriceUsd: decimal("floor_price_usd", { precision: 10, scale: 2 }),
+  retailPrice: decimal("retail_price", { precision: 10, scale: 2 }),
+  priceAvg: decimal("price_avg", { precision: 10, scale: 6 }),
+  priceCeiling: decimal("price_ceiling", { precision: 10, scale: 6 }),
   
   // Volume metrics
-  volume24h: decimal("volume_24h", { precision: 10, scale: 6 }), // Added for 24h volume
-  volumeChange: decimal("volume_change", { precision: 10, scale: 4 }), // Change in volume as percentage
+  volume24h: decimal("volume_24h", { precision: 10, scale: 6 }),
+  volumeChange: decimal("volume_change", { precision: 10, scale: 4 }),
   
   // Collection metrics
-  marketcap: decimal("marketcap", { precision: 14, scale: 2 }), // Total market value of the collection
-  marketcapChange: decimal("marketcap_change", { precision: 10, scale: 4 }), // Change in marketcap as percentage
+  marketcap: decimal("marketcap", { precision: 20, scale: 6 }),
+  marketcapChange: decimal("marketcap_change", { precision: 5, scale: 2 }),
   
   // Holder metrics
-  holders: integer("holders"), // Number of traders currently holding NFTs
-  holdersChange: decimal("holders_change", { precision: 10, scale: 4 }), // Change in holders as percentage
-  holdersDiamondHands: integer("holders_diamond_hands"), // Number of diamond hands holders
-  holdersWhales: integer("holders_whales"), // Number of whales holding NFTs from collection
+  holders: integer("holders"),
+  holdersChange: decimal("holders_change", { precision: 10, scale: 4 }),
+  holdersDiamondHands: integer("holders_diamond_hands").default(0),
+  holdersWhales: integer("holders_whales").default(0),
   
   // Activity metrics
-  sales: integer("sales"), // Number of NFTs sold
-  salesChange: decimal("sales_change", { precision: 10, scale: 4 }), // Change in sales as percentage
-  traders: integer("traders"), // Number of traders (buyer and/or seller)
-  tradersChange: decimal("traders_change", { precision: 10, scale: 4 }), // Change in traders as percentage
+  sales: integer("sales"),
+  salesChange: decimal("sales_change", { precision: 10, scale: 4 }),
+  traders: integer("traders"),
+  tradersChange: decimal("traders_change", { precision: 10, scale: 4 }),
   
   // Rarity metrics
-  rarityScore: decimal("rarity_score", { precision: 10, scale: 2 }), // Rarity score (higher is more rare)
-  rarityRank: integer("rarity_rank"), // Rarity rank within collection (lower is more rare)
+  rarityScore: decimal("rarity_score", { precision: 10, scale: 2 }),
+  rarityRank: integer("rarity_rank"),
   
   // Basic metadata
   currency: text("currency").default("ETH"),
   items: integer("items"),
   category: text("category").default("art"),
   creatorId: integer("creator_id").references(() => users.id),
+  collectionId: integer("collection_id").references(() => nftCollections.id),
   attributes: jsonb("attributes").notNull().default([]),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -124,7 +128,12 @@ export const insertNftSchema = createInsertSchema(nfts).pick({
   items: true,
   category: true,
   creatorId: true,
+  collectionId: true,
   attributes: true,
+}).extend({
+  floorPrice: z.number().int().optional(),
+  floorPriceUsd: z.number().optional(),
+  retailPrice: z.number().optional(),
 });
 
 // Auction schema
@@ -385,6 +394,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type NFT = typeof nfts.$inferSelect & {
+  collection?: NFTCollection;
   creator: User;
   attributes: Array<{
     trait_type: string;
@@ -486,7 +496,7 @@ export type UserAchievement = typeof userAchievements.$inferSelect & {
 }
 export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
 
-// Add if not already present
+// NFT Collection schema
 export const nftCollections = pgTable("nft_collections", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -494,9 +504,20 @@ export const nftCollections = pgTable("nft_collections", {
   blockchain: text("blockchain").notNull(),
   imageUrl: text("image_url"),
   totalSupply: integer("total_supply"),
-  floorPrice: decimal("floor_price", { precision: 10, scale: 6 }),
+  floorPrice: integer("floor_price"),
+  floorPriceUsd: decimal("floor_price_usd", { precision: 10, scale: 2 }),
+  retailPrice: decimal("retail_price", { precision: 10, scale: 2 }),
   volume24h: decimal("volume_24h", { precision: 10, scale: 6 }),
   holders: integer("holders"),
-  marketCap: decimal("market_cap", { precision: 10, scale: 6 }),
+  marketCap: decimal("market_cap", { precision: 14, scale: 6 }),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const insertNftCollectionSchema = createInsertSchema(nftCollections).omit({ 
+  id: true,
+  createdAt: true 
+});
+
+// Type definitions
+export type NFTCollection = typeof nftCollections.$inferSelect;
+export type InsertNFTCollection = z.infer<typeof insertNftCollectionSchema>;
