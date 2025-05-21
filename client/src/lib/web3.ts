@@ -50,7 +50,7 @@ export async function connectWallet(walletType: WalletType): Promise<WalletConne
 // Connect to MetaMask
 async function connectMetaMask(): Promise<WalletConnection> {
   // Check if MetaMask is installed
-  if (!window.ethereum) {
+  if (typeof window.ethereum === 'undefined') {
     throw new Error("MetaMask is not installed");
   }
 
