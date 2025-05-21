@@ -1,39 +1,41 @@
+import 'dotenv/config';
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import path from 'path';
+import cors from 'cors';
 import { setupRoutes } from './routes';
-import { db } from './db';
 
 const app = express();
-const port = process.env.PORT || 5000;
-
-// Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Set up routes
-setupRoutes(app);
-
-// Create HTTP server
 const server = createServer(app);
-
-// Create WebSocket server
 const wss = new WebSocketServer({ server });
 
-// WebSocket connection handler
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Serve static files from the client/dist directory
+app.use(express.static(path.join(__dirname, '../client/dist')));
+
+// Set up API routes
+setupRoutes(app);
+
+// WebSocket connection handling
 wss.on('connection', (ws) => {
-  console.log('Client connected to WebSocket');
+  console.log('Client connected');
   
   ws.on('message', (message) => {
     console.log('Received message:', message);
+    // Handle WebSocket messages here
   });
   
   ws.on('close', () => {
-    console.log('Client disconnected from WebSocket');
+    console.log('Client disconnected');
   });
 });
 
-// Start server
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Start the server
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

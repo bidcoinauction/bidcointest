@@ -99,7 +99,7 @@ export function useWebSocket() {
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         // Use the absolute path to avoid issues with Vite's dev server
         const wsUrl = `${protocol}//${window.location.host}/ws`;
-        
+
         console.log(`[websocket] Connecting to ${wsUrl}...`);
         const ws = new WebSocket(wsUrl);
         socketRef.current = ws;

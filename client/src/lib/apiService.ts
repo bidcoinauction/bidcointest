@@ -1,143 +1,45 @@
-/**
- * Central API service file
- * Consolidates all API interactions in one place
- */
-
 import axios from 'axios';
-import { Auction, NFT, BidPack, Activity, BlockchainStats } from "@shared/schema";
 
+// Create axios instance with base URL
 const api = axios.create({
   baseURL: '/api'
 });
 
-/**
- * NFT API functions - using Alchemy as the primary data source
- * with hosted images from our OortStorages CDN
- */
-export const nftApi = {
-  /**
-   * Get NFT metadata by contract address and token ID
-   */
-  getNFTMetadata: (contractAddress: string, tokenId: string) => {
-    return api.get(`/alchemy/nft/${contractAddress}/${tokenId}`).then(res => res.data);
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  response => {
+    console.log(`API Success [${response.config.url}]:`, response.data);
+    return response;
   },
-
-  /**
-   * Get tokenURI data for an NFT
-   */
-  getTokenURI: (contractAddress: string, tokenId: string, chain: string = 'ethereum') => {
-    return api.get(`/nft/token-uri/${contractAddress}/${tokenId}?chain=${chain}`).then(res => res.data);
-  },
-
-  /**
-   * Get trending collections
-   */
-  getTrendingCollections: (limit: number = 10) => {
-    return api.get(`/alchemy/collections/trending?limit=${limit}`).then(res => res.data);
-  },
-
-  /**
-   * Get collection metadata
-   */
-  getCollectionMetadata: (address: string) => {
-    return api.get(`/alchemy/contract/${address}`).then(res => res.data);
-  },
-
-  /**
-   * Get NFTs owned by an address
-   */
-  getOwnedNFTs: (ownerAddress: string, pageKey?: string, pageSize: number = 50) => {
-    let url = `/alchemy/owner/${ownerAddress}/nfts?pageSize=${pageSize}`;
-    if (pageKey) {
-      url += `&pageKey=${pageKey}`;
-    }
-    return api.get(url).then(res => res.data);
+  error => {
+    console.error(`API Error [${error.config?.url}]:`, error.response?.data || error.message);
+    return Promise.reject(error);
   }
-};
+);
 
 /**
  * Auction API functions
  */
 export const auctionService = {
-  /**
-   * Get all auctions
-   */
   getAuctions: () => {
-    return api.get<Auction[]>("/auctions").then(res => res.data);
+    return api.get('/auctions').then(res => res.data);
   },
 
-  /**
-   * Get auction by ID
-   */
-  getAuction: async (id: number): Promise<Auction> => {
-    const { data } = await api.get<Auction>(`/auctions/${id}`);
-
-    if (data && data.nft && data.nft.id) {
-      try {
-        const { data: enrichedNFT } = await api.get(`/nft-details/${data.nft.id}`);
-        if (enrichedNFT) {
-          data.nft = enrichedNFT;
-        }
-      } catch (error) {
-        console.error('Error fetching enriched NFT details:', error);
-      }
-    }
-
-    return data;
+  getAuction: (id: number) => {
+    return api.get(`/auctions/${id}`).then(res => res.data);
   },
 
-  /**
-   * Get featured auctions
-   */
   getFeaturedAuctions: () => {
-    return api.get<Auction[]>("/auctions/featured").then(res => res.data);
-  },
-
-  /**
-   * Place a bid on an auction
-   */
-  placeBid: (auctionId: number, amount: string, bidderAddress: string) => {
-    return api.post<Auction>(`/bids`, {
-      auctionId,
-      amount,
-      bidderAddress,
-    }).then(res => res.data);
+    return api.get('/auctions/featured').then(res => res.data);
   }
 };
 
 /**
- * BidPack API functions
+ * Bid Pack API functions
  */
 export const bidPackService = {
-  /**
-   * Get all bid packs
-   */
   getBidPacks: () => {
-    return api.get<BidPack[]>("/bidpacks").then(res => res.data);
-  },
-
-  /**
-   * Get bid pack by ID
-   */
-  getBidPack: (id: number) => {
-    return api.get<BidPack>(`/bidpacks/${id}`).then(res => res.data);
-  },
-
-  /**
-   * Purchase a bid pack
-   */
-  purchaseBidPack: (bidPackId: number, walletAddress: string) => {
-    return api.post("/bidpacks/purchase", {
-      bidPackId,
-      walletAddress,
-    }).then(res => res.data);
-  },
-
-  /**
-   * Get user's bid packs
-   */
-  getUserBidPacks: (userId: number) => {
-    return api.get<any[]>(`/users/${userId}/bidpacks`).then(res => res.data);
+    return api.get('/bidpacks').then(res => res.data);
   }
 };
 
@@ -145,11 +47,8 @@ export const bidPackService = {
  * Activity API functions
  */
 export const activityService = {
-  /**
-   * Get all activity
-   */
   getActivity: () => {
-    return api.get<Activity[]>("/activity").then(res => res.data);
+    return api.get('/activity').then(res => res.data);
   }
 };
 
@@ -157,42 +56,36 @@ export const activityService = {
  * Blockchain API functions
  */
 export const blockchainService = {
-  /**
-   * Get blockchain stats
-   */
-  getBlockchainStats: () => {
-    return api.get<BlockchainStats>("/blockchain/stats").then(res => res.data);
+  getStats: () => {
+    return api.get('/blockchain/stats').then(res => res.data);
   }
 };
 
 /**
- * User API functions
+ * NFT API functions
  */
-export const userService = {
-  /**
-   * Get user by wallet address
-   */
-  getUserByWalletAddress: (walletAddress: string) => {
-    if (!walletAddress) return Promise.resolve(null);
-    return api.get<any>(`/users/by-wallet/${walletAddress}`).then(res => res.data);
+export const nftApi = {
+  getDetailedMetadata: (contractAddress: string, tokenId: string, chainId: number = 1) => {
+    // This would normally call your backend API
+    // For now, we'll return mock data
+    return Promise.resolve({
+      name: `NFT #${tokenId}`,
+      description: 'A detailed NFT description',
+      image: 'https://example.com/nft.png',
+      traits: [
+        { trait_type: 'Background', value: 'Blue' },
+        { trait_type: 'Eyes', value: 'Green' },
+        { trait_type: 'Mouth', value: 'Smile' }
+      ]
+    });
   }
 };
 
 /**
- * Achievement API functions
+ * Alchemy API functions (via your backend)
  */
-export const achievementService = {
-  /**
-   * Get user achievements
-   */
-  getUserAchievements: (userId: number) => {
-    return api.get<any[]>(`/users/${userId}/achievements`).then(res => res.data);
-  },
-
-  /**
-   * Get user achievement stats
-   */
-  getUserAchievementStats: (userId: number) => {
-    return api.get<any>(`/users/${userId}/achievement-stats`).then(res => res.data);
+export const alchemyApi = {
+  getNFTMetadata: (contractAddress: string, tokenId: string) => {
+    return api.get(`/alchemy/nft/${contractAddress}/${tokenId}`).then(res => res.data);
   }
 };
