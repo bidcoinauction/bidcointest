@@ -46,7 +46,11 @@ export function useTokenURI(contractAddress?: string, tokenId?: string, chain: s
     queryKey: ['tokenURI', contractAddress, tokenId, chain],
     queryFn: async () => {
       try {
-        const data = await nftApi.getTokenURI(contractAddress as string, tokenId as string, chain);
+        const data = await nftApi.getTokenURI(
+          contractAddress as string, 
+          tokenId as string, 
+          typeof chain === 'string' ? parseInt(chain, 10) : chain
+        );
         setErrorCount(0); // Reset error count on success
         return data;
       } catch (err) {

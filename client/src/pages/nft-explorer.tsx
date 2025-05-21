@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   getWalletNFTs, 
-  getNFTsByCollection, 
+  getNFTsByCollection,
   importNFTFromMoralis,
-  importWalletNFTs
-} from "@/lib/api";
+  importWalletNFTs 
+} from "@/services/nftExplorerService";
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
 import { 

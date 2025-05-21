@@ -186,7 +186,7 @@ function CryptoPayment({ bidPack, onComplete, onCancel }: CryptoPaymentProps) {
     
     try {
       // In a real implementation, this would call a blockchain transaction
-      const result = await purchaseBidPack(bidPack.id, address);
+      const result = await purchaseBidPack({ id: bidPack.id, address });
       
       toast({
         title: "Purchase Successful",

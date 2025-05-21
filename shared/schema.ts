@@ -485,3 +485,18 @@ export type UserAchievement = typeof userAchievements.$inferSelect & {
   user: User;
 }
 export type InsertUserAchievement = z.infer<typeof insertUserAchievementSchema>;
+
+// Add if not already present
+export const nftCollections = pgTable("nft_collections", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  contractAddress: text("contract_address").notNull().unique(),
+  blockchain: text("blockchain").notNull(),
+  imageUrl: text("image_url"),
+  totalSupply: integer("total_supply"),
+  floorPrice: decimal("floor_price", { precision: 10, scale: 6 }),
+  volume24h: decimal("volume_24h", { precision: 10, scale: 6 }),
+  holders: integer("holders"),
+  marketCap: decimal("market_cap", { precision: 10, scale: 6 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});

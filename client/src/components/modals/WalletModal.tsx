@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import useWallet from "@/hooks/useWallet";
-import { WalletType } from "@/lib/web3";
+import { WalletProvider } from '@shared/types';
 import { ChevronRight, Wallet, Link2, Chrome } from "lucide-react";
 
 interface WalletModalProps {
@@ -18,7 +18,7 @@ interface WalletModalProps {
 export default function WalletModal({ open, onOpenChange }: WalletModalProps) {
   const { connect, isConnecting } = useWallet();
   
-  const handleConnect = async (walletType: WalletType) => {
+  const handleConnect = async (walletType: WalletProvider) => {
     await connect(walletType);
     onOpenChange(false);
   };

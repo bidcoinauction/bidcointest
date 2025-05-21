@@ -21,8 +21,8 @@ import { Heart, Share2, ExternalLink, Trophy, TrendingUp, Award } from "lucide-r
 import { useToast } from "@/hooks/use-toast";
 import useWallet from "@/hooks/useWallet";
 import { useWebSocket } from "@/hooks/useWebSocket";
-import { fetchFromAPI } from "@/lib/api";
 import { nftApi } from "@/lib/apiService";
+import { alchemyApi } from "@/lib/alchemyApi";
 
 export default function AuctionDetailsPage() {
   const [, params] = useRoute("/auctions/:id");
@@ -75,7 +75,7 @@ export default function AuctionDetailsPage() {
       setDetailedMetadata({
         ...auction.nft,
         // Floor price removed per requirements
-        traits: auction.nft.attributes.map(attr => ({
+        traits: auction.nft.attributes.map((attr: NFTAttribute) => ({
           trait_type: attr.trait_type,
           value: attr.value,
           rarity: attr.rarity

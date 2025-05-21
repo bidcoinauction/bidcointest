@@ -479,3 +479,29 @@ export class AlchemyNftService {
 }
 
 export const alchemyNftService = new AlchemyNftService();
+
+// The service already exists, but you can enhance the implementation
+export const alchemyApi = {
+  getNFTMetadata: async (contractAddress: string, tokenId: string): Promise<AlchemyNFTMetadata> => {
+    try {
+      // Implementation here
+      // Check if in cache first
+      const cacheKey = `${contractAddress.toLowerCase()}_${tokenId}`;
+      const cachedData = nftCache.get(cacheKey);
+      
+      if (cachedData) {
+        return cachedData;
+      }
+      
+      // Fetch from Alchemy API
+      // Store in cache
+      // Return data
+      
+      // Placeholder return
+      throw new Error("Implementation needed");
+    } catch (error) {
+      console.error("Alchemy API error:", error);
+      throw error;
+    }
+  }
+};
