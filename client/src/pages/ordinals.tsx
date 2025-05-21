@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { getNFTs } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
@@ -7,17 +6,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThumbsUp, Eye, ArrowRight } from "lucide-react";
 import BidPacksSection from "@/components/bidpacks/BidPacksSection";
 
+// Define type interfaces
+interface Ordinal {
+  id: string;
+  name: string;
+  imageUrl: string;
+  blockchain: string;
+  tokenStandard: string;
+  tokenId: string;
+  creator: {
+    username: string;
+  };
+}
+
+interface ApiResponse {
+  nfts: Ordinal[];
+}
+
 export default function OrdinalsPage() {
   const [blockchain, setBlockchain] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   
-  const { data: nfts, isLoading, error } = useQuery({
+  const { data: nfts, isLoading, error } = useQuery<ApiResponse>({
     queryKey: ["/api/nfts"],
-    queryFn: getNFTs,
+    queryFn: () => fetch("/api/nfts").then(res => res.json()),
   });
   
   // Filter NFTs to only show Bitcoin Ordinals
-  const ordinals = nfts?.filter(nft => 
+  const ordinals = nfts?.nfts?.filter((nft: Ordinal) => 
     nft.blockchain === "BTC Ordinal" || 
     nft.blockchain === "BTC" || 
     nft.tokenStandard === "Ordinal"
@@ -100,7 +116,7 @@ export default function OrdinalsPage() {
               </div>
             ) : ordinals && ordinals.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {ordinals.map((ordinal) => (
+                {ordinals.map((ordinal: Ordinal) => (
                   <div key={ordinal.id} className="bg-[#1f2937] rounded-xl overflow-hidden border border-[#374151] hover:shadow-glow transition-shadow duration-300">
                     <div className="relative">
                       <img 
